@@ -1,0 +1,17 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  errors:
+    # Keep the signal high while the project is young.
+    deprecated_member_use: warning
+  exclude:
+    - "**/*.g.dart"
+    - "lib/firebase_options.dart"
+
+linter:
+  rules:
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    avoid_print: true
+    unawaited_futures: false
+    use_build_context_synchronously: true

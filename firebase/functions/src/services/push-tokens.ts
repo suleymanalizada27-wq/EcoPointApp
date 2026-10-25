@@ -1,0 +1,50 @@
+import { createHash } from 'node:crypto';
+import { Errors } from '../errors';
+import type { Deps } from './context';
+import { rateLimit } from './wallet';
+
+const MAX_TOKENS_PER_USER = 8;
+const TOKEN_RE = /^[A-Za-z0-9_:\-.]{20,4096}$/;
+
+const key = (token: string): string =>
+  createHash('sha256').update(token).digest('hex').slice(0, 32);
+
+/** Stores an FCM device token for the caller (server-only path). */
+export async function registerPushToken(
+  { store, now }: Deps,
+  uid: string,
+  input: { token: unknown; platform?: unknown },
+): Promise<{ ok: true }> {
+  if (typeof input.token !== 'string' || !TOKEN_RE.test(input.token)) {
+    throw Errors.invalid('Invalid token');
+  }
+  const platform = input.platform === 'ios' ? 'ios' : 'android';
+  await rateLimit(store, `pushtoken/${uid}`, now, { windowMs: 3_600_000, max: 30 });
+
+  const path = `pushTokens/${uid}`;
+  await store.set(`${path}/${key(input.token)}`, { token: input.token, platform, ts: now });
+
+  // Keep only the newest few devices.
+  const all = (await store.get<Record<string, { ts?: number }>>(path)) ?? {};
+  const ids = Object.keys(all);
+  if (ids.length > MAX_TOKENS_PER_USER) {
+    const oldest = ids
+      .sort((a, b) => (all[a]?.ts ?? 0) - (all[b]?.ts ?? 0))
+      .slice(0, ids.length - MAX_TOKENS_PER_USER);
+    await Promise.all(oldest.map((id) => store.remove(`${path}/${id}`)));
+  }
+  return { ok: true };
+}
+
+/** Called on sign-out so a shared phone stops receiving the old user's pushes. */
+export async function unregisterPushToken(
+  { store }: Deps,
+  uid: string,
+  input: { token: unknown },
+): Promise<{ ok: true }> {
+  if (typeof input.token !== 'string' || !TOKEN_RE.test(input.token)) {
+    throw Errors.invalid('Invalid token');
+  }
+  await store.remove(`pushTokens/${uid}/${key(input.token)}`);
+  return { ok: true };
+}

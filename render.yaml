@@ -1,4 +1,5 @@
-# Render blueprint (https://render.com). Free plan; the app + UptimeRobot keep it awake.
+# Render blueprint (https://render.com). Free plan; UptimeRobot + the app keep it awake.
+# The repo root package.json delegates build/start to firebase/functions.
 services:
   - type: web
     name: ecopoint-api

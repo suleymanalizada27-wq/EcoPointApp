@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "814012413122",
+    "firebase_url": "https://ecopoint-suleyman-2026-default-rtdb.firebaseio.com",
+    "project_id": "ecopoint-suleyman-2026",
+    "storage_bucket": "ecopoint-suleyman-2026.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:814012413122:android:dd80c512779b03eaa1f75b",
+        "android_client_info": {
+          "package_name": "az.ecopoint.ecopoint_pro"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "814012413122-v6qaakb62leltmaninsdl2a27ndgvbuk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDKRzQxbRkkEaHSrQdAjk8Ivl2pi5z5DE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "814012413122-v6qaakb62leltmaninsdl2a27ndgvbuk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,31 +1,12 @@
 {
-  "name": "ecopoint-functions",
+  "name": "ecopoint-pro-root",
   "private": true,
   "version": "1.0.0",
-  "description": "Trusted backend for EcoPoint Pro: all EP-mutating logic lives here.",
-  "main": "lib/index.js",
-  "engines": {
-    "node": ">=20"
-  },
+  "description": "Repo root. Render builds and starts the API (firebase/functions) through these scripts.",
+  "engines": { "node": ">=20" },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run",
-    "qr": "tsx tools/issue-bin-qr.ts",
-    "serve": "npm run build && firebase emulators:start --only functions,database,auth",
-    "deploy": "npm run build && firebase deploy --only functions,database",
-    "start": "node lib/server-main.js"
-  },
-  "dependencies": {
-    "express": "^4.22.3",
-    "firebase-admin": "^12.7.0",
-    "firebase-functions": "^6.1.0"
-  },
-  "devDependencies": {
-    "@types/express": "^4.17.25",
-    "@types/node": "^20.14.0",
-    "tsx": "^4.19.0",
-    "typescript": "^5.6.0",
-    "vitest": "^2.1.0"
+    "build": "npm --prefix firebase/functions install && npm --prefix firebase/functions run build",
+    "start": "node firebase/functions/lib/server-main.js",
+    "test": "npm --prefix firebase/functions test"
   }
 }

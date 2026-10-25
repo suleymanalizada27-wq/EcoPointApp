@@ -1,0 +1,18 @@
+# Render blueprint (https://render.com). Free plan; the app + UptimeRobot keep it awake.
+services:
+  - type: web
+    name: ecopoint-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: DATABASE_URL
+        sync: false
+      - key: QR_HMAC_SECRET
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false

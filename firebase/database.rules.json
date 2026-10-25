@@ -1,0 +1,41 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "prefs": {
+          ".write": "auth != null && auth.uid === $uid",
+          "notifyActivity": { ".validate": "newData.isBoolean()" },
+          "notifyNews": { ".validate": "newData.isBoolean()" },
+          "$other": { ".validate": false }
+        }
+      }
+    },
+
+    "leaderboard": {
+      ".read": "auth != null",
+      ".indexOn": ["ep", "nameLower"]
+    },
+
+    "devices": {
+      ".read": "auth != null",
+      "$deviceId": {
+        ".write": "auth != null && auth.token.device === true"
+      }
+    },
+
+    "rewards": {
+      ".read": "auth != null"
+    },
+
+    "globalNotifications": {
+      ".read": "auth != null",
+      ".indexOn": ["ts"]
+    },
+
+    "qrNonces": { ".indexOn": ["exp"] }
+  }
+}

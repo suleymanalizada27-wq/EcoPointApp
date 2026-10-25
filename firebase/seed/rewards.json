@@ -1,0 +1,270 @@
+{
+  "p1": {
+    "name": {
+      "az": "Şəkərsiz Çay",
+      "en": "Sugar-free Tea",
+      "ru": "Чай без сахара",
+      "tr": "Şekersiz Çay"
+    },
+    "brand": "EcoCafe",
+    "ep": 150,
+    "cat": "food",
+    "icon": "tea",
+    "kind": "item",
+    "active": true
+  },
+  "p2": {
+    "name": {
+      "az": "Üzvi Meyvə Paketi",
+      "en": "Organic Fruit Pack",
+      "ru": "Органические фрукты",
+      "tr": "Organik Meyve"
+    },
+    "brand": "GreenMarket",
+    "ep": 300,
+    "cat": "food",
+    "icon": "fruit",
+    "kind": "item",
+    "active": true
+  },
+  "p3": {
+    "name": {
+      "az": "Enerji İçki",
+      "en": "Energy Drink",
+      "ru": "Энергетик",
+      "tr": "Enerji İçeceği"
+    },
+    "brand": "GreenBoost",
+    "ep": 100,
+    "cat": "food",
+    "icon": "drink",
+    "kind": "item",
+    "active": true
+  },
+  "p4": {
+    "name": {
+      "az": "Plov Porsiyası",
+      "en": "Pilaf Portion",
+      "ru": "Плов",
+      "tr": "Pilav Porsiyonu"
+    },
+    "brand": "Novruz Çayxana",
+    "ep": 400,
+    "cat": "food",
+    "icon": "meal",
+    "kind": "item",
+    "active": true
+  },
+  "p16": {
+    "name": {
+      "az": "Kombucha İçki",
+      "en": "Kombucha Drink",
+      "ru": "Чайный гриб",
+      "tr": "Kombucha İçeceği"
+    },
+    "brand": "FermentBaku",
+    "ep": 220,
+    "cat": "food",
+    "icon": "kombucha",
+    "kind": "item",
+    "active": true
+  },
+  "p5": {
+    "name": {
+      "az": "USB Günəş Şarjı",
+      "en": "Solar USB Charger",
+      "ru": "Солнечное зарядное",
+      "tr": "Güneş USB Şarj"
+    },
+    "brand": "SolarTech",
+    "ep": 1200,
+    "cat": "tech",
+    "icon": "solar",
+    "kind": "item",
+    "active": true
+  },
+  "p6": {
+    "name": {
+      "az": "Eko Qulaqlıq",
+      "en": "Eco Headphones",
+      "ru": "Эко наушники",
+      "tr": "Eko Kulaklık"
+    },
+    "brand": "EcoSound",
+    "ep": 900,
+    "cat": "tech",
+    "icon": "headphones",
+    "kind": "item",
+    "active": true
+  },
+  "p7": {
+    "name": {
+      "az": "Smart Tracker",
+      "en": "Smart Tracker",
+      "ru": "Смарт трекер",
+      "tr": "Akıllı Takip"
+    },
+    "brand": "GreenTech",
+    "ep": 1800,
+    "cat": "tech",
+    "icon": "tracker",
+    "kind": "item",
+    "active": true
+  },
+  "p8": {
+    "name": {
+      "az": "Wireless Şarj",
+      "en": "Wireless Charger",
+      "ru": "Беспроводная зарядка",
+      "tr": "Kablosuz Şarj"
+    },
+    "brand": "SolarTech",
+    "ep": 1500,
+    "cat": "tech",
+    "icon": "charger",
+    "kind": "item",
+    "active": true
+  },
+  "p9": {
+    "name": {
+      "az": "Bambu Dişfırçası",
+      "en": "Bamboo Toothbrush",
+      "ru": "Бамбуковая щётка",
+      "tr": "Bambu Diş Fırçası"
+    },
+    "brand": "EcoLife",
+    "ep": 200,
+    "cat": "eco",
+    "icon": "toothbrush",
+    "kind": "item",
+    "active": true
+  },
+  "p10": {
+    "name": {
+      "az": "Bərpaolunan Torba",
+      "en": "Reusable Bag",
+      "ru": "Многоразовая сумка",
+      "tr": "Yeniden Kullanımlı Çanta"
+    },
+    "brand": "GreenBag",
+    "ep": 250,
+    "cat": "eco",
+    "icon": "bag",
+    "kind": "item",
+    "active": true
+  },
+  "p11": {
+    "name": {
+      "az": "Eko Termos",
+      "en": "Eco Thermos",
+      "ru": "Эко термос",
+      "tr": "Eko Termos"
+    },
+    "brand": "EcoLife",
+    "ep": 600,
+    "cat": "eco",
+    "icon": "thermos",
+    "kind": "item",
+    "active": true
+  },
+  "p12": {
+    "name": {
+      "az": "Eko Sabun Dəsti",
+      "en": "Eco Soap Set",
+      "ru": "Эко набор мыла",
+      "tr": "Eko Sabun Seti"
+    },
+    "brand": "NaturePure",
+    "ep": 180,
+    "cat": "eco",
+    "icon": "soap",
+    "kind": "item",
+    "active": true
+  },
+  "p13": {
+    "name": {
+      "az": "Avtobus Kartı",
+      "en": "Bus Card",
+      "ru": "Карта автобуса",
+      "tr": "Otobüs Kartı"
+    },
+    "brand": "BakuBus",
+    "ep": 500,
+    "cat": "service",
+    "icon": "bus",
+    "kind": "item",
+    "active": true
+  },
+  "p14": {
+    "name": {
+      "az": "Kino Bileti",
+      "en": "Cinema Ticket",
+      "ru": "Билет в кино",
+      "tr": "Sinema Bileti"
+    },
+    "brand": "CinePlex",
+    "ep": 800,
+    "cat": "service",
+    "icon": "cinema",
+    "kind": "item",
+    "active": true
+  },
+  "p15": {
+    "name": {
+      "az": "Kitabxana Aylığı",
+      "en": "Library Monthly",
+      "ru": "Абонемент библиотеки",
+      "tr": "Kütüphane Aboneliği"
+    },
+    "brand": "BakuLib",
+    "ep": 350,
+    "cat": "service",
+    "icon": "library",
+    "kind": "item",
+    "active": true
+  },
+  "c1": {
+    "name": {
+      "az": "Bravo Kuponu",
+      "en": "Bravo Coupon",
+      "ru": "Купон Bravo",
+      "tr": "Bravo Kuponu"
+    },
+    "brand": "Bravo",
+    "ep": 500,
+    "cat": "service",
+    "icon": "cart",
+    "kind": "coupon",
+    "partnerId": "bravo",
+    "active": true
+  },
+  "c2": {
+    "name": {
+      "az": "Bolmart Kuponu",
+      "en": "Bolmart Coupon",
+      "ru": "Купон Bolmart",
+      "tr": "Bolmart Kuponu"
+    },
+    "brand": "Bolmart",
+    "ep": 300,
+    "cat": "service",
+    "icon": "store",
+    "kind": "coupon",
+    "partnerId": "bolmart",
+    "active": true
+  },
+  "t1": {
+    "name": {
+      "az": "BakıKart Doldur",
+      "en": "Top Up BakiCard",
+      "ru": "Пополнить BakiCard",
+      "tr": "BakiCard Yükle"
+    },
+    "brand": "BakuBus",
+    "ep": 100,
+    "cat": "service",
+    "icon": "bus",
+    "kind": "transport",
+    "active": true
+  }
+}
