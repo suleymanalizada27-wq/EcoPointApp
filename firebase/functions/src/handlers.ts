@@ -6,7 +6,7 @@ import { lookupUsers, transferEp } from './services/transfer';
 import { applyReferral, claimChallenge, claimDailyCheckIn } from './services/gamification';
 import { deleteAccountData, ensureProfile, updateProfile } from './services/profile';
 import { redeemDeviceWeight } from './services/devices';
-import { registerPushToken, unregisterPushToken } from './services/push-tokens';
+import { registerPushToken, sendTestPush, unregisterPushToken } from './services/push-tokens';
 import {
   adminAdjustBalance,
   adminBroadcast,
@@ -93,6 +93,7 @@ export const HANDLERS: Record<string, Handler> = {
   deleteAccountData: (c) => deleteAccountData(c.deps, c.caller.uid),
   registerPushToken: (c) =>
     registerPushToken(c.deps, c.caller.uid, { token: c.data.token, platform: c.data.platform }),
+  sendTestPush: (c) => sendTestPush(c.deps, c.caller.uid),
   unregisterPushToken: (c) => unregisterPushToken(c.deps, c.caller.uid, { token: c.data.token }),
 
   adminAdjustBalance: (c) =>

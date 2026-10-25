@@ -142,3 +142,34 @@ describe('FcmPusher', () => {
     await expect(new FcmPusher(store, messaging).toUser(ALICE, { title: 't', body: 'b' })).resolves.toBeUndefined();
   });
 });
+
+describe('sendTestPush', () => {
+  it('reports the outcome and rate-limits rapid repeats', async () => {
+    const { sendTestPush } = await import('../src/services/push-tokens');
+    const store = new MemoryStore();
+    const push = new MemoryPusher();
+    const r = await sendTestPush({ store, now: NOW, push }, ALICE);
+    expect(r.sent).toBe(1);
+    await expectReason(sendTestPush({ store, now: NOW + 100, push }, ALICE), 'rate-limited');
+  });
+
+  it('refuses when push is not configured', async () => {
+    const { sendTestPush } = await import('../src/services/push-tokens');
+    await expectReason(sendTestPush({ store: new MemoryStore(), now: NOW }, ALICE), 'invalid-input');
+  });
+
+  it('FcmPusher surfaces FCM failures in the report', async () => {
+    const store = new MemoryStore();
+    await registerPushToken({ store, now: NOW }, ALICE, { token: TOKEN_A });
+    const messaging: MessagingLike = {
+      sendEachForMulticast: async () => {
+        throw new Error('Cloud Messaging API has not been used in project');
+      },
+      send: async () => 'id',
+    };
+    const r = await new FcmPusher(store, messaging).toUserReport(ALICE, { title: 't', body: 'b' });
+    expect(r.tokens).toBe(1);
+    expect(r.sent).toBe(0);
+    expect(r.errors[0]).toContain('Cloud Messaging API');
+  });
+});

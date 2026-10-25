@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { Errors } from '../errors';
+import type { PushReport } from '../push';
 import type { Deps } from './context';
 import { rateLimit } from './wallet';
 
@@ -47,4 +48,18 @@ export async function unregisterPushToken(
   }
   await store.remove(`pushTokens/${uid}/${key(input.token)}`);
   return { ok: true };
+}
+
+/** Sends a test push to the caller's own devices and reports the outcome. */
+export async function sendTestPush(
+  { store, now, push }: Deps,
+  uid: string,
+): Promise<PushReport> {
+  if (!push) throw Errors.invalid('Push is not configured on this server');
+  await rateLimit(store, `pushtest/${uid}`, now, {
+    windowMs: 3_600_000,
+    max: 10,
+    minIntervalMs: 5_000,
+  });
+  return push.toUserReport(uid, { title: 'EcoPoint', body: 'Test bildirisi \u2705' });
 }

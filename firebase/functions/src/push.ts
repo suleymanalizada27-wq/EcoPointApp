@@ -9,9 +9,20 @@ export interface PushMessage {
  * Sends push notifications. Implementations MUST be best-effort: a failed push
  * never fails (or rolls back) a money operation.
  */
+export interface PushReport {
+  /** Devices registered for the user. */
+  tokens: number;
+  sent: number;
+  failed: number;
+  /** FCM error codes seen (no secrets), or a top-level failure message. */
+  errors: string[];
+}
+
 export interface PushSender {
   /** Push to every registered device of one user. */
   toUser(uid: string, msg: PushMessage): Promise<void>;
+  /** Same, but reports what happened (used by the self-test endpoint). */
+  toUserReport(uid: string, msg: PushMessage): Promise<PushReport>;
   /** Push to everyone subscribed to the "news" topic. */
   toNews(msg: PushMessage): Promise<void>;
 }
@@ -49,18 +60,31 @@ export class FcmPusher implements PushSender {
   ) {}
 
   async toUser(uid: string, msg: PushMessage): Promise<void> {
+    await this.toUserReport(uid, msg);
+  }
+
+  async toUserReport(uid: string, msg: PushMessage): Promise<PushReport> {
+    const report: PushReport = { tokens: 0, sent: 0, failed: 0, errors: [] };
     try {
       const rows = (await this.store.get<Record<string, { token?: string }>>(`pushTokens/${uid}`)) ?? {};
       const entries = Object.entries(rows).filter(
         ([, v]) => typeof v?.token === 'string' && v.token.length > 0,
       );
-      if (entries.length === 0) return;
+      report.tokens = entries.length;
+      if (entries.length === 0) return report;
       const res = await this.messaging.sendEachForMulticast({
         tokens: entries.map(([, v]) => v.token as string),
         notification: { title: msg.title, body: msg.body },
         android: { priority: 'high' },
       });
       // Drop tokens FCM says are gone (app uninstalled, token rotated).
+      for (const r of res.responses) {
+        if (r.success) report.sent += 1;
+        else {
+          report.failed += 1;
+          report.errors.push(r.error?.code ?? 'unknown');
+        }
+      }
       await Promise.all(
         res.responses.map((r, i) =>
           !r.success && r.error?.code && DEAD_TOKEN_CODES.has(r.error.code)
@@ -70,7 +94,9 @@ export class FcmPusher implements PushSender {
       );
     } catch (e) {
       this.log('push toUser failed', e);
+      report.errors.push(e instanceof Error ? e.message.slice(0, 300) : 'unknown');
     }
+    return report;
   }
 
   async toNews(msg: PushMessage): Promise<void> {
@@ -92,6 +118,10 @@ export class MemoryPusher implements PushSender {
   readonly news: PushMessage[] = [];
   async toUser(uid: string, msg: PushMessage): Promise<void> {
     this.user.push({ uid, ...msg });
+  }
+  async toUserReport(uid: string, msg: PushMessage): Promise<PushReport> {
+    this.user.push({ uid, ...msg });
+    return { tokens: 1, sent: 1, failed: 0, errors: [] };
   }
   async toNews(msg: PushMessage): Promise<void> {
     this.news.push(msg);

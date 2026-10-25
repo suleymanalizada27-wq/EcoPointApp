@@ -110,6 +110,7 @@ The root `package.json` only delegates to `firebase/functions`, so Render keeps 
 - Publish the local project: `. .\tool\publish_repo.ps1` (mirrors the project, refuses to push secrets).
 - Android push/https patch: `. .\tool\android_patch.ps1`; launcher icon: `dart run flutter_launcher_icons`.
 - Google sign-in: `. .\tool\google_sha.ps1`, then build with `--dart-define=GOOGLE_WEB_CLIENT_ID=<web client id>`.
+- Push self-test (e-mail account): `. .\tool\test_push.ps1` → server pushes a test notification to your phone and reports tokens/sent/errors.
 - Release build: `flutter build apk --release --dart-define=BACKEND_URL=https://<service>.onrender.com --dart-define=GOOGLE_WEB_CLIENT_ID=<id>`.
 
 ## Features
@@ -124,7 +125,7 @@ sign-out · account deletion · offline banner + RTDB offline cache.
 ## Verification
 
 Actually run in the sandbox:
-- `firebase/functions`: `npm test` → **78 tests pass** (QR forgery/replay/expiry/concurrency, double-spend, idempotency, refunds, caps, rules, push tokens/delivery); `tsc` builds; building and starting from the repo root (`npm run build`, `npm start`) works.
+- `firebase/functions`: `npm test` → **81 tests pass** (QR forgery/replay/expiry/concurrency, double-spend, idempotency, refunds, caps, rules, push tokens/delivery); `tsc` builds; building and starting from the repo root (`npm run build`, `npm start`) works.
 - `python3 tool/verify_static.py`: Dart **syntax** of all files (tree-sitter), every import resolves, 338 localization keys identical across az/en/ru/tr, every `tr('…')` key exists.
 
 **Not** run in the sandbox (needs a device): Flutter compile, any real FCM delivery, Google sign-in, camera, location. The author's machine ran `flutter analyze`/`test` and a release APK before the push/Google/icon changes; those changes still need that check.
