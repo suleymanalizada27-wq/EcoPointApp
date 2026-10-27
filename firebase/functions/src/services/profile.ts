@@ -4,6 +4,7 @@ import { Errors } from '../errors';
 import type { Store } from '../store';
 import type { Deps } from './context';
 import { secureRng } from './context';
+import { bumpStat } from './stats';
 
 export interface AuthInfo {
   name?: string | null;
@@ -52,7 +53,10 @@ export async function ensureProfile(
   }
   if (!user.email && auth.email) updates.email = auth.email;
   if (!user.photoURL && auth.photoURL) updates.photoURL = auth.photoURL;
-  if (!user.createdAt) updates.createdAt = now;
+  if (!user.createdAt) {
+    updates.createdAt = now;
+    await bumpStat(store, now, 'signups', 1);
+  }
 
   await store.transaction(`users/${uid}/balance`, (cur) =>
     cur === null || cur === undefined ? 0 : cur,
@@ -107,6 +111,7 @@ export async function deleteAccountData({ store }: Deps, uid: string): Promise<{
     store.remove(`rate/${uid}`),
     store.remove(`idempotency/${uid}`),
     store.remove(`pushTokens/${uid}`),
+    store.remove(`pushUsers/${uid}`),
   ]);
   return { ok: true };
 }

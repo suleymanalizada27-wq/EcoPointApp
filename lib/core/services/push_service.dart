@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/router.dart';
 import '../../features/wallet/data/wallet_providers.dart';
 import 'backend_service.dart';
+import 'preferences.dart';
 import 'firebase_bootstrap.dart';
 import 'firebase_providers.dart';
 
@@ -29,6 +30,7 @@ class PushService {
   final BackendService _backend;
   final FirebaseMessaging _messaging;
   StreamSubscription<String>? _refreshSub;
+  String _lang = 'az';
 
   static bool get isSupported =>
       !kIsWeb && !kUseEmulator && (Platform.isAndroid || Platform.isIOS);
@@ -37,7 +39,8 @@ class PushService {
 
   /// Asks for permission (Android 13+ / iOS) and registers this device.
   /// Returns false if the user declined notifications.
-  Future<bool> registerDevice() async {
+  Future<bool> registerDevice(String lang) async {
+    _lang = lang;
     final settings = await _messaging.requestPermission();
     if (settings.authorizationStatus == AuthorizationStatus.denied) {
       return false;
@@ -56,6 +59,8 @@ class PushService {
       await _backend.call('registerPushToken', {
         'token': token,
         'platform': _platform,
+        // The server writes reminders in the user's app language.
+        'lang': _lang,
       });
     } catch (_) {
       // Retried on the next app start; push is optional.
@@ -103,8 +108,10 @@ bool _pushReady(Ref ref) {
 final pushRegistrationProvider = FutureProvider<void>((ref) async {
   final uid = ref.watch(uidProvider);
   if (uid == null || !_pushReady(ref)) return;
+  // Re-registers when the app language changes so reminders follow it.
+  final lang = ref.watch(localeProvider).languageCode;
   try {
-    await ref.read(pushServiceProvider).registerDevice();
+    await ref.read(pushServiceProvider).registerDevice(lang);
   } catch (_) {}
 });
 

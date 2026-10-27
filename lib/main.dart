@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app/app.dart';
 import 'core/services/backend_service.dart';
+import 'core/services/error_reporter.dart';
 import 'core/services/firebase_bootstrap.dart';
 import 'core/services/firebase_providers.dart';
 import 'core/services/preferences.dart';
@@ -24,7 +25,11 @@ Future<void> main() async {
   final boot = await FirebaseBootstrap.init();
 
   // Wake a sleeping free-tier backend while the UI starts.
-  if (boot.isReady) unawaited(BackendService(FirebaseAuth.instance).warmUp());
+  if (boot.isReady) {
+    final backend = BackendService(FirebaseAuth.instance);
+    unawaited(backend.warmUp());
+    ErrorReporter(backend).install();
+  }
 
   runApp(
     ProviderScope(

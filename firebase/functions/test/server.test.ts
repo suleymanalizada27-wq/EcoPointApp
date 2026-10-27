@@ -42,6 +42,27 @@ async function call(name: string, body: unknown, token?: string) {
   return { status: res.status, json: (await res.json()) as any };
 }
 
+describe('invite page', () => {
+  it('serves a preview card for a known code and 404 for unknown/bad ones', async () => {
+    await store.set('referralCodes/ABCD234', ALICE);
+    await store.set(`leaderboard/${ALICE}/name`, 'Alice Aliyeva');
+    const ok = await fetch(`${base}/invite/abcd-234`);
+    expect(ok.status).toBe(200);
+    const html = await ok.text();
+    expect(html).toContain('og:image');
+    expect(html).toContain('Alice səni EcoPoint-ə dəvət edir');
+    expect(html).not.toContain('Aliyeva');
+    expect(html).toContain('ABCD234');
+    expect((await fetch(`${base}/invite/ZZZZ999`)).status).toBe(404);
+    expect((await fetch(`${base}/invite/<script>`)).status).toBe(404);
+  });
+  it('serves the preview image', async () => {
+    const r = await fetch(`${base}/og.jpg`);
+    expect(r.status).toBe(200);
+    expect(r.headers.get('content-type')).toContain('image/jpeg');
+  });
+});
+
 describe('HTTP transport', () => {
   it('health check needs no auth', async () => {
     const r = await fetch(`${base}/health`);

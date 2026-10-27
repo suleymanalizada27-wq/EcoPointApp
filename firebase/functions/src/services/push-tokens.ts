@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { Errors } from '../errors';
+import { asLang } from '../lib/notify-text';
 import type { PushReport } from '../push';
 import type { Deps } from './context';
 import { rateLimit } from './wallet';
@@ -14,7 +15,7 @@ const key = (token: string): string =>
 export async function registerPushToken(
   { store, now }: Deps,
   uid: string,
-  input: { token: unknown; platform?: unknown },
+  input: { token: unknown; platform?: unknown; lang?: unknown },
 ): Promise<{ ok: true }> {
   if (typeof input.token !== 'string' || !TOKEN_RE.test(input.token)) {
     throw Errors.invalid('Invalid token');
@@ -23,7 +24,14 @@ export async function registerPushToken(
   await rateLimit(store, `pushtoken/${uid}`, now, { windowMs: 3_600_000, max: 30 });
 
   const path = `pushTokens/${uid}`;
-  await store.set(`${path}/${key(input.token)}`, { token: input.token, platform, ts: now });
+  await store.set(`${path}/${key(input.token)}`, {
+    token: input.token,
+    platform,
+    lang: asLang(input.lang),
+    ts: now,
+  });
+  // Small index so the scheduler can find everyone with a device.
+  await store.set(`pushUsers/${uid}`, true);
 
   // Keep only the newest few devices.
   const all = (await store.get<Record<string, { ts?: number }>>(path)) ?? {};
@@ -47,6 +55,8 @@ export async function unregisterPushToken(
     throw Errors.invalid('Invalid token');
   }
   await store.remove(`pushTokens/${uid}/${key(input.token)}`);
+  const left = await store.get<Record<string, unknown>>(`pushTokens/${uid}`);
+  if (!left || Object.keys(left).length === 0) await store.remove(`pushUsers/${uid}`);
   return { ok: true };
 }
 

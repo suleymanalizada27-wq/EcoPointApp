@@ -372,7 +372,7 @@ const Map<String, String> stringsEn = {
   'referral_apply': 'Apply code',
   'referral_applied': 'Code applied: +{n} EP',
   'referral_share_text':
-      'Join me on EcoPoint and earn rewards for recycling! Use my code {code} when you sign up.',
+      'Join me on EcoPoint and earn rewards for recycling! Use my code {code} when you sign up. {link}',
   'danger_zone': 'Danger zone',
   'sign_out': 'Sign out',
   'sign_out_confirm': 'Sign out of EcoPoint?',
@@ -386,4 +386,48 @@ const Map<String, String> stringsEn = {
   'pro_active_until': 'Active until {d}',
   'pro_info':
       'Pro members earn a multiplier on scans. Subscriptions are not available in the app yet.',
+  'settings_guide':
+      'Eco guide',
+  'settings_admin':
+      'Admin panel',
+  'guide_title':
+      'Eco guide',
+  'guide_intro':
+      'Properly sorted waste is much easier to recycle. Local rules can differ — also check the labels on the bin.',
+  'guide_plastic_t':
+      'Plastic',
+  'guide_plastic_b':
+      'Empty bottles, squash them and close the cap. Greasy or very dirty containers make recycling harder.',
+  'guide_glass_t':
+      'Glass',
+  'guide_glass_b':
+      'Empty and rinse jars and bottles. Mirrors, window glass and ceramics should not be mixed with ordinary glass containers.',
+  'guide_paper_t':
+      'Paper and cardboard',
+  'guide_paper_b':
+      'Keep it dry. Wet or greasy paper and used tissues are not suitable for recycling.',
+  'guide_metal_t':
+      'Metal',
+  'guide_metal_b':
+      'Empty tins and drink cans. Aluminium can be recycled again and again.',
+  'guide_battery_t':
+      'Batteries and electronics',
+  'guide_battery_b':
+      'Never put them in general waste — they contain hazardous substances. Take them to a dedicated collection point.',
+  'guide_tips_t':
+      'Quick tips',
+  'guide_tip_1':
+      'Reduce first, reuse second, recycle third.',
+  'guide_tip_2':
+      'A cloth bag and your own bottle avoid hundreds of single-use items a year.',
+  'guide_tip_3':
+      'When in doubt, read the bin instructions — one wrong item can spoil a whole batch.',
+  'lb_weekly':
+      'This week',
+  'lb_all_time':
+      'All time',
+  'lb_weekly_empty':
+      'Nobody has earned EP this week yet. Be the first!',
+  'lb_weekly_note':
+      'The week resets every Monday (Baku time).',
 };

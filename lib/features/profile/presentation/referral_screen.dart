@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../../app/theme/ep_colors.dart';
 import '../../../app/theme/tokens.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/errors/failure.dart';
 import '../../../core/widgets/ep_button.dart';
 import '../../../core/widgets/ep_card.dart';
@@ -105,7 +106,11 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
                         onPressed: mine.isEmpty
                             ? null
                             : () => Share.share(context.tr(
-                                'referral_share_text', {'code': mine})),
+                                'referral_share_text', {
+                                'code': mine,
+                                'link':
+                                    '${AppConstants.backendUrl}/invite/$mine',
+                              })),
                       ),
                     ),
                   ],

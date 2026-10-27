@@ -27,9 +27,26 @@ class LeaderboardRepository {
   LeaderboardRepository(this._db);
   final FirebaseDatabase _db;
 
-  Stream<List<LeaderboardEntry>> top({int limit = 20}) {
-    return _db
-        .ref(DbPaths.leaderboard)
+  /// Monday (yyyy-MM-dd) of the current Baku (UTC+4) week — must match the
+  /// backend's `weekKey()`.
+  static String currentWeekKey([DateTime? now]) {
+    final ms = (now ?? DateTime.now()).toUtc().millisecondsSinceEpoch +
+        4 * 3600 * 1000;
+    final dn = ms ~/ 86400000;
+    final monday = dn - ((dn + 3) % 7);
+    final d = DateTime.fromMillisecondsSinceEpoch(monday * 86400000, isUtc: true);
+    String two(int v) => v.toString().padLeft(2, '0');
+    return '${d.year}-${two(d.month)}-${two(d.day)}';
+  }
+
+  Stream<List<LeaderboardEntry>> top({int limit = 20}) =>
+      _watch(_db.ref(DbPaths.leaderboard), limit);
+
+  Stream<List<LeaderboardEntry>> weekly({int limit = 20}) => _watch(
+      _db.ref('${DbPaths.weeklyBoard}/${currentWeekKey()}'), limit);
+
+  Stream<List<LeaderboardEntry>> _watch(DatabaseReference ref, int limit) {
+    return ref
         .orderByChild('ep')
         .limitToLast(limit)
         .onValue
@@ -56,4 +73,8 @@ class LeaderboardRepository {
 
 final leaderboardProvider = StreamProvider<List<LeaderboardEntry>>(
   (ref) => LeaderboardRepository(ref.watch(databaseProvider)).top(),
+);
+
+final weeklyLeaderboardProvider = StreamProvider<List<LeaderboardEntry>>(
+  (ref) => LeaderboardRepository(ref.watch(databaseProvider)).weekly(),
 );

@@ -128,31 +128,72 @@ class LeaderboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final board = ref.watch(leaderboardProvider);
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(context.tr('lb_title')),
+          bottom: TabBar(tabs: [
+            Tab(text: context.tr('lb_weekly')),
+            Tab(text: context.tr('lb_all_time')),
+          ]),
+        ),
+        body: TabBarView(children: [
+          _BoardList(
+            provider: weeklyLeaderboardProvider,
+            emptyKey: 'lb_weekly_empty',
+            note: context.tr('lb_weekly_note'),
+          ),
+          _BoardList(
+            provider: leaderboardProvider,
+            emptyKey: 'lb_empty',
+          ),
+        ]),
+      ),
+    );
+  }
+}
+
+class _BoardList extends ConsumerWidget {
+  const _BoardList({required this.provider, required this.emptyKey, this.note});
+  final StreamProvider<List<LeaderboardEntry>> provider;
+  final String emptyKey;
+  final String? note;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final board = ref.watch(provider);
     final me = ref.watch(uidProvider);
-    return Scaffold(
-      appBar: AppBar(title: Text(context.tr('lb_title'))),
-      body: AsyncBody<List<LeaderboardEntry>>(
-        value: board,
-        onRetry: () => ref.invalidate(leaderboardProvider),
-        data: (list) {
-          if (list.isEmpty) {
-            return EmptyView(
-              icon: Icons.emoji_events_outlined,
-              message: context.tr('lb_empty'),
-            );
-          }
-          return ListView.builder(
-            padding: const EdgeInsets.all(Sp.gutter),
-            itemCount: list.length,
-            itemBuilder: (context, i) => LeaderboardRow(
+    return AsyncBody<List<LeaderboardEntry>>(
+      value: board,
+      onRetry: () => ref.invalidate(provider),
+      data: (list) {
+        if (list.isEmpty) {
+          return EmptyView(
+            icon: Icons.emoji_events_outlined,
+            message: context.tr(emptyKey),
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.all(Sp.gutter),
+          itemCount: list.length + (note == null ? 0 : 1),
+          itemBuilder: (context, i) {
+            if (note != null && i == list.length) {
+              return Padding(
+                padding: const EdgeInsets.only(top: Sp.md),
+                child: Text(note!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: context.ep.textSecondary)),
+              );
+            }
+            return LeaderboardRow(
               rank: i + 1,
               entry: list[i],
               isMe: list[i].uid == me,
-            ),
-          );
-        },
-      ),
+            );
+          },
+        );
+      },
     );
   }
 }

@@ -1,4 +1,5 @@
-# Render blueprint (https://render.com). Free plan; the app + UptimeRobot keep it awake.
+# Render blueprint (https://render.com). Free plan; UptimeRobot + the app keep it awake.
+# The repo root package.json delegates build/start to firebase/functions.
 services:
   - type: web
     name: ecopoint-api
@@ -15,4 +16,10 @@ services:
       - key: QR_HMAC_SECRET
         sync: false
       - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false
+      - key: ADMIN_EMAILS
+        value: greenlinegroup2026@gmail.com
+      - key: CONTACT_EMAIL
+        value: greenlinegroup2026@gmail.com
+      - key: APP_DOWNLOAD_URL
         sync: false

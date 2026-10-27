@@ -156,3 +156,10 @@ export function normalizeCode(v: unknown): string {
 export function isUid(v: unknown): boolean {
   return typeof v === 'string' && /^[A-Za-z0-9]{20,40}$/.test(v);
 }
+
+/** Monday (yyyy-MM-dd, Asia/Baku) of the week containing `nowMs`. */
+export function weekKey(nowMs: number): string {
+  const dn = dayNumber(dayKey(nowMs));
+  const monday = dn - ((dn + 3) % 7); // epoch day 0 was a Thursday
+  return new Date(monday * 86_400_000).toISOString().slice(0, 10);
+}

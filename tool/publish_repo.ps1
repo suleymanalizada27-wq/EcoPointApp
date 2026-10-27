@@ -27,6 +27,9 @@ if (-not (Test-Path (Join-Path $src 'pubspec.yaml'))) {
   # Safety net: refuse to publish anything that looks like a secret.
   $names = git diff --cached --name-only
   $bad = $names | Select-String -Pattern 'adminsdk|\.secret|\.jks|\.keystore|key\.properties|\.env$'
+  # The backend needs src/lib (an old ignore rule once hid it): refuse to push without it.
+  $srcLib = git ls-files --cached --others --exclude-standard 'firebase/functions/src/lib'
+  if (-not $srcLib) { Write-Host "DAYANDIM: firebase/functions/src/lib gorunmur (.gitignore?)" -ForegroundColor Red; git reset | Out-Null; Pop-Location; return }
   $needle = 'BEGIN PRIVATE ' + 'KEY'
   $key = git grep --cached -l $needle
   if ($bad -or $key) {

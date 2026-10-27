@@ -125,7 +125,7 @@ sign-out · account deletion · offline banner + RTDB offline cache.
 ## Verification
 
 Actually run in the sandbox:
-- `firebase/functions`: `npm test` → **81 tests pass** (QR forgery/replay/expiry/concurrency, double-spend, idempotency, refunds, caps, rules, push tokens/delivery); `tsc` builds; building and starting from the repo root (`npm run build`, `npm start`) works.
+- `firebase/functions`: `npm test` → **106 tests pass** (QR forgery/replay/expiry/concurrency, double-spend, idempotency, refunds, caps, rules, push tokens/delivery); `tsc` builds; building and starting from the repo root (`npm run build`, `npm start`) works.
 - `python3 tool/verify_static.py`: Dart **syntax** of all files (tree-sitter), every import resolves, 338 localization keys identical across az/en/ru/tr, every `tr('…')` key exists.
 
 **Not** run in the sandbox (needs a device): Flutter compile, any real FCM delivery, Google sign-in, camera, location. The author's machine ran `flutter analyze`/`test` and a release APK before the push/Google/icon changes; those changes still need that check.
@@ -136,6 +136,7 @@ The Dart tests in `test/` are written but unexecuted.
 - Real Firebase config (`flutterfire configure`), SHA-1/256 for Google sign-in (`tool/google_sha.ps1`), the Google *web* client id (`--dart-define=GOOGLE_WEB_CLIENT_ID=…`), iOS URL scheme and APNs key (iOS has never been built).
 - `QR_HMAC_SECRET`, deployed functions, deployed rules, admin claim.
 - Bin firmware: signed per-deposit codes; `weightEventId`; optional `lat`/`lng` on `devices/{id}` — **no coordinates are invented**, bins without them appear only in the list.
+- Scheduled pushes (server timer, Asia/Baku, needs the server awake): 12:00 daily check-in reminder (only if not done yet), 20:00 streak-at-risk (streak ≥ 3), Monday 10:00 weekly summary (real totals, skipped when 0). Each runs once per day (atomic marker `cron/<kind>/<day>`), follows the user's app language and the *activity* notification switch. Not verified on a device.
 - Push (FCM): implemented (device token registry, per-user pushes for received EP / BakıKart results, broadcast topic `news`, honours the two notification switches) but **not verified end-to-end on a device**; iOS needs an APNs key. A release/Play Store signing key will need its own SHA fingerprints.
 - EcoPoint Pro purchase is **not** implemented (shown as unavailable); Pro can be set by an admin (`isPro`, `proExpiry`) and gives ×2 on scans/weight.
 - Impact figures are fixed-factor **estimates** (labelled as such), not measurements.
@@ -143,3 +144,11 @@ The Dart tests in `test/` are written but unexecuted.
 - Coupon values assume 500 EP = 1 AZN and 5 % commission (from the legacy module); verify with partners.
 - Launcher icon is generated with `dart run flutter_launcher_icons` (config in `pubspec.yaml`); no native splash, store listing or release signing config.
 - Only unit tests exist (no widget/integration tests); accessibility was designed in (semantic labels, 48 dp targets) but not audited on a device.
+
+
+## Added in the latest round
+- Admin panel (`/admin`, only for the verified admin e-mail) — see `docs/ADMIN.md`.
+- Error reporting (Dart errors → `errorLogs`), weekly leaderboard, eco guide, partner coupon check/redeem, public `/privacy` and `/delete-account` pages.
+- Play Store tooling: `tool/make_keystore.ps1`, `docs/PLAY_STORE.md`; capacity notes: `docs/SCALING.md`.
+
+Honest gaps: Flutter code of these features is only syntax/import-checked in the sandbox (run `flutter analyze`); scheduled pushes unverified on a device; iOS never built; native crashes not captured; no Play release made.

@@ -10,6 +10,13 @@ import '../features/auth/presentation/sign_in_screen.dart';
 import '../features/auth/presentation/sign_up_screen.dart';
 import '../features/challenges/presentation/challenges_screen.dart';
 import '../features/home/presentation/home_screen.dart';
+import '../features/admin/presentation/admin_bins_screen.dart';
+import '../features/admin/presentation/admin_home_screen.dart';
+import '../features/admin/presentation/admin_misc_screens.dart';
+import '../features/admin/presentation/admin_rewards_screen.dart';
+import '../features/admin/presentation/admin_stats_screen.dart';
+import '../features/admin/presentation/admin_users_screen.dart';
+import '../features/guide/presentation/eco_guide_screen.dart';
 import '../features/leaderboard/presentation/leaderboard_widgets.dart';
 import '../features/marketplace/presentation/marketplace_screen.dart';
 import '../features/marketplace/presentation/purchase_history_screen.dart';
@@ -161,6 +168,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
           path: '/achievements',
           builder: (_, __) => const AchievementsScreen()),
+      GoRoute(path: '/admin', builder: (_, __) => const AdminHomeScreen()),
+      GoRoute(path: '/admin/stats', builder: (_, __) => const AdminStatsScreen()),
+      GoRoute(path: '/admin/users', builder: (_, __) => const AdminUsersScreen()),
+      GoRoute(path: '/admin/rewards', builder: (_, __) => const AdminRewardsScreen()),
+      GoRoute(path: '/admin/bins', builder: (_, __) => const AdminBinsScreen()),
+      GoRoute(path: '/admin/transport', builder: (_, __) => const AdminTransportScreen()),
+      GoRoute(path: '/admin/coupons', builder: (_, __) => const AdminCouponsScreen()),
+      GoRoute(path: '/admin/broadcast', builder: (_, __) => const AdminBroadcastScreen()),
+      GoRoute(path: '/admin/errors', builder: (_, __) => const AdminErrorsScreen()),
+      GoRoute(path: '/guide', builder: (_, __) => const EcoGuideScreen()),
       GoRoute(
           path: '/leaderboard',
           builder: (_, __) => const LeaderboardScreen()),

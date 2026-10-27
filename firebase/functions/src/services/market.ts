@@ -6,6 +6,7 @@ import type { Deps } from './context';
 import { secureRng } from './context';
 import type { Store } from '../store';
 import { assertNotBanned, debit, increment, once } from './wallet';
+import { bumpReward, bumpStat } from './stats';
 
 /** `rewards/` is authoritative when it has content; else the built-in list. */
 export async function getReward(store: Store, id: string): Promise<CatalogItem | null> {
@@ -78,6 +79,9 @@ export async function purchaseReward(
         now,
       );
       await increment(store, `users/${uid}/stats/spent`, item.ep);
+      await bumpStat(store, now, 'spentEp', item.ep);
+      await bumpStat(store, now, 'purchases', 1);
+      await bumpReward(store, rewardId, name, now);
       await store.push(`users/${uid}/purchases`, {
         name,
         price: item.ep,
@@ -125,6 +129,9 @@ export async function createCoupon(
       now,
     );
     await increment(store, `users/${uid}/stats/spent`, ep);
+    await bumpStat(store, now, 'spentEp', ep);
+    await bumpStat(store, now, 'purchases', 1);
+    await bumpReward(store, `coupon_${partner.id}`, `${partner.name} kupon`, now);
 
     const record = { partnerId: partner.id, ep, fee, azn, code, ts: now, status: 'issued' };
     await store.push(`users/${uid}/coupons`, record);

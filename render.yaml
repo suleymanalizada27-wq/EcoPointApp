@@ -17,3 +17,9 @@ services:
         sync: false
       - key: FIREBASE_SERVICE_ACCOUNT
         sync: false
+      - key: ADMIN_EMAILS
+        value: greenlinegroup2026@gmail.com
+      - key: CONTACT_EMAIL
+        value: greenlinegroup2026@gmail.com
+      - key: APP_DOWNLOAD_URL
+        sync: false

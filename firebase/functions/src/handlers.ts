@@ -10,9 +10,23 @@ import { registerPushToken, sendTestPush, unregisterPushToken } from './services
 import {
   adminAdjustBalance,
   adminBroadcast,
+  adminDeleteReward,
+  adminErrorLogs,
+  adminGetUser,
+  adminListTransport,
+  adminLookupCoupon,
+  adminOverview,
+  adminRedeemCoupon,
   adminResolveTransport,
+  adminSearchUsers,
+  adminSetBan,
+  adminSetPro,
+  adminUpsertDevice,
+  adminUpsertReward,
   issueBinCode,
 } from './services/admin';
+import { reportError } from './services/errors-report';
+import { adminStats } from './services/stats';
 
 /** Verified caller identity, built by the transport layer (HTTP / callable). */
 export interface Caller {
@@ -92,7 +106,13 @@ export const HANDLERS: Record<string, Handler> = {
     }),
   deleteAccountData: (c) => deleteAccountData(c.deps, c.caller.uid),
   registerPushToken: (c) =>
-    registerPushToken(c.deps, c.caller.uid, { token: c.data.token, platform: c.data.platform }),
+    registerPushToken(c.deps, c.caller.uid, {
+      token: c.data.token,
+      platform: c.data.platform,
+      lang: c.data.lang,
+    }),
+  whoami: async (c) => ({ isAdmin: c.caller.isAdmin, email: c.caller.email ?? null }),
+  reportError: (c) => reportError(c.deps, c.caller.uid, c.data),
   sendTestPush: (c) => sendTestPush(c.deps, c.caller.uid),
   unregisterPushToken: (c) => unregisterPushToken(c.deps, c.caller.uid, { token: c.data.token }),
 
@@ -109,6 +129,20 @@ export const HANDLERS: Record<string, Handler> = {
       requestId: c.data.requestId,
       approve: c.data.approve,
     }),
+  adminOverview: (c) => (admin(c), adminOverview(c.deps)),
+  adminSearchUsers: (c) => (admin(c), adminSearchUsers(c.deps, c.data.query)),
+  adminGetUser: (c) => (admin(c), adminGetUser(c.deps, c.data.uid)),
+  adminSetBan: (c) =>
+    adminSetBan(c.deps, admin(c), { uid: c.data.uid, banned: c.data.banned, reason: c.data.reason }),
+  adminSetPro: (c) => adminSetPro(c.deps, admin(c), { uid: c.data.uid, days: c.data.days }),
+  adminUpsertReward: (c) => adminUpsertReward(c.deps, admin(c), c.data),
+  adminDeleteReward: (c) => adminDeleteReward(c.deps, admin(c), c.data.id),
+  adminUpsertDevice: (c) => adminUpsertDevice(c.deps, admin(c), c.data),
+  adminListTransport: (c) => (admin(c), adminListTransport(c.deps)),
+  adminLookupCoupon: (c) => (admin(c), adminLookupCoupon(c.deps, c.data.code)),
+  adminRedeemCoupon: (c) => adminRedeemCoupon(c.deps, admin(c), c.data.code),
+  adminErrorLogs: (c) => (admin(c), adminErrorLogs(c.deps)),
+  adminStats: (c) => (admin(c), adminStats(c.deps.store, c.deps.now)),
   adminIssueBinCode: async (c) => {
     admin(c);
     return issueBinCode(c.secret, c.data.binId, c.data.ttlSeconds, c.deps.now);

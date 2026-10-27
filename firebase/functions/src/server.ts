@@ -1,6 +1,9 @@
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
 import { AppError } from './errors';
 import { HANDLERS, type Caller } from './handlers';
+import path from 'node:path';
+import { deleteAccountHtml, inviteHtml, privacyHtml } from './pages';
+import { normalizeCode } from './lib/rules';
 import type { PushSender } from './push';
 import type { Store } from './store';
 
@@ -11,6 +14,12 @@ export interface ServerEnv {
   verifyToken: (token: string) => Promise<Caller>;
   /** Account creation time (ms) for the caller, if available. */
   accountCreatedAt?: (uid: string) => Promise<number | undefined>;
+  /** Contact address shown on the public privacy / deletion pages. */
+  contactEmail?: string;
+  /** Where the invite page sends people to install the app (store / APK link). */
+  downloadUrl?: string;
+  /** Public base URL of this server (defaults to the request host). */
+  publicUrl?: string;
   /** Optional device-push channel (FCM). */
   push?: PushSender;
   now?: () => number;
@@ -31,6 +40,35 @@ export function createApp(env: ServerEnv): Express {
   // Cheap endpoint used by the keep-alive pinger and the app's warm-up call.
   app.get('/health', (_req, res) => {
     res.json({ ok: true, ts: (env.now ?? Date.now)() });
+  });
+
+  // Public pages that app stores require.
+  const contact = env.contactEmail ?? 'support@example.com';
+  app.get('/privacy', (_req, res) => res.type('html').send(privacyHtml(contact)));
+  app.get('/delete-account', (_req, res) => res.type('html').send(deleteAccountHtml(contact)));
+
+  // Share link: nice preview card in WhatsApp/Telegram + the invite code.
+  const publicDir = path.join(__dirname, '..', 'public');
+  app.get('/og.jpg', (_req, res) => res.sendFile(path.join(publicDir, 'og.jpg'), { maxAge: '7d' }));
+  app.get('/logo.png', (_req, res) => res.sendFile(path.join(publicDir, 'logo.png'), { maxAge: '7d' }));
+  app.get('/invite/:code', async (req: Request, res: Response): Promise<void> => {
+    const code = normalizeCode(req.params.code);
+    const notFound = () => void res.status(404).type('text').send('Not found');
+    if (!/^[A-Z0-9]{4,12}$/.test(code)) return notFound();
+    let inviter: string | undefined;
+    try {
+      const uid = await env.store.get<string>(`referralCodes/${code}`);
+      if (typeof uid !== 'string') return notFound();
+      const name = await env.store.get<string>(`leaderboard/${uid}/name`);
+      if (typeof name === 'string' && name.trim()) inviter = name.trim().split(/\s+/)[0].slice(0, 20);
+    } catch {
+      /* fall through: still show a generic page */
+    }
+    const base = env.publicUrl ?? `https://${req.get('host') ?? 'localhost'}`;
+    res
+      .set('Cache-Control', 'public, max-age=300')
+      .type('html')
+      .send(inviteHtml({ code, inviter, baseUrl: base.replace(/\/+$/, ''), downloadUrl: env.downloadUrl }));
   });
 
   app.post('/api/:name', async (req: Request, res: Response) => {

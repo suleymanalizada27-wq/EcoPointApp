@@ -373,7 +373,7 @@ const Map<String, String> stringsAz = {
   'referral_apply': 'Kodu tətbiq et',
   'referral_applied': 'Kod tətbiq edildi: +{n} EP',
   'referral_share_text':
-      'EcoPoint-də mənə qoşul və təkrar emal ilə mükafat qazan! Qeydiyyatda {code} kodundan istifadə et.',
+      'EcoPoint-də mənə qoşul və təkrar emal ilə mükafat qazan! Qeydiyyatda {code} kodundan istifadə et. {link}',
   'danger_zone': 'Təhlükəli zona',
   'sign_out': 'Çıxış',
   'sign_out_confirm': 'EcoPoint-dən çıxmaq istəyirsiniz?',
@@ -387,4 +387,48 @@ const Map<String, String> stringsAz = {
   'pro_active_until': '{d} tarixinədək aktivdir',
   'pro_info':
       'Pro üzvlər skanlardan əlavə əmsalla qazanır. Abunəlik hələ tətbiqdə mövcud deyil.',
+  'settings_guide':
+      'Eko bələdçi',
+  'settings_admin':
+      'Admin paneli',
+  'guide_title':
+      'Eko bələdçi',
+  'guide_intro':
+      'Düzgün ayrılmış tullantı daha asan təkrar emal olunur. Yerli qaydalar fərqli ola bilər — qutunun üzərindəki işarələrə də baxın.',
+  'guide_plastic_t':
+      'Plastik',
+  'guide_plastic_b':
+      'Butulkaları boşaldın, sıxın və qapağını bağlayın. Yağlı və çox çirkli qablar təkrar emalı çətinləşdirir.',
+  'guide_glass_t':
+      'Şüşə',
+  'guide_glass_b':
+      'Qabları boşaldın və yaxalayın. Güzgü, pəncərə şüşəsi və keramika adi şüşə qabla qarışdırılmamalıdır.',
+  'guide_paper_t':
+      'Kağız və karton',
+  'guide_paper_b':
+      'Quru saxlayın. Islanmış, yağlanmış kağız və istifadə olunmuş salfetlər təkrar emal üçün yararsızdır.',
+  'guide_metal_t':
+      'Metal',
+  'guide_metal_b':
+      'Konserv və içki qutularını boşaldın. Alüminium dəfələrlə təkrar emal oluna bilir.',
+  'guide_battery_t':
+      'Batareya və elektronika',
+  'guide_battery_b':
+      'Adi zibilə atmayın — təhlükəli maddələr var. Xüsusi qəbul məntəqələrinə təhvil verin.',
+  'guide_tips_t':
+      'Qısa məsləhətlər',
+  'guide_tip_1':
+      'Daha az istifadə et, təkrar istifadə et, sonra təkrar emal et.',
+  'guide_tip_2':
+      'Bez torba və şəxsi butulka ildə yüzlərlə birdəfəlik qabın qarşısını alır.',
+  'guide_tip_3':
+      'Şübhəniz varsa, qutudakı təlimata baxın — səhv atılan bir qab bütün partiyanı korlaya bilər.',
+  'lb_weekly':
+      'Bu həftə',
+  'lb_all_time':
+      'Ümumi',
+  'lb_weekly_empty':
+      'Bu həftə hələ heç kim EP qazanmayıb. İlk sən ol!',
+  'lb_weekly_note':
+      'Həftə hər bazar ertəsi (Bakı vaxtı) sıfırlanır.',
 };

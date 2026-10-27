@@ -20,6 +20,13 @@
       ".indexOn": ["ep", "nameLower"]
     },
 
+    "weeklyBoard": {
+      "$week": {
+        ".read": "auth != null",
+        ".indexOn": ["ep"]
+      }
+    },
+
     "devices": {
       ".read": "auth != null",
       "$deviceId": {

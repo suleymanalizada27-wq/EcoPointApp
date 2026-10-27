@@ -3,7 +3,9 @@ import { getAuth } from 'firebase-admin/auth';
 import { getDatabase } from 'firebase-admin/database';
 import { getMessaging } from 'firebase-admin/messaging';
 import { AdminStore } from './admin-store';
+import { isAdminToken, parseAdminEmails } from './admin-access';
 import { FcmPusher } from './push';
+import { startScheduler } from './scheduler';
 import { createApp } from './server';
 
 /**
@@ -27,16 +29,21 @@ function need(name: string): string {
 const account = JSON.parse(need('FIREBASE_SERVICE_ACCOUNT'));
 initializeApp({ credential: cert(account), databaseURL: need('DATABASE_URL') });
 
+const adminEmails = parseAdminEmails(process.env.ADMIN_EMAILS);
 const store = new AdminStore(getDatabase());
+const push = new FcmPusher(store, getMessaging(), (m, e) => console.error(m, e));
 const app = createApp({
   store,
-  push: new FcmPusher(store, getMessaging(), (m, e) => console.error(m, e)),
+  push,
+  contactEmail: process.env.CONTACT_EMAIL ?? [...adminEmails][0],
+  downloadUrl: process.env.APP_DOWNLOAD_URL || undefined,
+  publicUrl: process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || undefined,
   secret: need('QR_HMAC_SECRET'),
   verifyToken: async (token) => {
     const d = await getAuth().verifyIdToken(token);
     return {
       uid: d.uid,
-      isAdmin: d.admin === true,
+      isAdmin: isAdminToken(d, adminEmails),
       name: typeof d.name === 'string' ? d.name : null,
       email: d.email ?? null,
       photoURL: typeof d.picture === 'string' ? d.picture : null,
@@ -51,3 +58,5 @@ const app = createApp({
 
 const port = Number(process.env.PORT ?? 8080);
 app.listen(port, '0.0.0.0', () => console.log(`EcoPoint API listening on ${port}`));
+// Daily reminders / weekly summary (needs the server awake: UptimeRobot pings /health).
+startScheduler({ store, push }, (m, e) => (e ? console.error(m, e) : console.log(m)));

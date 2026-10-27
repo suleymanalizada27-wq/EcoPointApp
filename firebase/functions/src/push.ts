@@ -92,6 +92,9 @@ export class FcmPusher implements PushSender {
             : Promise.resolve(),
         ),
       );
+      if (res.responses.length > 0 && res.responses.every((r) => !r.success && r.error?.code && DEAD_TOKEN_CODES.has(r.error.code))) {
+        await this.store.remove(`pushUsers/${uid}`);
+      }
     } catch (e) {
       this.log('push toUser failed', e);
       report.errors.push(e instanceof Error ? e.message.slice(0, 300) : 'unknown');

@@ -372,7 +372,7 @@ const Map<String, String> stringsTr = {
   'referral_apply': 'Kodu uygula',
   'referral_applied': 'Kod uygulandı: +{n} EP',
   'referral_share_text':
-      'EcoPoint’e katıl, geri dönüşümle ödül kazan! Kayıt olurken {code} kodumu kullan.',
+      'EcoPoint’e katıl, geri dönüşümle ödül kazan! Kayıt olurken {code} kodumu kullan. {link}',
   'danger_zone': 'Tehlikeli bölge',
   'sign_out': 'Çıkış yap',
   'sign_out_confirm': 'EcoPoint’ten çıkış yapılsın mı?',
@@ -386,4 +386,48 @@ const Map<String, String> stringsTr = {
   'pro_active_until': '{d} tarihine kadar aktif',
   'pro_info':
       'Pro üyeler taramalardan çarpan ile kazanır. Abonelik henüz uygulamada mevcut değil.',
+  'settings_guide':
+      'Eko rehber',
+  'settings_admin':
+      'Yönetici paneli',
+  'guide_title':
+      'Eko rehber',
+  'guide_intro':
+      'Doğru ayrılmış atık geri dönüştürülmesi çok daha kolaydır. Yerel kurallar farklı olabilir — kutudaki işaretlere de bakın.',
+  'guide_plastic_t':
+      'Plastik',
+  'guide_plastic_b':
+      'Şişeleri boşaltın, ezin ve kapağını kapatın. Yağlı veya çok kirli kaplar geri dönüşümü zorlaştırır.',
+  'guide_glass_t':
+      'Cam',
+  'guide_glass_b':
+      'Kavanoz ve şişeleri boşaltıp durulayın. Ayna, pencere camı ve seramik normal cam ambalajla karıştırılmamalıdır.',
+  'guide_paper_t':
+      'Kağıt ve karton',
+  'guide_paper_b':
+      'Kuru tutun. Islak veya yağlı kağıt ve kullanılmış mendiller geri dönüşüme uygun değildir.',
+  'guide_metal_t':
+      'Metal',
+  'guide_metal_b':
+      'Konserve ve içecek kutularını boşaltın. Alüminyum defalarca geri dönüştürülebilir.',
+  'guide_battery_t':
+      'Pil ve elektronik',
+  'guide_battery_b':
+      'Genel çöpe atmayın — tehlikeli maddeler içerir. Özel toplama noktalarına teslim edin.',
+  'guide_tips_t':
+      'Hızlı ipuçları',
+  'guide_tip_1':
+      'Önce azalt, sonra yeniden kullan, en son geri dönüştür.',
+  'guide_tip_2':
+      'Bez çanta ve kendi şişeniz yılda yüzlerce tek kullanımlık ürünü önler.',
+  'guide_tip_3':
+      'Şüpheniz varsa kutudaki talimata bakın — yanlış atılan tek bir ürün tüm partiyi bozabilir.',
+  'lb_weekly':
+      'Bu hafta',
+  'lb_all_time':
+      'Tüm zamanlar',
+  'lb_weekly_empty':
+      'Bu hafta henüz kimse EP kazanmadı. İlk sen ol!',
+  'lb_weekly_note':
+      'Hafta her pazartesi (Bakü saati) sıfırlanır.',
 };

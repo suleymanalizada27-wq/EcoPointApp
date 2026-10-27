@@ -1,7 +1,9 @@
 import { CONFIG } from '../lib/config';
 import { Errors } from '../errors';
+import { weekKey } from '../lib/rules';
 import type { PushSender } from '../push';
 import type { Store } from '../store';
+import { bumpStat } from './stats';
 
 export type TxType = 'earn' | 'received' | 'sent' | 'purchase' | 'weight' | 'bonus' | 'other';
 
@@ -40,6 +42,22 @@ async function syncLeaderboard(store: Store, uid: string, balance: number): Prom
   await store.update(`leaderboard/${uid}`, { ep: balance });
 }
 
+/** Public weekly ranking: EP *earned* this week (not balance). */
+async function bumpWeekly(store: Store, uid: string, amount: number, now: number): Promise<void> {
+  try {
+    const path = `weeklyBoard/${weekKey(now)}/${uid}`;
+    await increment(store, `${path}/ep`, amount);
+    const lb = await store.get<any>(`leaderboard/${uid}`);
+    await store.update(path, {
+      name: typeof lb?.name === 'string' ? lb.name : '—',
+      photoURL: typeof lb?.photoURL === 'string' ? lb.photoURL : '',
+      avatar: typeof lb?.avatar === 'string' ? lb.avatar : '',
+    });
+  } catch {
+    /* the ranking must never block an EP credit */
+  }
+}
+
 /**
  * Adds EP. `earned` marks recycling income, which feeds the lifetime
  * `stats/earned` counter (levels, achievements).
@@ -54,7 +72,12 @@ export async function credit(
 ): Promise<number> {
   if (!Number.isInteger(amount) || amount <= 0) throw Errors.invalid('Invalid amount');
   const balance = await increment(store, `users/${uid}/balance`, amount);
-  if (opts.earned) await increment(store, `users/${uid}/stats/earned`, amount);
+  if (opts.earned) {
+    await increment(store, `users/${uid}/stats/earned`, amount);
+    await bumpWeekly(store, uid, amount, now);
+    await bumpStat(store, now, 'earnedEp', amount);
+    await bumpStat(store, now, 'earns', 1);
+  }
   await writeTx(store, uid, amount, meta, now);
   await syncLeaderboard(store, uid, balance);
   return balance;

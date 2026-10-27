@@ -13,6 +13,7 @@ import '../../../core/widgets/ep_avatar.dart';
 import '../../../core/widgets/ep_card.dart';
 import '../../../core/widgets/ep_feedback.dart';
 import '../../../core/widgets/state_views.dart';
+import '../../admin/data/admin_api.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../wallet/data/wallet_providers.dart';
 
@@ -163,6 +164,11 @@ class ProfileScreen extends ConsumerWidget {
             SettingsItem(Icons.shopping_bag_rounded,
                 context.tr('settings_purchases'),
                 () => context.push('/purchases')),
+            SettingsItem(Icons.eco_rounded, context.tr('settings_guide'),
+                () => context.push('/guide')),
+            if (ref.watch(isAdminProvider).valueOrNull == true)
+              SettingsItem(Icons.admin_panel_settings_rounded,
+                  context.tr('settings_admin'), () => context.push('/admin')),
           ]),
           const SizedBox(height: Sp.md),
           SettingsGroup(children: [

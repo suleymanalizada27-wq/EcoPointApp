@@ -72,6 +72,7 @@ abstract final class DbPaths {
   static const String devices = 'devices';
   static const String rewards = 'rewards';
   static const String leaderboard = 'leaderboard';
+  static const String weeklyBoard = 'weeklyBoard';
   static const String globalNotifications = 'globalNotifications';
   static const String connectionState = '.info/connected';
 }
