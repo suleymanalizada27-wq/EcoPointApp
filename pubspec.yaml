@@ -24,6 +24,7 @@ dependencies:
   http: ^1.2.2
   google_sign_in: ^6.2.2
   firebase_messaging: ^15.1.6
+  firebase_crashlytics: ^4.3.0
 
   # Native capabilities
   mobile_scanner: ^6.0.2

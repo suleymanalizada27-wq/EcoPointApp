@@ -1,9 +1,10 @@
 import { CONFIG } from '../lib/config';
 import { Errors } from '../errors';
-import { weekKey } from '../lib/rules';
+import { bakuHour, weekKey } from '../lib/rules';
 import type { PushSender } from '../push';
 import type { Store } from '../store';
 import { bumpStat } from './stats';
+import { flagUser, MANY_SCANS_PER_DAY } from './flags';
 
 export type TxType = 'earn' | 'received' | 'sent' | 'purchase' | 'weight' | 'bonus' | 'other';
 
@@ -180,8 +181,10 @@ export async function rateLimit(
   opts: { windowMs: number; max: number; minIntervalMs?: number },
 ): Promise<void> {
   let blocked = false;
+  let overMax = false;
   await store.transaction(`rate/${key}`, (cur) => {
     blocked = false;
+    overMax = false;
     const c = (cur ?? {}) as { start?: number; count?: number; last?: number };
     let start = num(c.start) || now;
     let count = num(c.count);
@@ -196,11 +199,19 @@ export async function rateLimit(
     }
     if (count >= opts.max) {
       blocked = true;
+      overMax = true;
       return undefined;
     }
     return { start, count: count + 1, last: now };
   });
-  if (blocked) throw Errors.rateLimited();
+  if (blocked) {
+    // Hitting the hourly cap (not a double tap) on money-related actions is a hint.
+    const [bucket, uid] = key.split('/');
+    if (overMax && uid && ['scan', 'weight', 'transfer'].includes(bucket)) {
+      await flagUser(store, uid, `rate-limit:${bucket}`, now);
+    }
+    throw Errors.rateLimited();
+  }
 }
 
 /** Reserves part of the per-day earning allowance. */
@@ -211,6 +222,7 @@ export async function reserveDaily(
   add: { ep: number; scans?: number; grams?: number },
 ): Promise<void> {
   let blocked = false;
+  let scansTotal = 0;
   await store.transaction(`users/${uid}/daily/${day}`, (cur) => {
     blocked = false;
     const c = (cur ?? {}) as { ep?: number; scans?: number; grams?: number };
@@ -220,9 +232,24 @@ export async function reserveDaily(
       blocked = true;
       return undefined;
     }
-    return { ep, scans: num(c.scans) + (add.scans ?? 0), grams };
+    scansTotal = num(c.scans) + (add.scans ?? 0);
+    return { ep, scans: scansTotal, grams };
   });
-  if (blocked) throw Errors.dailyLimit();
+  if (blocked) {
+    await flagUser(store, uid, 'daily-limit', Date.now());
+    throw Errors.dailyLimit();
+  }
+  if (scansTotal >= MANY_SCANS_PER_DAY && (add.scans ?? 0) > 0) {
+    await flagUser(store, uid, 'many-scans', Date.now());
+  }
+  if ((add.scans ?? 0) > 0) {
+    try {
+      await increment(store, `users/${uid}/habit/h${bakuHour(Date.now())}`, 1);
+      await increment(store, `users/${uid}/monthly/${day.slice(0, 7)}/scans`, add.scans ?? 0);
+    } catch {
+      /* the monthly counter must never block a scan */
+    }
+  }
 }
 
 export async function assertNotBanned(store: Store, uid: string): Promise<void> {

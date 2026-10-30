@@ -3,7 +3,8 @@ import { MemoryStore } from '../src/store';
 import { MemoryPusher } from '../src/push';
 import { tick } from '../src/scheduler';
 import { registerPushToken, unregisterPushToken } from '../src/services/push-tokens';
-import { dailyReminderText, streakRiskText, weeklySummaryText } from '../src/lib/notify-text';
+import { smartText, streakRiskText, weeklySummaryText } from '../src/lib/notify-text';
+import { sendHourFor } from '../src/services/smart-push';
 import { ALICE, BOB, seedUser } from './helpers';
 
 const CAROL = 'carolCarolCarolCarol03';
@@ -26,35 +27,56 @@ describe('scheduled reminders', () => {
     push = new MemoryPusher();
   });
 
-  it('daily reminder: only people who have not checked in, in their language, honouring prefs', async () => {
+  it('smart push: one personal message per person, honouring prefs and check-in state', async () => {
     await setup(store, ALICE, 'ru', { streak: { count: 4, lastDay: '2026-03-14', history: [] } });
     await setup(store, BOB, 'az', { streak: { count: 2, lastDay: '2026-03-15', history: [] } });
-    await setup(store, CAROL, 'en', { prefs: { notifyActivity: false } });
+    await setup(store, CAROL, 'en', { prefs: { notifyActivity: false, notifyOffers: false } });
 
     const r = await tick({ store, push }, baku('2026-03-15', 12, 5));
-    expect(r.dailyReminder).toEqual({ considered: 3, sent: 1 });
-    expect(push.user).toEqual([{ uid: ALICE, ...dailyReminderText('ru', 4) }]);
+    expect(r.smartPush).toEqual({ considered: 3, sent: 1 });
+    expect(push.user).toEqual([
+      { uid: ALICE, ...smartText('ru', 'daily', { name: 'alice', streak: 4 }), route: '/home' },
+    ]);
   });
 
-  it('runs at most once per day, even if ticked again or restarted', async () => {
-    await setup(store, ALICE, 'az');
+  it('runs at most once per person per day, even if ticked again or restarted', async () => {
+    await setup(store, ALICE, 'az', {
+      streak: { count: 2, lastDay: '2026-03-14', history: [] },
+      daily: { '2026-03-10': { scans: 1, ep: 50 } },
+    });
     await tick({ store, push }, baku('2026-03-15', 12, 5));
     await tick({ store, push }, baku('2026-03-15', 12, 6));
-    await tick({ store, push }, baku('2026-03-15', 15, 0));
+    await tick({ store, push }, baku('2026-03-15', 13, 0));
+    await tick({ store, push }, baku('2026-03-15', 14, 0));
     expect(push.user).toHaveLength(1);
     // …and again the next day.
     await tick({ store, push }, baku('2026-03-16', 12, 1));
     expect(push.user).toHaveLength(2);
   });
 
-  it('does not run before its hour or after its window; catches up if the server slept', async () => {
-    await setup(store, ALICE, 'az');
-    expect(await tick({ store, push }, baku('2026-03-15', 9, 0))).toEqual({});
-    expect(await tick({ store, push }, baku('2026-03-15', 18, 30))).toEqual({});
+  it('sends only between 09:00 and 21:00, at the person\'s own hour; catches up if the server slept', async () => {
+    await setup(store, ALICE, 'az', { streak: { count: 2, lastDay: '2026-03-14', history: [] } });
+    // Default hour is 12: not yet at 09:00–11:59, not at night.
+    expect(await tick({ store, push }, baku('2026-03-15', 9, 0))).toMatchObject({ smartPush: { sent: 0 } });
+    expect(await tick({ store, push }, baku('2026-03-15', 23, 30))).toEqual({});
     expect(push.user).toHaveLength(0);
-    // Woke up at 15:40 → still inside the 12:00–18:00 window.
-    const r = await tick({ store, push }, baku('2026-03-15', 15, 40));
-    expect(r.dailyReminder?.sent).toBe(1);
+    // Woke up at 14:40 → still inside the 3-hour window after 12:00.
+    const r = await tick({ store, push }, baku('2026-03-15', 14, 40));
+    expect(r.smartPush?.sent).toBe(1);
+  });
+
+  it('learns the preferred hour from scans (one hour before the usual scan time)', async () => {
+    await setup(store, ALICE, 'az', {
+      streak: { count: 2, lastDay: '2026-03-14', history: [] },
+      habit: { h18: 5, h9: 1 },
+    });
+    expect(sendHourFor({ h18: 5, h9: 1 })).toBe(17);
+    expect(sendHourFor({ h2: 9 })).toBe(9); // clamped to 09:00
+    expect(sendHourFor({ h18: 1 })).toBe(12); // too little data → default
+    await tick({ store, push }, baku('2026-03-15', 12, 5));
+    expect(push.user).toHaveLength(0);
+    await tick({ store, push }, baku('2026-03-15', 17, 5));
+    expect(push.user).toHaveLength(1);
   });
 
   it('streak risk: only a live streak of 3+ days that was not continued today', async () => {

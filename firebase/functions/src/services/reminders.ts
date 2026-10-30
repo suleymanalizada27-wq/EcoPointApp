@@ -23,7 +23,7 @@ export interface RunResult {
 }
 
 /** Language of the user's most recently registered device (default az). */
-async function userLang(store: Store, uid: string): Promise<Lang> {
+export async function userLang(store: Store, uid: string): Promise<Lang> {
   const rows = await store.get<Record<string, { lang?: unknown; ts?: number }>>(`pushTokens/${uid}`);
   let best: { lang?: unknown; ts?: number } | null = null;
   for (const v of Object.values(rows ?? {})) {
@@ -32,7 +32,7 @@ async function userLang(store: Store, uid: string): Promise<Lang> {
   return asLang(best?.lang);
 }
 
-async function forEachPushUser(
+export async function forEachPushUser(
   env: ReminderEnv,
   fn: (uid: string) => Promise<boolean>,
 ): Promise<RunResult> {

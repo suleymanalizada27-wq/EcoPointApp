@@ -7,6 +7,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/errors/failure.dart';
 import '../../../core/services/backend_service.dart';
 import '../../../core/services/firebase_providers.dart';
+import '../../../core/services/session_restore.dart';
 
 /// Maps a Firebase Auth error code to a localisation key.
 String authErrorKey(String code) {
@@ -54,6 +55,7 @@ class AuthRepository {
         email: email.trim(),
         password: password,
       );
+      await SessionRestore.remember(google: false);
     } catch (e) {
       throw Failure.from(e);
     }
@@ -107,6 +109,7 @@ class AuthRepository {
         idToken: tokens.idToken,
       );
       await _auth.signInWithCredential(credential);
+      await SessionRestore.remember(google: true);
       return true;
     } on Failure {
       rethrow;
@@ -126,6 +129,7 @@ class AuthRepository {
   }
 
   Future<void> signOut() async {
+    await SessionRestore.remember(google: false);
     try {
       await _google().signOut();
     } catch (_) {
@@ -139,6 +143,7 @@ class AuthRepository {
   Future<void> deleteAccount() async {
     final user = _auth.currentUser;
     if (user == null) throw const Failure(Failure.unauthenticated);
+    await SessionRestore.remember(google: false);
     await _backend.call('deleteAccountData');
     try {
       await user.delete();

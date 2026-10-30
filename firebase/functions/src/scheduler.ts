@@ -2,12 +2,13 @@ import { CONFIG } from './lib/config';
 import { dayKey, weekKey } from './lib/rules';
 import type { PushSender } from './push';
 import {
-  runDailyReminder,
   runStreakRisk,
   runWeeklySummary,
   type ReminderEnv,
   type RunResult,
 } from './services/reminders';
+import { runSmartPush, SEND_FROM, SEND_UNTIL } from './services/smart-push';
+import { runWeeklyPrizes } from './services/weekly-prizes';
 import type { Store } from './store';
 
 interface Job {
@@ -18,6 +19,8 @@ interface Job {
   windowHours: number;
   /** Limit to a weekday (1 = Monday … 7 = Sunday). */
   weekday?: number;
+  /** Runs once per hour inside its window (marker per day+hour). */
+  hourly?: boolean;
   run: (env: ReminderEnv) => Promise<RunResult>;
 }
 
@@ -33,6 +36,20 @@ export async function runMaintenance(env: ReminderEnv): Promise<RunResult> {
   }
   const boards = (await env.store.get<Record<string, unknown>>('weeklyBoard')) ?? {};
   const cutoff = weekKey(env.now - 28 * 86_400_000);
+  const sus = (await env.store.get<Record<string, any>>('suspicious')) ?? {};
+  for (const [uid, v] of Object.entries(sus)) {
+    if (Number(v?.last) < env.now - 30 * 86_400_000) {
+      await env.store.remove(`suspicious/${uid}`);
+      removed++;
+    }
+  }
+  const prizes = (await env.store.get<Record<string, unknown>>('weeklyPrizes')) ?? {};
+  for (const wk of Object.keys(prizes)) {
+    if (wk < cutoff) {
+      await env.store.remove(`weeklyPrizes/${wk}`);
+      removed++;
+    }
+  }
   for (const wk of Object.keys(boards)) {
     if (wk < cutoff) {
       await env.store.remove(`weeklyBoard/${wk}`);
@@ -52,8 +69,9 @@ export async function runMaintenance(env: ReminderEnv): Promise<RunResult> {
 
 export const JOBS: Job[] = [
   { kind: 'maintenance', hour: 3, windowHours: 3, run: runMaintenance },
-  { kind: 'dailyReminder', hour: 12, windowHours: 6, run: runDailyReminder },
+  { kind: 'smartPush', hour: SEND_FROM, windowHours: SEND_UNTIL - SEND_FROM, hourly: true, run: runSmartPush },
   { kind: 'streakRisk', hour: 20, windowHours: 2, run: (e) => runStreakRisk(e) },
+  { kind: 'weeklyPrizes', hour: 1, windowHours: 20, weekday: 1, run: runWeeklyPrizes },
   { kind: 'weeklySummary', hour: 10, windowHours: 8, weekday: 1, run: runWeeklySummary },
 ];
 
@@ -93,16 +111,17 @@ export async function tick(
   const day = dayKey(ms);
   for (const job of JOBS) {
     if (!due(job, ms)) continue;
-    const claim = await deps.store.transaction(`cron/${job.kind}/${day}`, (cur) =>
+    const stamp = job.hourly ? `${day}_${localHour(ms)}` : day;
+    const claim = await deps.store.transaction(`cron/${job.kind}/${stamp}`, (cur) =>
       cur === null || cur === undefined ? ms : undefined,
     );
     if (!claim.committed) continue;
     try {
       out[job.kind] = await job.run({ store: deps.store, push: deps.push, now: ms });
-      log(`cron ${job.kind} ${day}: ${JSON.stringify(out[job.kind])}`);
+      log(`cron ${job.kind} ${stamp}: ${JSON.stringify(out[job.kind])}`);
     } catch (e) {
       // Release the marker so the next tick can retry within the window.
-      await deps.store.remove(`cron/${job.kind}/${day}`);
+      await deps.store.remove(`cron/${job.kind}/${stamp}`);
       log(`cron ${job.kind} failed`, e);
     }
   }

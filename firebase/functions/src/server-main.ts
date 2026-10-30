@@ -37,6 +37,11 @@ const app = createApp({
   push,
   contactEmail: process.env.CONTACT_EMAIL ?? [...adminEmails][0],
   downloadUrl: process.env.APP_DOWNLOAD_URL || undefined,
+  androidPackage: process.env.ANDROID_PACKAGE || undefined,
+  androidSha256: (process.env.ANDROID_SHA256 ?? '')
+    .split(',')
+    .map((s) => s.trim().toUpperCase())
+    .filter(Boolean),
   publicUrl: process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || undefined,
   secret: need('QR_HMAC_SECRET'),
   verifyToken: async (token) => {

@@ -40,6 +40,7 @@ class UserProfile {
     this.proExpiry,
     this.notifyActivity = true,
     this.notifyNews = true,
+    this.notifyOffers = true,
   });
 
   final String uid;
@@ -54,6 +55,7 @@ class UserProfile {
   final DateTime? proExpiry;
   final bool notifyActivity;
   final bool notifyNews;
+  final bool notifyOffers;
 
   /// Pro is active only while not expired (the legacy flag never expired).
   bool isProAt(DateTime now) {
@@ -89,6 +91,9 @@ class UserProfile {
           : asBool(prefs['notifyActivity']),
       notifyNews:
           prefs['notifyNews'] == null ? true : asBool(prefs['notifyNews']),
+      notifyOffers: prefs['notifyOffers'] == null
+          ? true
+          : asBool(prefs['notifyOffers']),
     );
   }
 }

@@ -28,7 +28,7 @@ export function privacyHtml(contact: string): string {
 <li><b>Hesab:</b> e-poçt ünvanı, ad, (Google ilə girişdə) profil şəkli və giriş identifikatoru.</li>
 <li><b>Tətbiq fəaliyyəti:</b> EP balansı, əməliyyat tarixçəsi, skan və köçürmələr, gündəlik seriya, nailiyyətlər, mükafat və kupon alışları, istinad (referral) kodu.</li>
 <li><b>Bildiriş məlumatı:</b> cihazın bildiriş nişanı (FCM token), tətbiq dili və bildiriş seçimləri.</li>
-<li><b>Texniki xəta hesabatları:</b> tətbiqin çökmə/xəta mətni, tətbiq versiyası, platforma. Şəxsi məzmun daxil deyil.</li>
+<li><b>Texniki xəta hesabatları:</b> tətbiqin çökmə/xəta mətni, tətbiq versiyası, platforma; Firebase Crashlytics vasitəsilə həmçinin cihaz modeli, əməliyyat sistemi versiyası və hesabın anonim identifikatoru. Şəxsi məzmun daxil deyil.</li>
 <li><b>BakıKart sorğusu:</b> doldurma üçün daxil etdiyiniz 16 rəqəmli kart nömrəsi yalnız serverdə növbədə saxlanılır.</li>
 </ul>
 
@@ -43,7 +43,7 @@ export function privacyHtml(contact: string): string {
 
 <h2>Üçüncü tərəflər</h2>
 <ul>
-<li><b>Google Firebase</b> (giriş, verilənlər bazası, bildirişlər).</li>
+<li><b>Google Firebase</b> (giriş, verilənlər bazası, bildirişlər, çökmə hesabatları).</li>
 <li><b>Render</b> (server hostinqi).</li>
 <li><b>OpenStreetMap</b> (xəritə lövhələri; xəritəni açanda IP ünvanınız onların serverinə görünə bilər).</li>
 </ul>
@@ -62,10 +62,10 @@ export function privacyHtml(contact: string): string {
 
 <hr>
 <h1>EcoPoint Privacy Policy</h1>
-<p><b>Data we collect:</b> account data (email, name, profile photo when you use Google sign-in), app activity (EP balance, transactions, scans, transfers, streaks, purchases, referral code), notification data (device push token, app language, notification preferences), technical error reports (error text, app version, platform), and, only when you request a BakıKart top-up, the card number you enter (kept server-side in a queue).</p>
+<p><b>Data we collect:</b> account data (email, name, profile photo when you use Google sign-in), app activity (EP balance, transactions, scans, transfers, streaks, purchases, referral code), notification data (device push token, app language, notification preferences), technical error and crash reports (error text, app version, platform; via Firebase Crashlytics also device model, OS version and an anonymous account identifier), and, only when you request a BakıKart top-up, the card number you enter (kept server-side in a queue).</p>
 <p><b>Stays on your device:</b> the camera is used only to read QR codes (no photos or video are stored or sent); your location is used only to show nearby bins on the map and is not sent to our server.</p>
 <p><b>Use:</b> to run your account, calculate and verify EP, prevent fraud, send notifications (daily reminder, streak warning, weekly summary, EP received) and fix bugs. We do not sell data or use it for advertising.</p>
-<p><b>Third parties:</b> Google Firebase (sign-in, database, notifications), Render (hosting), OpenStreetMap (map tiles).</p>
+<p><b>Third parties:</b> Google Firebase (sign-in, database, notifications, crash reports), Render (hosting), OpenStreetMap (map tiles).</p>
 <p><b>Retention and deletion:</b> data is kept while your account exists. Deleting your account removes your profile, balance, transaction history, push tokens and leaderboard entry; security and accounting records (transfers, admin log) may remain without your profile. Error reports are deleted after 14 days. Delete your account in the app (Profile → Settings → Delete account) or contact <a href="mailto:${c}">${c}</a>.</p>
 <p><b>Children:</b> the app is not directed at children under 13.</p>`,
   );

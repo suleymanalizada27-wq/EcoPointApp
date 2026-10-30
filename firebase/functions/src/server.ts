@@ -18,6 +18,9 @@ export interface ServerEnv {
   contactEmail?: string;
   /** Where the invite page sends people to install the app (store / APK link). */
   downloadUrl?: string;
+  /** Android package + signing certificate SHA-256 fingerprints for App Links. */
+  androidPackage?: string;
+  androidSha256?: string[];
   /** Public base URL of this server (defaults to the request host). */
   publicUrl?: string;
   /** Optional device-push channel (FCM). */
@@ -51,6 +54,24 @@ export function createApp(env: ServerEnv): Express {
   const publicDir = path.join(__dirname, '..', 'public');
   app.get('/og.jpg', (_req, res) => res.sendFile(path.join(publicDir, 'og.jpg'), { maxAge: '7d' }));
   app.get('/logo.png', (_req, res) => res.sendFile(path.join(publicDir, 'logo.png'), { maxAge: '7d' }));
+  // Android App Links verification file (lets /invite/<code> open the app).
+  app.get('/.well-known/assetlinks.json', (_req, res) => {
+    const prints = (env.androidSha256 ?? []).filter((x) => /^([0-9A-F]{2}:){31}[0-9A-F]{2}$/.test(x));
+    if (prints.length === 0) {
+      res.status(404).type('text').send('Not configured');
+      return;
+    }
+    res.json([
+      {
+        relation: ['delegate_permission/common.handle_all_urls'],
+        target: {
+          namespace: 'android_app',
+          package_name: env.androidPackage ?? 'az.ecopoint.pro',
+          sha256_cert_fingerprints: prints,
+        },
+      },
+    ]);
+  });
   app.get('/invite/:code', async (req: Request, res: Response): Promise<void> => {
     const code = normalizeCode(req.params.code);
     const notFound = () => void res.status(404).type('text').send('Not found');

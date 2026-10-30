@@ -23,3 +23,7 @@ services:
         value: greenlinegroup2026@gmail.com
       - key: APP_DOWNLOAD_URL
         sync: false
+      - key: ANDROID_PACKAGE
+        value: az.ecopoint.pro
+      - key: ANDROID_SHA256
+        sync: false

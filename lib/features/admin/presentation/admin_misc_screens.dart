@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../app/theme/tokens.dart';
 import '../../../core/widgets/ep_button.dart';
@@ -9,6 +12,7 @@ import '../../../core/widgets/ep_text_field.dart';
 import '../../../core/widgets/state_views.dart';
 import '../data/admin_api.dart';
 import 'admin_common.dart';
+import 'admin_users_screen.dart';
 
 // ───────────────────────── BakıKart requests ─────────────────────────
 
@@ -283,6 +287,136 @@ class AdminErrorsScreen extends ConsumerWidget {
           );
         },
       ),
+    );
+  }
+}
+
+// ───────────────────────── suspicious activity ─────────────────────────
+
+final adminSuspiciousProvider =
+    FutureProvider.autoDispose<List<Map<String, Object?>>>(
+  (ref) => ref.watch(adminApiProvider).suspicious(),
+);
+
+class AdminSuspiciousScreen extends ConsumerWidget {
+  const AdminSuspiciousScreen({super.key});
+
+  static const _reasonNames = {
+    'rate-limit_scan': 'Saatlıq skan limitini aşıb',
+    'rate-limit_weight': 'Saatlıq çəki limitini aşıb',
+    'rate-limit_transfer': 'Saatlıq köçürmə limitini aşıb',
+    'daily-limit': 'Gündəlik EP/çəki limitinə çatıb',
+    'many-scans': 'Bir gündə çox skan (25+)',
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final list = ref.watch(adminSuspiciousProvider);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Şübhəli fəaliyyət')),
+      body: AsyncBody<List<Map<String, Object?>>>(
+        value: list,
+        onRetry: () => ref.invalidate(adminSuspiciousProvider),
+        data: (rows) {
+          if (rows.isEmpty) {
+            return const EmptyView(
+                icon: Icons.verified_user_outlined,
+                message: 'Şübhəli fəaliyyət qeydi yoxdur.');
+          }
+          return RefreshIndicator(
+            onRefresh: () async => ref.refresh(adminSuspiciousProvider.future),
+            child: ListView(padding: adminPad, children: [
+              const Text('Bunlar yalnız işarədir, avtomatik blok deyil. '
+                  'Özün baxıb qərar ver. Qeydlər 30 gündən sonra silinir.'),
+              const SizedBox(height: Sp.md),
+              for (final r in rows) ...[
+                EpCard(
+                  onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                    builder: (_) => AdminUserDetailScreen(uid: '${r['uid']}'),
+                  )),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(children: [
+                        Expanded(
+                          child: Text('${r['name']}',
+                              style: const TextStyle(fontWeight: FontWeight.w700)),
+                        ),
+                        if (r['banned'] == true) const Text('BLOKLU'),
+                      ]),
+                      Text('Son: ${fmtTs(r['last'])} · cəmi ${r['total']}'),
+                      const SizedBox(height: 4),
+                      for (final e in (r['reasons'] as Map? ?? const {}).entries)
+                        Text('• ${_reasonNames['${e.key}'.replaceAll(':', '_')] ?? e.key} (${e.value}×)'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: Sp.sm),
+              ],
+            ]),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ───────────────────────── CSV export ─────────────────────────
+
+class AdminExportScreen extends ConsumerStatefulWidget {
+  const AdminExportScreen({super.key});
+  @override
+  ConsumerState<AdminExportScreen> createState() => _ExportState();
+}
+
+class _ExportState extends ConsumerState<AdminExportScreen> {
+  String? _busy;
+
+  Future<void> _export(String kind) async {
+    setState(() => _busy = kind);
+    try {
+      final r = await ref.read(adminApiProvider).exportCsv(kind);
+      final dir = await Directory.systemTemp.createTemp('ecopoint_csv');
+      final file = File('${dir.path}/${r['filename']}');
+      // UTF-8 BOM so Excel shows Azerbaijani letters correctly.
+      await file.writeAsString('\uFEFF${r['csv']}', flush: true);
+      if (!mounted) return;
+      if (r['truncated'] == true) {
+        showEpToast(context, 'Yalnız ilk 1000 istifadəçi daxil edildi',
+            kind: ToastKind.info);
+      }
+      await Share.shareXFiles([XFile(file.path, mimeType: 'text/csv')]);
+    } catch (e) {
+      if (mounted) showEpToast(context, adminErrorText(e), kind: ToastKind.error);
+    } finally {
+      if (mounted) setState(() => _busy = null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('CSV ixrac')),
+      body: ListView(padding: adminPad, children: [
+        const Text('Diqqət: istifadəçi faylında e-poçt ünvanları var. '
+            'Onu yalnız lazım olan şəxslə və təhlükəsiz kanalla paylaş. '
+            'Hər ixrac admin jurnalına yazılır.'),
+        const SizedBox(height: Sp.md),
+        EpButton(
+          label: 'İstifadəçilər (CSV)',
+          icon: Icons.people_alt_rounded,
+          loading: _busy == 'users',
+          onPressed: _busy == null ? () => _export('users') : null,
+        ),
+        const SizedBox(height: Sp.sm),
+        EpButton(
+          label: 'Gündəlik statistika (CSV)',
+          icon: Icons.insights_rounded,
+          kind: EpButtonKind.secondary,
+          loading: _busy == 'daily',
+          onPressed: _busy == null ? () => _export('daily') : null,
+        ),
+      ]),
     );
   }
 }

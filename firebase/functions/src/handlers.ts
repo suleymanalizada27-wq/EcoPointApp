@@ -3,7 +3,7 @@ import type { Deps } from './services/context';
 import { createCoupon, purchaseReward, requestTransportTopUp } from './services/market';
 import { redeemQr } from './services/qr';
 import { lookupUsers, transferEp } from './services/transfer';
-import { applyReferral, claimChallenge, claimDailyCheckIn } from './services/gamification';
+import { applyReferral, claimChallenge, claimDailyCheckIn, claimMonthly } from './services/gamification';
 import { deleteAccountData, ensureProfile, updateProfile } from './services/profile';
 import { redeemDeviceWeight } from './services/devices';
 import { registerPushToken, sendTestPush, unregisterPushToken } from './services/push-tokens';
@@ -20,6 +20,8 @@ import {
   adminResolveTransport,
   adminSearchUsers,
   adminSetBan,
+  adminSuspicious,
+  adminExportCsv,
   adminSetPro,
   adminUpsertDevice,
   adminUpsertReward,
@@ -63,6 +65,7 @@ export const HANDLERS: Record<string, Handler> = {
   claimDailyCheckIn: (c) => claimDailyCheckIn(c.deps, c.caller.uid, c.data.day),
   claimChallenge: (c) =>
     claimChallenge(c.deps, c.caller.uid, { challengeId: c.data.challengeId, day: c.data.day }),
+  claimMonthly: (c) => claimMonthly(c.deps, c.caller.uid, { challengeId: c.data.challengeId }),
   applyReferral: async (c) =>
     applyReferral(c.deps, c.caller.uid, {
       code: c.data.code,
@@ -142,6 +145,8 @@ export const HANDLERS: Record<string, Handler> = {
   adminLookupCoupon: (c) => (admin(c), adminLookupCoupon(c.deps, c.data.code)),
   adminRedeemCoupon: (c) => adminRedeemCoupon(c.deps, admin(c), c.data.code),
   adminErrorLogs: (c) => (admin(c), adminErrorLogs(c.deps)),
+  adminSuspicious: (c) => (admin(c), adminSuspicious(c.deps)),
+  adminExportCsv: (c) => adminExportCsv(c.deps, admin(c), c.data.kind),
   adminStats: (c) => (admin(c), adminStats(c.deps.store, c.deps.now)),
   adminIssueBinCode: async (c) => {
     admin(c);

@@ -1,5 +1,6 @@
-import { CONFIG, MISSIONS } from '../lib/config';
+import { CONFIG, MISSIONS, MONTHLY, type MonthlyId } from '../lib/config';
 import {
+  dayKey,
   isMissionId,
   liveStreak,
   missionComplete,
@@ -91,6 +92,36 @@ export async function claimChallenge(
     throw e;
   }
   return { ep };
+}
+
+/** Pays a monthly goal once per month, after reading the server's own scan counter. */
+export async function claimMonthly(
+  { store, now }: Deps,
+  uid: string,
+  input: { challengeId: unknown },
+): Promise<{ ep: number }> {
+  const id = input.challengeId;
+  if (typeof id !== 'string' || !Object.prototype.hasOwnProperty.call(MONTHLY, id)) {
+    throw Errors.invalid('Unknown challenge');
+  }
+  const def = MONTHLY[id as MonthlyId];
+  await assertNotBanned(store, uid);
+  const month = dayKey(now).slice(0, 7);
+  const scans = Number((await store.get<any>(`users/${uid}/monthly/${month}/scans`)) ?? 0);
+  if (!(scans >= def.goal)) throw Errors.invalid('Challenge not complete');
+
+  const key = `users/${uid}/claims/${id}_${month}`;
+  const claim = await store.transaction(key, (cur) =>
+    cur === null || cur === undefined ? now : undefined,
+  );
+  if (!claim.committed) throw Errors.duplicate('Already claimed');
+  try {
+    await credit(store, uid, def.ep, { type: 'bonus', desc: `🏅 Monthly: ${id}` }, now, { earned: true });
+  } catch (e) {
+    await store.remove(key);
+    throw e;
+  }
+  return { ep: def.ep };
 }
 
 /** Both sides get the bonus; one referrer per account, capped per referrer. */

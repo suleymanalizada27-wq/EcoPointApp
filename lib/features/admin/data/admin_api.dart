@@ -63,6 +63,12 @@ class AdminApi {
   Future<void> broadcast(String title, String body) =>
       _b.call('adminBroadcast', {'title': title, 'body': body});
 
+  Future<List<Map<String, Object?>>> suspicious() async =>
+      _list((await _b.call('adminSuspicious'))['items']);
+
+  Future<Map<String, Object?>> exportCsv(String kind) =>
+      _b.call('adminExportCsv', {'kind': kind});
+
   Future<Map<String, Object?>> stats() => _b.call('adminStats');
 
   Future<List<Map<String, Object?>>> errors() async =>

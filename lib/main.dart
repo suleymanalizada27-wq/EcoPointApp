@@ -13,6 +13,7 @@ import 'core/services/error_reporter.dart';
 import 'core/services/firebase_bootstrap.dart';
 import 'core/services/firebase_providers.dart';
 import 'core/services/preferences.dart';
+import 'core/services/session_restore.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,10 +26,16 @@ Future<void> main() async {
   final boot = await FirebaseBootstrap.init();
 
   // Wake a sleeping free-tier backend while the UI starts.
+  ErrorReporter? reporter;
+  var restored = false;
   if (boot.isReady) {
     final backend = BackendService(FirebaseAuth.instance);
     unawaited(backend.warmUp());
-    ErrorReporter(backend).install();
+    reporter = ErrorReporter(backend);
+    await reporter.install();
+    FirebaseAuth.instance.userChanges().listen((u) => reporter?.setUser(u?.uid));
+    // Quietly sign Google users back in if the phone lost the session.
+    restored = await SessionRestore.restoreIfLost();
   }
 
   runApp(
@@ -40,4 +47,10 @@ Future<void> main() async {
       child: const EcoPointApp(),
     ),
   );
+  if (restored) {
+    // Diagnostic for the admin error log: how often the phone loses sessions.
+    unawaited(reporter?.report(
+        'INFO session restored via Google silent sign-in (Firebase session was lost)',
+        null));
+  }
 }

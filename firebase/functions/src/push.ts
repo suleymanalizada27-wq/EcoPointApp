@@ -3,6 +3,8 @@ import type { Store } from './store';
 export interface PushMessage {
   title: string;
   body: string;
+  /** In-app screen to open when the notification is tapped (whitelisted by the app). */
+  route?: string;
 }
 
 /**
@@ -32,6 +34,7 @@ export interface MessagingLike {
   sendEachForMulticast(m: {
     tokens: string[];
     notification: { title: string; body: string };
+    data?: Record<string, string>;
     android?: { priority: 'high' | 'normal' };
   }): Promise<{
     responses: Array<{ success: boolean; error?: { code?: string } }>;
@@ -39,6 +42,7 @@ export interface MessagingLike {
   send(m: {
     topic: string;
     notification: { title: string; body: string };
+    data?: Record<string, string>;
     android?: { priority: 'high' | 'normal' };
   }): Promise<string>;
 }
@@ -75,6 +79,7 @@ export class FcmPusher implements PushSender {
       const res = await this.messaging.sendEachForMulticast({
         tokens: entries.map(([, v]) => v.token as string),
         notification: { title: msg.title, body: msg.body },
+        ...(msg.route ? { data: { route: msg.route } } : {}),
         android: { priority: 'high' },
       });
       // Drop tokens FCM says are gone (app uninstalled, token rotated).
@@ -107,6 +112,7 @@ export class FcmPusher implements PushSender {
       await this.messaging.send({
         topic: NEWS_TOPIC,
         notification: { title: msg.title, body: msg.body },
+        ...(msg.route ? { data: { route: msg.route } } : {}),
         android: { priority: 'high' },
       });
     } catch (e) {

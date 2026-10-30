@@ -8,6 +8,7 @@ import '../../../app/theme/ep_colors.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/errors/failure.dart';
+import '../../../core/services/invite_link.dart';
 import '../../../core/widgets/ep_button.dart';
 import '../../../core/widgets/ep_card.dart';
 import '../../../core/widgets/ep_feedback.dart';
@@ -25,6 +26,17 @@ class ReferralScreen extends ConsumerStatefulWidget {
 class _ReferralScreenState extends ConsumerState<ReferralScreen> {
   final _code = TextEditingController();
   bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Code that arrived through a shared invite link.
+    final pending = pendingInviteCode.value;
+    if (pending != null) {
+      _code.text = pending;
+      pendingInviteCode.value = null;
+    }
+  }
 
   @override
   void dispose() {

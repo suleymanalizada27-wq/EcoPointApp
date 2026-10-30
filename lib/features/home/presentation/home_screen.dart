@@ -61,6 +61,7 @@ class HomeScreen extends ConsumerWidget {
             _WeekCard(),
             _MissionsSection(),
             _ImpactSection(),
+            _InviteCard(),
             _LeaderboardSection(),
             _FeaturedRewards(),
             _BinsSection(),
@@ -479,6 +480,41 @@ class _ImpactSection extends ConsumerWidget {
                   ?.copyWith(color: c.textTertiary)),
         ),
       ],
+    );
+  }
+}
+
+class _InviteCard extends StatelessWidget {
+  const _InviteCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.ep;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(Sp.gutter, Sp.lg, Sp.gutter, 0),
+      child: EpCard(
+        onTap: () => context.push('/referral'),
+        borderColor: c.emerald.withValues(alpha: 0.5),
+        child: Row(
+          children: [
+            Icon(Icons.card_giftcard_rounded, color: c.emerald, size: 32),
+            const SizedBox(width: Sp.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(context.tr('home_invite_title'),
+                      style: context.text.titleSmall),
+                  const SizedBox(height: 2),
+                  Text(context.tr('home_invite_body'),
+                      style: context.text.bodySmall),
+                ],
+              ),
+            ),
+            const Icon(Icons.ios_share_rounded),
+          ],
+        ),
+      ),
     );
   }
 }

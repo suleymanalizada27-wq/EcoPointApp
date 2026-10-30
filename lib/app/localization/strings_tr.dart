@@ -430,4 +430,54 @@ const Map<String, String> stringsTr = {
       'Bu hafta henüz kimse EP kazanmadı. İlk sen ol!',
   'lb_weekly_note':
       'Hafta her pazartesi (Bakü saati) sıfırlanır.',
+  'ch_monthly':
+      'Aylık hedefler',
+  'ch_m30_t':
+      'Bu ay 30 tarama',
+  'ch_m30_s':
+      'Aylık tarama hedefi',
+  'ch_m60_t':
+      'Bu ay 60 tarama',
+  'ch_m60_s':
+      'Büyük aylık hedef',
+  'ch_weekly_prize':
+      'Her pazartesi geçen haftanın ilk 3 kişisi bonus EP alır (200 / 100 / 50).',
+  'home_invite_title':
+      'Arkadaşını davet et',
+  'home_invite_body':
+      'Kodunu ve bağlantını paylaş, ikiniz de bonus EP kazanın.',
+  'notif_primer_title':
+      'Hatırlatmaları açalım mı?',
+  'notif_primer_body':
+      'Günlük serini kaybetmemen, haftalık sonuçları ve yeni ödülleri görmen için bildirim gönderelim. İstediğin zaman ayarlardan kapatabilirsin.',
+  'notif_primer_yes':
+      'Evet, aç',
+  'notif_primer_later':
+      'Sonra',
+  'bins_nearest_title':
+      'En yakın boş kutu',
+  'bins_directions':
+      'Yol tarifi',
+  'bins_open_failed':
+      'Harita uygulaması açılamadı',
+  'share_card_title':
+      'EcoPoint sonuçlarım',
+  'share_card_month':
+      'bu ay tarama',
+  'share_card_total':
+      'toplam tarama',
+  'share_card_earned':
+      'kazanılan EP',
+  'share_card_streak':
+      'günlük seri',
+  'share_card_code':
+      'Kayıtta benim kodum',
+  'share_card_tagline':
+      'EcoPoint · geri dönüştür, EP kazan',
+  'share_card_text_plain':
+      'EcoPoint ile geri dönüştürüp EP kazanıyorum!',
+  'notif_pref_offers':
+      'Kişisel öneriler ve hatırlatmalar',
+  'notif_pref_offers_sub':
+      'Ödüle kalan EP, geri dönüş hatırlatması',
 };

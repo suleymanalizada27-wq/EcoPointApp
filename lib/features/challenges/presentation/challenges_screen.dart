@@ -15,6 +15,7 @@ class ChallengesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final missions = ref.watch(missionsProvider);
+    final monthly = ref.watch(monthlyMissionsProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(context.tr('ch_title'))),
@@ -31,6 +32,20 @@ class ChallengesScreen extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: Sp.xs),
               child: MissionTile(mission: m),
             ),
+          SectionHeader(
+            title: context.tr('ch_monthly'),
+            padding: const EdgeInsets.only(top: Sp.xl, bottom: Sp.sm),
+          ),
+          for (final m in monthly)
+            Padding(
+              padding: const EdgeInsets.only(bottom: Sp.xs),
+              child: MissionTile(mission: m),
+            ),
+          Padding(
+            padding: const EdgeInsets.only(top: Sp.md),
+            child: Text(context.tr('ch_weekly_prize'),
+                style: context.text.bodySmall),
+          ),
         ],
       ),
     );

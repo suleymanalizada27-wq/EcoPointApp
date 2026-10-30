@@ -45,6 +45,31 @@ class GamificationRepository {
     });
   }
 
+  /// Baku (UTC+4) calendar month key, same as the server's.
+  static String monthKey() {
+    final d = DateTime.now().toUtc().add(const Duration(hours: 4));
+    return '${d.year}-${d.month.toString().padLeft(2, '0')}';
+  }
+
+  Stream<int> scansThisMonth(String uid) => _db
+      .ref('users/$uid/monthly/${monthKey()}/scans')
+      .onValue
+      .map((e) => asInt(e.snapshot.value));
+
+  Stream<Set<String>> claimedThisMonth(String uid) {
+    final suffix = '_${monthKey()}';
+    return _db.ref(DbPaths.claims(uid)).limitToLast(80).onValue.map((e) {
+      final out = <String>{};
+      for (final c in e.snapshot.children) {
+        final k = c.key ?? '';
+        if (k.startsWith('m_') && k.endsWith(suffix)) {
+          out.add(k.substring(0, k.length - suffix.length));
+        }
+      }
+      return out;
+    });
+  }
+
   Future<CheckInResult> checkIn() async {
     final res = await _backend.call('claimDailyCheckIn', {
       'day': Fmt.dayKey(DateTime.now()),
@@ -57,6 +82,10 @@ class GamificationRepository {
   }
 
   Future<int> claimMission(String id) async {
+    if (id.startsWith('m_')) {
+      final r = await _backend.call('claimMonthly', {'challengeId': id});
+      return asInt(r['ep']);
+    }
     final res = await _backend.call('claimChallenge', {
       'challengeId': id,
       'day': Fmt.dayKey(DateTime.now()),
@@ -106,4 +135,23 @@ final unlockedAchievementsProvider = Provider<Set<String>>((ref) {
   final streak = ref.watch(streakProvider).valueOrNull ?? StreakState.empty;
   if (stats == null) return const {};
   return AchievementDef.unlocked(stats, streak.count);
+});
+
+final scansThisMonthProvider = StreamProvider<int>((ref) {
+  final uid = ref.watch(uidProvider);
+  if (uid == null) return Stream.value(0);
+  return ref.watch(gamificationRepositoryProvider).scansThisMonth(uid);
+});
+
+final claimedThisMonthProvider = StreamProvider<Set<String>>((ref) {
+  final uid = ref.watch(uidProvider);
+  if (uid == null) return Stream.value(const <String>{});
+  return ref.watch(gamificationRepositoryProvider).claimedThisMonth(uid);
+});
+
+final monthlyMissionsProvider = Provider<List<MissionProgress>>((ref) {
+  return MissionProgress.computeMonthly(
+    scansMonth: ref.watch(scansThisMonthProvider).valueOrNull ?? 0,
+    claimedMonth: ref.watch(claimedThisMonthProvider).valueOrNull ?? const {},
+  );
 });

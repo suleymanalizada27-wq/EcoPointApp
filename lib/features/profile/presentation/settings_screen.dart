@@ -175,6 +175,13 @@ class NotificationPrefsScreen extends ConsumerWidget {
                   onChanged: (v) => set('notifyActivity', v),
                 ),
                 SwitchListTile(
+                  value: profile?.notifyOffers ?? true,
+                  activeColor: context.ep.emerald,
+                  title: Text(context.tr('notif_pref_offers')),
+                  subtitle: Text(context.tr('notif_pref_offers_sub')),
+                  onChanged: (v) => set('notifyOffers', v),
+                ),
+                SwitchListTile(
                   value: profile?.notifyNews ?? true,
                   activeColor: context.ep.emerald,
                   title: Text(context.tr('notif_pref_news')),

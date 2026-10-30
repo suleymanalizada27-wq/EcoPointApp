@@ -304,3 +304,85 @@ export async function adminErrorLogs({ store }: Deps): Promise<{ errors: unknown
     .slice(0, 50);
   return { errors };
 }
+
+// ───────────────────────── suspicious activity + exports ─────────────────────────
+
+export async function adminSuspicious({ store }: Deps): Promise<{ items: unknown[] }> {
+  const all = (await store.get<Record<string, any>>('suspicious')) ?? {};
+  const rows = Object.entries(all)
+    .map(([uid, v]) => ({ uid, last: Number(v?.last) || 0, total: Number(v?.total) || 0, reasons: v?.reasons ?? {} }))
+    .sort((a, b) => b.last - a.last)
+    .slice(0, 30);
+  const items = await Promise.all(
+    rows.map(async (r) => ({
+      ...r,
+      name: (await store.get<string>(`leaderboard/${r.uid}/name`)) ?? '—',
+      banned: Boolean(await store.get(`security/banned/${r.uid}`)),
+    })),
+  );
+  return { items };
+}
+
+/** CSV cell: quotes and neutralises spreadsheet formulas (=, +, -, @). */
+export function csvCell(v: unknown): string {
+  let s = v === null || v === undefined ? '' : String(v);
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+const toCsv = (rows: unknown[][]): string => rows.map((r) => r.map(csvCell).join(',')).join('\n') + '\n';
+
+const EXPORT_LIMIT = 1000;
+
+export async function adminExportCsv(
+  { store, now }: Deps,
+  adminUid: string,
+  kind: unknown,
+): Promise<{ filename: string; csv: string; rows: number; truncated: boolean }> {
+  if (kind === 'daily') {
+    const all = (await store.get<Record<string, any>>('statsDaily')) ?? {};
+    const rows: unknown[][] = [['day', 'signups', 'earnedEp', 'spentEp', 'scans', 'purchases']];
+    for (const day of Object.keys(all).sort()) {
+      const d = all[day] ?? {};
+      rows.push([day, d.signups ?? 0, d.earnedEp ?? 0, d.spentEp ?? 0, d.earns ?? 0, d.purchases ?? 0]);
+    }
+    await log(store, adminUid, 'exportCsv', { kind: 'daily' }, now);
+    return { filename: 'ecopoint-daily.csv', csv: toCsv(rows), rows: rows.length - 1, truncated: false };
+  }
+  if (kind === 'users') {
+    const board = (await store.get<Record<string, any>>('leaderboard')) ?? {};
+    const uids = Object.keys(board).slice(0, EXPORT_LIMIT);
+    const rows: unknown[][] = [['uid', 'name', 'email', 'balance', 'earned', 'spent', 'scans', 'createdAt']];
+    for (let i = 0; i < uids.length; i += 10) {
+      const chunk = uids.slice(i, i + 10);
+      const part = await Promise.all(
+        chunk.map(async (uid) => {
+          const [email, createdAt, stats] = await Promise.all([
+            store.get<string>(`users/${uid}/email`),
+            store.get<number>(`users/${uid}/createdAt`),
+            store.get<any>(`users/${uid}/stats`),
+          ]);
+          return [
+            uid,
+            board[uid]?.name ?? '',
+            email ?? '',
+            board[uid]?.ep ?? 0,
+            stats?.earned ?? 0,
+            stats?.spent ?? 0,
+            stats?.scans ?? 0,
+            createdAt ? new Date(createdAt).toISOString() : '',
+          ];
+        }),
+      );
+      rows.push(...part);
+    }
+    await log(store, adminUid, 'exportCsv', { kind: 'users' }, now);
+    return {
+      filename: 'ecopoint-users.csv',
+      csv: toCsv(rows),
+      rows: rows.length - 1,
+      truncated: Object.keys(board).length > EXPORT_LIMIT,
+    };
+  }
+  throw Errors.invalid('Unknown export');
+}

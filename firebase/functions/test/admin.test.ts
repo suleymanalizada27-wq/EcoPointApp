@@ -198,3 +198,42 @@ describe('maintenance', () => {
     expect(r.maintenance?.sent).toBe(1);
   });
 });
+
+describe('suspicious activity and CSV export', () => {
+  it('flags users who hit the hourly scan cap and lists them', async () => {
+    const { MemoryStore } = await import('../src/store');
+    const { rateLimit } = await import('../src/services/wallet');
+    const { adminSuspicious } = await import('../src/services/admin');
+    const { ALICE, NOW, deps, seedUser } = await import('./helpers');
+    const s = new MemoryStore();
+    await seedUser(s, ALICE, { name: 'Alice' });
+    await s.set(`leaderboard/${ALICE}`, { name: 'Alice', ep: 0 });
+    for (let i = 0; i < 3; i++) await rateLimit(s, `scan/${ALICE}`, NOW + i, { windowMs: 3_600_000, max: 3 });
+    await expect(rateLimit(s, `scan/${ALICE}`, NOW + 10, { windowMs: 3_600_000, max: 3 })).rejects.toBeTruthy();
+    // a double tap (min interval) is NOT suspicious
+    await rateLimit(s, `scan/${BOB}x`, NOW, { windowMs: 3_600_000, max: 3, minIntervalMs: 3000 });
+    await expect(
+      rateLimit(s, `scan/${BOB}x`, NOW + 100, { windowMs: 3_600_000, max: 3, minIntervalMs: 3000 }),
+    ).rejects.toBeTruthy();
+    const r = (await adminSuspicious(deps(s))) as { items: any[] };
+    expect(r.items).toHaveLength(1);
+    expect(r.items[0]).toMatchObject({ uid: ALICE, name: 'Alice', banned: false });
+    expect(r.items[0].reasons['rate-limit:scan']).toBe(1);
+  });
+
+  it('exports CSV safely (formula injection neutralised) and logs it', async () => {
+    const { MemoryStore } = await import('../src/store');
+    const { adminExportCsv, csvCell } = await import('../src/services/admin');
+    const { ALICE, NOW, deps, seedUser } = await import('./helpers');
+    expect(csvCell('=HYPERLINK("x")')).toBe(`"'=HYPERLINK(""x"")"`);
+    expect(csvCell('a,b')).toBe('"a,b"');
+    expect(csvCell('Əli')).toBe('Əli');
+    const s = new MemoryStore();
+    await seedUser(s, ALICE, { name: '=cmd', email: 'a@x.az' });
+    await s.set(`leaderboard/${ALICE}`, { name: '=cmd', ep: 5 });
+    const out = await adminExportCsv(deps(s, NOW), 'adminAdminAdminAdmin01', 'users');
+    expect(out.rows).toBe(1);
+    expect(out.csv.split('\n')[1]).toContain(`'=cmd`);
+    await expect(adminExportCsv(deps(s, NOW), 'adminAdminAdminAdmin01', 'nope')).rejects.toBeTruthy();
+  });
+});

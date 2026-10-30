@@ -30,3 +30,15 @@ The link does not open the app directly (no app-link configuration yet) — the 
 ## Statistics
 Admin → Statistika: daily signups, EP earned/spent, scan count (last 14 days) and top rewards. Counters start collecting
 after this update, so earlier days show 0.
+
+## Share image, nearest bin, App Links
+- Statistics → share icon builds a picture with your numbers and invite code (preview first).
+- Bins → "Ən yaxın boş qutu" card (online, mapped, under 80 % full) with a directions button (opens the maps app).
+- App Links: `https://<server>/invite/<CODE>` opens the app when it is installed (and shows the invite page otherwise).
+  Needs Render env `ANDROID_SHA256` = signing-certificate SHA-256 (comma separated for several keys, e.g. debug + release)
+  and optionally `ANDROID_PACKAGE` (default `az.ecopoint.pro`). Check `https://<server>/.well-known/assetlinks.json`.
+  If Android has not verified the link it simply opens in the browser (the invite page) — nothing breaks.
+  Links do not survive installation ("deferred" links are not supported): the friend taps the link again after installing.
+- Admin → Şübhəli fəaliyyət: hints when someone hits the hourly scan/weight/transfer cap, the daily limit, or 25+ scans a day.
+  Hints are not bans. Admin → CSV ixrac: users (first 1000, contains e-mails) and daily statistics; every export is logged.
+- Crashlytics: reports appear in Firebase console → Crashlytics (release builds only). Needs the Gradle plugin patch in `tool/android_patch.ps1`.

@@ -431,4 +431,54 @@ const Map<String, String> stringsAz = {
       'Bu həftə hələ heç kim EP qazanmayıb. İlk sən ol!',
   'lb_weekly_note':
       'Həftə hər bazar ertəsi (Bakı vaxtı) sıfırlanır.',
+  'ch_monthly':
+      'Aylıq hədəflər',
+  'ch_m30_t':
+      'Bu ay 30 skan',
+  'ch_m30_s':
+      'Aylıq skan hədəfi',
+  'ch_m60_t':
+      'Bu ay 60 skan',
+  'ch_m60_s':
+      'Böyük aylıq hədəf',
+  'ch_weekly_prize':
+      'Hər bazar ertəsi əvvəlki həftənin ilk 3 nəfərinə əlavə EP mükafatı verilir (200 / 100 / 50).',
+  'home_invite_title':
+      'Dostunu dəvət et',
+  'home_invite_body':
+      'Kodunu və linkini paylaş, ikiniz də bonus EP qazanın.',
+  'notif_primer_title':
+      'Xatırlatmaları açaq?',
+  'notif_primer_body':
+      'Gündəlik seriyanı itirməmək, həftəlik nəticələri və yeni mükafatları görmək üçün bildiriş göndərək. İstədiyin vaxt ayarlardan söndürə bilərsən.',
+  'notif_primer_yes':
+      'Bəli, açaq',
+  'notif_primer_later':
+      'Sonra',
+  'bins_nearest_title':
+      'Ən yaxın boş qutu',
+  'bins_directions':
+      'Yol göstər',
+  'bins_open_failed':
+      'Xəritə tətbiqi açılmadı',
+  'share_card_title':
+      'Mənim EcoPoint nəticəm',
+  'share_card_month':
+      'bu ay skan',
+  'share_card_total':
+      'ümumi skan',
+  'share_card_earned':
+      'qazanılan EP',
+  'share_card_streak':
+      'günlük seriya',
+  'share_card_code':
+      'Qeydiyyatda mənim kodum',
+  'share_card_tagline':
+      'EcoPoint · təkrar emal et, EP qazan',
+  'share_card_text_plain':
+      'EcoPoint-də təkrar emal edib EP qazanıram!',
+  'notif_pref_offers':
+      'Fərdi təkliflər və xatırlatmalar',
+  'notif_pref_offers_sub':
+      'Mükafata qalan EP, passivlik xatırlatması',
 };

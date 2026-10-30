@@ -7,6 +7,8 @@ import '../../app/theme/ep_colors.dart';
 import '../../app/theme/tokens.dart';
 import '../../core/services/push_service.dart';
 import '../auth/data/auth_repository.dart';
+import '../../core/services/invite_link.dart';
+import 'notification_primer.dart';
 
 /// Hosts the four tabs with a bottom bar and a raised centre scan button.
 class MainShell extends ConsumerWidget {
@@ -29,7 +31,11 @@ class MainShell extends ConsumerWidget {
 
     return Scaffold(
       extendBody: true,
-      body: shell,
+      body: Stack(children: [
+        shell,
+        const NotificationPrimerHost(),
+        const InviteLinkHost(),
+      ]),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Semantics(
         button: true,
@@ -141,4 +147,43 @@ class _NavItem extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Opens the referral screen when an invite App Link brought a code.
+class InviteLinkHost extends StatefulWidget {
+  const InviteLinkHost({super.key});
+
+  @override
+  State<InviteLinkHost> createState() => _InviteLinkHostState();
+}
+
+class _InviteLinkHostState extends State<InviteLinkHost> {
+  @override
+  void initState() {
+    super.initState();
+    pendingInviteCode.addListener(_check);
+    _check();
+  }
+
+  @override
+  void dispose() {
+    pendingInviteCode.removeListener(_check);
+    super.dispose();
+  }
+
+  bool _scheduled = false;
+
+  void _check() {
+    if (_scheduled) return;
+    _scheduled = true;
+    // Never navigate while the router is still resolving the link.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scheduled = false;
+      if (!mounted || pendingInviteCode.value == null) return;
+      context.push('/referral');
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }

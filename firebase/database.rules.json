@@ -10,6 +10,7 @@
           ".write": "auth != null && auth.uid === $uid",
           "notifyActivity": { ".validate": "newData.isBoolean()" },
           "notifyNews": { ".validate": "newData.isBoolean()" },
+          "notifyOffers": { ".validate": "newData.isBoolean()" },
           "$other": { ".validate": false }
         }
       }

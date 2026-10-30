@@ -47,6 +47,17 @@ export const MISSIONS = {
 
 export type MissionId = keyof typeof MISSIONS;
 
+/** Monthly goals: number of scans in the current Baku calendar month. */
+export const MONTHLY = {
+  m_scan30: { ep: 300, goal: 30 },
+  m_scan60: { ep: 700, goal: 60 },
+} as const;
+
+export type MonthlyId = keyof typeof MONTHLY;
+
+/** Prizes for the top 3 of the previous week's leaderboard. */
+export const WEEKLY_PRIZES = [200, 100, 50] as const;
+
 export const COUPON_PARTNERS = {
   bravo: { id: 'bravo', name: 'Bravo', minEp: 500, epPerAzn: 500 },
   bolmart: { id: 'bolmart', name: 'Bolmart', minEp: 300, epPerAzn: 500 },

@@ -10,6 +10,7 @@ import '../features/auth/presentation/sign_in_screen.dart';
 import '../features/auth/presentation/sign_up_screen.dart';
 import '../features/challenges/presentation/challenges_screen.dart';
 import '../features/home/presentation/home_screen.dart';
+import '../core/services/invite_link.dart';
 import '../features/admin/presentation/admin_bins_screen.dart';
 import '../features/admin/presentation/admin_home_screen.dart';
 import '../features/admin/presentation/admin_misc_screens.dart';
@@ -66,6 +67,13 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   String? redirect(BuildContext context, GoRouterState state) {
     final loc = state.matchedLocation;
+    // App Link from a shared invite: remember the code, then continue normally.
+    final path = state.uri.path;
+    if (path.startsWith('/invite/')) {
+      final code = parseInviteCode(path.substring('/invite/'.length));
+      if (code != null) pendingInviteCode.value = code;
+      return Routes.home;
+    }
     final boot = ref.read(bootProvider);
     if (!boot.isReady) {
       return loc == Routes.setupRequired ? null : Routes.setupRequired;
@@ -168,6 +176,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
           path: '/achievements',
           builder: (_, __) => const AchievementsScreen()),
+      GoRoute(path: '/invite/:code', builder: (_, __) => const SizedBox.shrink()),
       GoRoute(path: '/admin', builder: (_, __) => const AdminHomeScreen()),
       GoRoute(path: '/admin/stats', builder: (_, __) => const AdminStatsScreen()),
       GoRoute(path: '/admin/users', builder: (_, __) => const AdminUsersScreen()),
@@ -176,6 +185,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/admin/transport', builder: (_, __) => const AdminTransportScreen()),
       GoRoute(path: '/admin/coupons', builder: (_, __) => const AdminCouponsScreen()),
       GoRoute(path: '/admin/broadcast', builder: (_, __) => const AdminBroadcastScreen()),
+      GoRoute(path: '/admin/suspicious', builder: (_, __) => const AdminSuspiciousScreen()),
+      GoRoute(path: '/admin/export', builder: (_, __) => const AdminExportScreen()),
       GoRoute(path: '/admin/errors', builder: (_, __) => const AdminErrorsScreen()),
       GoRoute(path: '/guide', builder: (_, __) => const EcoGuideScreen()),
       GoRoute(

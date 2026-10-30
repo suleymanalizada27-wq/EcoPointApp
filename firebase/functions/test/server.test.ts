@@ -42,6 +42,12 @@ async function call(name: string, body: unknown, token?: string) {
   return { status: res.status, json: (await res.json()) as any };
 }
 
+describe('app links file', () => {
+  it('is 404 until a fingerprint is configured', async () => {
+    expect((await fetch(`${base}/.well-known/assetlinks.json`)).status).toBe(404);
+  });
+});
+
 describe('invite page', () => {
   it('serves a preview card for a known code and 404 for unknown/bad ones', async () => {
     await store.set('referralCodes/ABCD234', ALICE);

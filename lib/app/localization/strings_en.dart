@@ -430,4 +430,54 @@ const Map<String, String> stringsEn = {
       'Nobody has earned EP this week yet. Be the first!',
   'lb_weekly_note':
       'The week resets every Monday (Baku time).',
+  'ch_monthly':
+      'Monthly goals',
+  'ch_m30_t':
+      '30 scans this month',
+  'ch_m30_s':
+      'Monthly scan goal',
+  'ch_m60_t':
+      '60 scans this month',
+  'ch_m60_s':
+      'Big monthly goal',
+  'ch_weekly_prize':
+      'Every Monday the top 3 of last week get bonus EP (200 / 100 / 50).',
+  'home_invite_title':
+      'Invite a friend',
+  'home_invite_body':
+      'Share your code and link, you both earn bonus EP.',
+  'notif_primer_title':
+      'Turn on reminders?',
+  'notif_primer_body':
+      'We will remind you to keep your daily streak and tell you about weekly results and new rewards. You can turn this off any time in settings.',
+  'notif_primer_yes':
+      'Yes, turn on',
+  'notif_primer_later':
+      'Not now',
+  'bins_nearest_title':
+      'Nearest bin with room',
+  'bins_directions':
+      'Directions',
+  'bins_open_failed':
+      'Could not open the maps app',
+  'share_card_title':
+      'My EcoPoint results',
+  'share_card_month':
+      'scans this month',
+  'share_card_total':
+      'total scans',
+  'share_card_earned':
+      'EP earned',
+  'share_card_streak':
+      'day streak',
+  'share_card_code':
+      'My code when you sign up',
+  'share_card_tagline':
+      'EcoPoint · recycle, earn EP',
+  'share_card_text_plain':
+      'I recycle and earn EP with EcoPoint!',
+  'notif_pref_offers':
+      'Personal tips and reminders',
+  'notif_pref_offers_sub':
+      'EP left for a reward, comeback reminders',
 };

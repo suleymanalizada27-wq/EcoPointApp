@@ -15,3 +15,7 @@ privacy/deletion texts are factual templates — have them legally reviewed.
 6. New personal developer accounts must run a closed test (currently 12+ testers for 14 days) before production — check the current Play policy.
 
 Kotlin DSL projects (`build.gradle.kts`): add a `signingConfigs.create("release")` reading `key.properties` and point `buildTypes.release.signingConfig` to it.
+
+## App Links with the release key
+After `make_keystore.ps1`, add the printed **SHA-256** to the Render env var `ANDROID_SHA256` (comma separated, keep the debug one while testing) and, once on Play, also the Play App Signing SHA-256.
+Data safety form: add "crash logs" (Firebase Crashlytics) and the anonymous account id.

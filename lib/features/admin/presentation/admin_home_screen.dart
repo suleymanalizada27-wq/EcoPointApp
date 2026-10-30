@@ -51,6 +51,8 @@ class _Body extends ConsumerWidget {
       (Icons.local_offer_rounded, 'Kupon yoxlama', '/admin/coupons'),
       (Icons.campaign_rounded, 'Elan göndər', '/admin/broadcast'),
       (Icons.bug_report_rounded, 'Xəta jurnalı', '/admin/errors'),
+      (Icons.shield_outlined, 'Şübhəli fəaliyyət', '/admin/suspicious'),
+      (Icons.download_rounded, 'CSV ixrac', '/admin/export'),
     ];
     return RefreshIndicator(
       onRefresh: () async => ref.refresh(adminOverviewProvider.future),

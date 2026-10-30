@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/router.dart';
 import '../../features/wallet/data/wallet_providers.dart';
@@ -39,10 +40,18 @@ class PushService {
 
   /// Asks for permission (Android 13+ / iOS) and registers this device.
   /// Returns false if the user declined notifications.
-  Future<bool> registerDevice(String lang) async {
+  ///
+  /// With [ask] false the system prompt is never shown: the device is only
+  /// registered if notifications are already allowed (the friendly primer
+  /// screen asks first, then calls this with `ask: true`).
+  Future<bool> registerDevice(String lang, {bool ask = true}) async {
     _lang = lang;
-    final settings = await _messaging.requestPermission();
-    if (settings.authorizationStatus == AuthorizationStatus.denied) {
+    final settings = ask
+        ? await _messaging.requestPermission()
+        : await _messaging.getNotificationSettings();
+    final status = settings.authorizationStatus;
+    if (status != AuthorizationStatus.authorized &&
+        status != AuthorizationStatus.provisional) {
       return false;
     }
     final token = await _messaging.getToken();
@@ -52,6 +61,16 @@ class PushService {
       onError: (_) {},
     );
     return true;
+  }
+
+  /// True when the system permission is still undecided or not granted.
+  Future<bool> needsPermission() async {
+    try {
+      final s = (await _messaging.getNotificationSettings()).authorizationStatus;
+      return s == AuthorizationStatus.notDetermined;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> _send(String token) async {
@@ -111,7 +130,7 @@ final pushRegistrationProvider = FutureProvider<void>((ref) async {
   // Re-registers when the app language changes so reminders follow it.
   final lang = ref.watch(localeProvider).languageCode;
   try {
-    await ref.read(pushServiceProvider).registerDevice(lang);
+    await ref.read(pushServiceProvider).registerDevice(lang, ask: false);
   } catch (_) {}
 });
 
@@ -125,6 +144,24 @@ final pushTopicProvider = FutureProvider<void>((ref) async {
   await ref.read(pushServiceProvider).setNewsSubscribed(news);
 });
 
+/// Screens a notification may open. Anything else falls back to the inbox,
+/// so a crafted message can never navigate somewhere unexpected.
+const Set<String> kPushRoutes = {
+  '/home', '/rewards', '/bins', '/profile', '/challenges', '/scan',
+  '/leaderboard', '/notifications', '/referral', '/stats',
+};
+const Set<String> _tabRoutes = {'/home', '/rewards', '/bins', '/profile'};
+
+void openPushRoute(GoRouter router, Object? raw) {
+  final route = raw is String && kPushRoutes.contains(raw) ? raw : '/notifications';
+  if (_tabRoutes.contains(route)) {
+    router.go(route);
+    return;
+  }
+  router.go('/home');
+  router.push(route);
+}
+
 /// Foreground banner + "open the app from a notification" routing.
 final pushListenersProvider = Provider<void>((ref) {
   if (!_pushReady(ref)) return;
@@ -136,13 +173,21 @@ final pushListenersProvider = Provider<void>((ref) {
     final text = [n.title, n.body].whereType<String>().join(' — ');
     rootMessengerKey.currentState
       ?..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(text), behavior: SnackBarBehavior.floating));
+      ..showSnackBar(SnackBar(
+        content: Text(text),
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'OK',
+          onPressed: () => openPushRoute(ref.read(routerProvider), m.data['route']),
+        ),
+      ));
   }));
 
-  void open() => ref.read(routerProvider).go('/notifications');
-  subs.add(FirebaseMessaging.onMessageOpenedApp.listen((_) => open()));
+  void open(RemoteMessage m) =>
+      openPushRoute(ref.read(routerProvider), m.data['route']);
+  subs.add(FirebaseMessaging.onMessageOpenedApp.listen(open));
   FirebaseMessaging.instance.getInitialMessage().then((m) {
-    if (m != null) open();
+    if (m != null) open(m);
   });
 
   ref.onDispose(() {

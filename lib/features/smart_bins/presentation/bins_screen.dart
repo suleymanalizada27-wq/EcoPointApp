@@ -14,6 +14,7 @@ import '../../../core/widgets/state_views.dart';
 import '../data/bins_repository.dart';
 import '../domain/smart_bin.dart';
 import 'bin_detail_sheet.dart';
+import 'bin_navigation.dart';
 
 Color fillColor(EpColors c, int pct) =>
     pct >= 80 ? c.danger : (pct >= 50 ? c.warning : c.emerald);
@@ -80,6 +81,8 @@ class _BinsScreenState extends ConsumerState<BinsScreen> {
               status: location.status,
               onEnable: () => ref.read(locationProvider.notifier).request(),
             ),
+          if (bins.valueOrNull != null)
+            _NearestCard(bins: bins.valueOrNull!, location: location),
           Expanded(
             child: bins.when(
               loading: () => const LoadingView(),
@@ -131,6 +134,63 @@ class _BinsScreenState extends ConsumerState<BinsScreen> {
       return da.compareTo(db);
     });
     return copy;
+  }
+}
+
+/// "Nearest bin with room" shortcut with a directions button.
+class _NearestCard extends StatelessWidget {
+  const _NearestCard({required this.bins, required this.location});
+  final List<SmartBin> bins;
+  final LocationState? location;
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final bin = nearestAvailableBin(bins, location, now);
+    if (bin == null) return const SizedBox.shrink();
+    final c = context.ep;
+    final tone = fillColor(c, bin.fillPercent);
+    final d = location?.distanceTo(bin);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(Sp.gutter, 0, Sp.gutter, Sp.sm),
+      child: EpCard(
+        onTap: () => showBinDetail(context, bin),
+        borderColor: c.emerald.withValues(alpha: 0.5),
+        child: Row(
+          children: [
+            IconTile(icon: Icons.near_me_rounded, color: tone),
+            const SizedBox(width: Sp.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(context.tr('bins_nearest_title'),
+                      style: context.text.labelMedium
+                          ?.copyWith(color: c.textSecondary)),
+                  Text(bin.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.titleSmall),
+                  Text(
+                    [
+                      if (d != null) Fmt.distance(d),
+                      '${context.tr('bins_fill')} ${bin.fillPercent}%',
+                    ].join(' · '),
+                    style: context.text.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: Sp.xs),
+            FilledButton.icon(
+              onPressed: () => openDirections(context, bin),
+              icon: const Icon(Icons.directions_walk_rounded, size: 18),
+              label: Text(context.tr('bins_directions')),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

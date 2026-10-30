@@ -125,7 +125,7 @@ sign-out · account deletion · offline banner + RTDB offline cache.
 ## Verification
 
 Actually run in the sandbox:
-- `firebase/functions`: `npm test` → **106 tests pass** (QR forgery/replay/expiry/concurrency, double-spend, idempotency, refunds, caps, rules, push tokens/delivery); `tsc` builds; building and starting from the repo root (`npm run build`, `npm start`) works.
+- `firebase/functions`: `npm test` → **121 tests pass** (QR forgery/replay/expiry/concurrency, double-spend, idempotency, refunds, caps, rules, push tokens/delivery, personalized smart notifications); `tsc` builds; building and starting from the repo root (`npm run build`, `npm start`) works.
 - `python3 tool/verify_static.py`: Dart **syntax** of all files (tree-sitter), every import resolves, 338 localization keys identical across az/en/ru/tr, every `tr('…')` key exists.
 
 **Not** run in the sandbox (needs a device): Flutter compile, any real FCM delivery, Google sign-in, camera, location. The author's machine ran `flutter analyze`/`test` and a release APK before the push/Google/icon changes; those changes still need that check.
@@ -152,3 +152,16 @@ The Dart tests in `test/` are written but unexecuted.
 - Play Store tooling: `tool/make_keystore.ps1`, `docs/PLAY_STORE.md`; capacity notes: `docs/SCALING.md`.
 
 Honest gaps: Flutter code of these features is only syntax/import-checked in the sandbox (run `flutter analyze`); scheduled pushes unverified on a device; iOS never built; native crashes not captured; no Play release made.
+
+## Round 3
+- Sign-in persistence: Google users are silently signed back in if the phone loses the Firebase session (`lib/core/services/session_restore.dart`); password users cannot be restored. Cause of the original sign-outs is unconfirmed.
+- Monthly goals (30 / 60 scans → 300 / 700 EP) and Monday prizes for last week's top 3 (200 / 100 / 50 EP), both paid by the server.
+- Home invite card, notification primer (asks before the OS prompt, max 3 times), admin statistics, share link with preview card.
+
+## Round 4
+Crashlytics, nearest free bin + directions, statistics share image, admin suspicious-activity list + CSV export, invite App Links (`/.well-known/assetlinks.json`).
+Unverified until run on a phone: Gradle plugin patch (Crashlytics), App Links verification, share image rendering, directions deep link.
+
+## Smart personal notifications
+
+Hourly job (`smart-push.ts`): at most one push per person per day, 09:00-21:00 Baku, at the hour the person usually scans. Priority: monthly reward ready -> monthly goal close -> reward within reach -> comeback (7+ days) -> daily check-in. Text uses the person's name and language. Toggles: `prefs/notifyActivity` (monthly/daily) and `prefs/notifyOffers` (reward/comeback). Tapping opens the relevant screen (route whitelist in `push_service.dart`). Requires `firebase deploy --only database`.

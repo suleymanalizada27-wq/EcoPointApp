@@ -11,6 +11,7 @@ import '../../../core/widgets/ep_card.dart';
 import '../../../core/widgets/ep_feedback.dart';
 import '../data/bins_repository.dart';
 import '../domain/smart_bin.dart';
+import 'bin_navigation.dart';
 import 'bins_screen.dart' show fillColor;
 
 void showBinDetail(BuildContext context, SmartBin bin) {
@@ -175,6 +176,15 @@ class _BinDetailSheetState extends ConsumerState<BinDetailSheet> {
                 ].join(' · '),
                 style: context.text.bodySmall,
               ),
+              if (bin.hasCoordinates) ...[
+                const SizedBox(height: Sp.md),
+                EpButton(
+                  label: context.tr('bins_directions'),
+                  icon: Icons.directions_walk_rounded,
+                  kind: EpButtonKind.secondary,
+                  onPressed: () => openDirections(context, bin),
+                ),
+              ],
               if (online && bin.supportsWeightRedeem) ...[
                 const SizedBox(height: Sp.lg),
                 Text(context.tr('bins_redeem_hint'),

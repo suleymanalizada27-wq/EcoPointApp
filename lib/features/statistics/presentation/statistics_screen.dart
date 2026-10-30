@@ -13,6 +13,7 @@ import '../../wallet/data/wallet_providers.dart';
 import '../../wallet/domain/activity_aggregator.dart';
 import '../../wallet/domain/ep_transaction.dart';
 import '../../wallet/domain/impact_estimator.dart';
+import '../../share/presentation/share_card.dart';
 import 'ep_bar_chart.dart';
 
 class StatisticsScreen extends ConsumerStatefulWidget {
@@ -35,7 +36,16 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
     final locale = Localizations.localeOf(context).languageCode;
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('stats_title'))),
+      appBar: AppBar(
+        title: Text(context.tr('stats_title')),
+        actions: [
+          IconButton(
+            tooltip: context.tr('share'),
+            icon: const Icon(Icons.ios_share_rounded),
+            onPressed: () => showShareCard(context),
+          ),
+        ],
+      ),
       body: AsyncBody<List<EpTransaction>>(
         value: txs,
         onRetry: () => ref.invalidate(transactionsProvider),

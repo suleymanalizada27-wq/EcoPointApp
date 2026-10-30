@@ -14,6 +14,7 @@ abstract final class PrefKeys {
   static const String language = 'ep-lang';
   static const String theme = 'ep-theme';
   static const String onboarded = 'ep-onboarded';
+  static const String notifAsks = 'ep-notif-asks';
 }
 
 /// App language. Azerbaijani is the default.

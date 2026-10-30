@@ -22,7 +22,13 @@ final databaseProvider = Provider<FirebaseDatabase>(
 final authUserProvider = StreamProvider<User?>((ref) {
   final boot = ref.watch(bootProvider);
   if (!boot.isReady) return Stream<User?>.value(null);
-  return ref.watch(firebaseAuthProvider).userChanges();
+  final auth = ref.watch(firebaseAuthProvider);
+  // Start from the already-restored user so a cold start never flashes the
+  // sign-in screen, then follow live changes.
+  return (() async* {
+    yield auth.currentUser;
+    yield* auth.userChanges();
+  })();
 });
 
 /// Current UID or `null` while signed out / loading.

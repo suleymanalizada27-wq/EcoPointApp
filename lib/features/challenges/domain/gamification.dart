@@ -33,7 +33,7 @@ class StreakState {
   }
 }
 
-enum MissionKind { scansToday, streak }
+enum MissionKind { scansToday, streak, scansMonth }
 
 /// A daily mission. Rewards are paid only by the backend (`claimChallenge`),
 /// which recomputes progress itself. (The legacy app displayed these missions
@@ -86,6 +86,28 @@ class MissionDef {
       goal: 2,
     ),
   ];
+
+  /// Monthly goals (mirror `MONTHLY` in the backend config).
+  static const List<MissionDef> monthly = [
+    MissionDef(
+      id: 'm_scan30',
+      icon: Icons.calendar_month_rounded,
+      titleKey: 'ch_m30_t',
+      subKey: 'ch_m30_s',
+      ep: 300,
+      kind: MissionKind.scansMonth,
+      goal: 30,
+    ),
+    MissionDef(
+      id: 'm_scan60',
+      icon: Icons.workspace_premium_rounded,
+      titleKey: 'ch_m60_t',
+      subKey: 'ch_m60_s',
+      ep: 700,
+      kind: MissionKind.scansMonth,
+      goal: 60,
+    ),
+  ];
 }
 
 class MissionProgress {
@@ -109,12 +131,33 @@ class MissionProgress {
     required int streak,
     required Set<String> claimedToday,
   }) {
-    return MissionDef.all.map((d) {
+    return computeFor(MissionDef.all, scansToday: scansToday, streak: streak, claimed: claimedToday);
+  }
+
+  static List<MissionProgress> computeMonthly({
+    required int scansMonth,
+    required Set<String> claimedMonth,
+  }) =>
+      MissionDef.monthly
+          .map((d) => MissionProgress(
+                def: d,
+                progress: scansMonth,
+                claimed: claimedMonth.contains(d.id),
+              ))
+          .toList();
+
+  static List<MissionProgress> computeFor(
+    List<MissionDef> defs, {
+    required int scansToday,
+    required int streak,
+    required Set<String> claimed,
+  }) {
+    return defs.map((d) {
       final p = d.kind == MissionKind.scansToday ? scansToday : streak;
       return MissionProgress(
         def: d,
         progress: p,
-        claimed: claimedToday.contains(d.id),
+        claimed: claimed.contains(d.id),
       );
     }).toList();
   }

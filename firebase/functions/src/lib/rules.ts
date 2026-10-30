@@ -157,6 +157,16 @@ export function isUid(v: unknown): boolean {
   return typeof v === 'string' && /^[A-Za-z0-9]{20,40}$/.test(v);
 }
 
+/** Hour of day (0–23) in Asia/Baku. */
+export function bakuHour(nowMs: number): number {
+  const h = new Intl.DateTimeFormat('en-GB', {
+    timeZone: CONFIG.timeZone,
+    hour: 'numeric',
+    hourCycle: 'h23',
+  }).format(new Date(nowMs));
+  return Number(h);
+}
+
 /** Monday (yyyy-MM-dd, Asia/Baku) of the week containing `nowMs`. */
 export function weekKey(nowMs: number): string {
   const dn = dayNumber(dayKey(nowMs));

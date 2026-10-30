@@ -1,13 +1,14 @@
 import 'dart:io' show Platform;
 
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 
 import '../constants/app_constants.dart';
 import 'backend_service.dart';
 
-/// Sends uncaught Dart errors to the backend (`reportError`) so the admin
-/// can see them. Best effort: never throws, de-duplicates, and only reports
-/// while a user is signed in. Native (Java/C++) crashes are NOT covered.
+/// Sends uncaught Dart errors to the backend (`reportError`, visible in the
+/// admin panel) and — in release builds — to Firebase Crashlytics, which also
+/// captures native crashes. Best effort: never throws, de-duplicates.
 class ErrorReporter {
   ErrorReporter(this._backend);
 
@@ -18,16 +19,43 @@ class ErrorReporter {
   /// Route currently shown; updated by the router observer if wired.
   String? screen;
 
-  void install() {
+  bool _crashlytics = false;
+
+  Future<void> install() async {
+    try {
+      _crashlytics = !kDebugMode;
+      await FirebaseCrashlytics.instance
+          .setCrashlyticsCollectionEnabled(_crashlytics);
+    } catch (_) {
+      _crashlytics = false;
+    }
     final previous = FlutterError.onError;
     FlutterError.onError = (details) {
       previous?.call(details);
+      if (_crashlytics) {
+        try {
+          FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+        } catch (_) {}
+      }
       report(details.exception, details.stack);
     };
     PlatformDispatcher.instance.onError = (error, stack) {
+      if (_crashlytics) {
+        try {
+          FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        } catch (_) {}
+      }
       report(error, stack);
       return true;
     };
+  }
+
+  /// Links crash reports to the (pseudonymous) account id; null on sign-out.
+  Future<void> setUser(String? uid) async {
+    if (!_crashlytics) return;
+    try {
+      await FirebaseCrashlytics.instance.setUserIdentifier(uid ?? '');
+    } catch (_) {}
   }
 
   Future<void> report(Object error, StackTrace? stack) async {
