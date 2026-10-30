@@ -57,6 +57,17 @@ foreach ($f in $files) {
     }
   }
 }
+# Crashlytics plugin 3.x needs google-services 4.4.1+ (idempotent version bump)
+foreach ($f in $files) {
+  if ($f.Settings -and (Test-Path $f.Path)) {
+    $txt = [IO.File]::ReadAllText($f.Path)
+    $fixed = [regex]::Replace($txt, '(com\.google\.gms\.google-services["''\)]*\s+version\s+["''])[^"'']+(["''])', '${1}4.4.2${2}')
+    if ($fixed -ne $txt) {
+      [IO.File]::WriteAllText($f.Path, $fixed, $utf8)
+      Write-Host ("google-services plugin 4.4.2-ye yenilendi: " + $f.Path) -ForegroundColor Green
+    }
+  }
+}
 if (Test-Path $m) {
   $t = [IO.File]::ReadAllText($m)
   if ($t -notmatch 'pathPrefix="/invite"') {
