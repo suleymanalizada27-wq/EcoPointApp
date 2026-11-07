@@ -119,13 +119,13 @@ Onboarding · email/password + Google sign-in · password reset · profile setup
 home dashboard · native QR scanner (permission gate, duplicate-scan lock, torch) · rewards marketplace (search, categories, stock) ·
 coupons · BakıKart request · EP transfer (search by name/ID or scan a friend's QR) with history · smart-bin map (OpenStreetMap, no key) + list,
 location permission with fallbacks · statistics (7/30-day chart) · streak, daily missions, achievements · leaderboard ·
-referral · notifications (global + personal) · settings (language az/en/ru/tr, theme dark/light/system, notification prefs, privacy, about) ·
+referral · notifications (global + personal) · settings (language az/en/ru/tr/es/de/it/zh/ja/ko/ar/fa/hi/pt/vi — Arabic and Persian are right-to-left, theme dark/light/system, notification prefs, privacy, about) ·
 sign-out · account deletion · offline banner + RTDB offline cache.
 
 ## Verification
 
 Actually run in the sandbox:
-- `firebase/functions`: `npm test` → **121 tests pass** (QR forgery/replay/expiry/concurrency, double-spend, idempotency, refunds, caps, rules, push tokens/delivery, personalized smart notifications); `tsc` builds; building and starting from the repo root (`npm run build`, `npm start`) works.
+- `firebase/functions`: `npm test` → **123 tests pass** (QR forgery/replay/expiry/concurrency, double-spend, idempotency, refunds, caps, rules, push tokens/delivery, personalized smart notifications); `tsc` builds; building and starting from the repo root (`npm run build`, `npm start`) works.
 - `python3 tool/verify_static.py`: Dart **syntax** of all files (tree-sitter), every import resolves, 338 localization keys identical across az/en/ru/tr, every `tr('…')` key exists.
 
 **Not** run in the sandbox (needs a device): Flutter compile, any real FCM delivery, Google sign-in, camera, location. The author's machine ran `flutter analyze`/`test` and a release APK before the push/Google/icon changes; those changes still need that check.

@@ -263,7 +263,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         child: Column(
           children: [
             Align(
-              alignment: Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: IconButton(
                 tooltip: context.tr('close'),
                 onPressed: () => context.pop(),

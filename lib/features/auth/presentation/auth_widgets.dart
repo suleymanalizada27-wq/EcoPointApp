@@ -59,7 +59,7 @@ class AuthScaffold extends StatelessWidget {
                         height: 56,
                         child: showBack
                             ? Align(
-                                alignment: Alignment.centerLeft,
+                                alignment: AlignmentDirectional.centerStart,
                                 child: IconButton(
                                   tooltip: MaterialLocalizations.of(context)
                                       .backButtonTooltip,

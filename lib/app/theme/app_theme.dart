@@ -12,6 +12,49 @@ abstract final class AppTheme {
   static ThemeData get dark => _build(EpColors.dark, Brightness.dark);
   static ThemeData get light => _build(EpColors.light, Brightness.light);
 
+  /// Arabic, Persian and Hindi need a font that actually contains their
+  /// glyphs, and they must not use letter spacing: any non-zero spacing breaks
+  /// the joining of cursive letters (Arabic script) and conjuncts
+  /// (Devanagari). Other languages return [theme] unchanged.
+  static ThemeData localized(ThemeData theme, Locale locale) {
+    final code = locale.languageCode;
+    if (code != 'ar' && code != 'fa' && code != 'hi') return theme;
+
+    TextStyle? fix(TextStyle? s) {
+      if (s == null) return null;
+      final flat = s.copyWith(letterSpacing: 0);
+      return code == 'hi'
+          ? GoogleFonts.notoSansDevanagari(textStyle: flat)
+          : GoogleFonts.notoSansArabic(textStyle: flat);
+    }
+
+    TextTheme apply(TextTheme t) => t.copyWith(
+          displayLarge: fix(t.displayLarge),
+          displayMedium: fix(t.displayMedium),
+          displaySmall: fix(t.displaySmall),
+          headlineLarge: fix(t.headlineLarge),
+          headlineMedium: fix(t.headlineMedium),
+          headlineSmall: fix(t.headlineSmall),
+          titleLarge: fix(t.titleLarge),
+          titleMedium: fix(t.titleMedium),
+          titleSmall: fix(t.titleSmall),
+          bodyLarge: fix(t.bodyLarge),
+          bodyMedium: fix(t.bodyMedium),
+          bodySmall: fix(t.bodySmall),
+          labelLarge: fix(t.labelLarge),
+          labelMedium: fix(t.labelMedium),
+          labelSmall: fix(t.labelSmall),
+        );
+
+    return theme.copyWith(
+      textTheme: apply(theme.textTheme),
+      primaryTextTheme: apply(theme.primaryTextTheme),
+      appBarTheme: theme.appBarTheme.copyWith(
+        titleTextStyle: fix(theme.appBarTheme.titleTextStyle),
+      ),
+    );
+  }
+
   static ThemeData _build(EpColors c, Brightness b) {
     final scheme = ColorScheme(
       brightness: b,

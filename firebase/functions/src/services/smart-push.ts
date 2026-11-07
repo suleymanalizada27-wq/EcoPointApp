@@ -1,7 +1,7 @@
 import { BUILT_IN_CATALOG } from '../catalog';
 import { MONTHLY } from '../lib/config';
 import { bakuHour, dayKey, liveStreak } from '../lib/rules';
-import { smartText, type SmartKind, type SmartVars } from '../lib/notify-text';
+import { smartText, type Lang, type SmartKind, type SmartVars } from '../lib/notify-text';
 import type { Store } from '../store';
 import { forEachPushUser, userLang, type ReminderEnv, type RunResult } from './reminders';
 
@@ -129,7 +129,7 @@ function daysBetweenKeys(a: string, b: string): number {
   return Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 86_400_000);
 }
 
-async function rewardList(store: Store, lang: 'az' | 'en' | 'ru' | 'tr'): Promise<RewardLite[]> {
+async function rewardList(store: Store, lang: Lang): Promise<RewardLite[]> {
   const all = await store.get<Record<string, any>>('rewards');
   const rows =
     all && Object.keys(all).length > 0
@@ -137,7 +137,7 @@ async function rewardList(store: Store, lang: 'az' | 'en' | 'ru' | 'tr'): Promis
       : BUILT_IN_CATALOG.map((c) => ({ ...c }));
   return rows
     .filter((r: any) => r.kind === 'item' && r.active !== false && typeof r.ep === 'number' && (r.stock === undefined || r.stock > 0))
-    .map((r: any) => ({ id: String(r.id), name: String(r.name?.[lang] ?? r.name?.az ?? r.id), ep: r.ep as number }));
+    .map((r: any) => ({ id: String(r.id), name: String(r.name?.[lang] ?? r.name?.en ?? r.name?.az ?? r.id), ep: r.ep as number }));
 }
 
 /**
@@ -156,7 +156,7 @@ export async function runSmartPush(env: ReminderEnv): Promise<RunResult> {
   const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
   const daysLeft = Math.max(0, daysInMonth - Number(today.slice(8, 10)));
 
-  const rewardsByLang: Partial<Record<'az' | 'en' | 'ru' | 'tr', RewardLite[]>> = {};
+  const rewardsByLang: Partial<Record<Lang, RewardLite[]>> = {};
 
   return forEachPushUser(env, async (uid) => {
     const log = (await store.get<any>(`pushLog/${uid}`)) ?? {};

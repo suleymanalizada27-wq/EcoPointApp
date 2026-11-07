@@ -338,6 +338,7 @@ const Map<String, String> stringsEn = {
   'profile_user_id': 'User ID',
   'settings_title': 'Settings',
   'settings_language': 'Language',
+  'lang_no_results': 'No languages found',
   'settings_theme': 'Appearance',
   'theme_system': 'System',
   'theme_light': 'Light',

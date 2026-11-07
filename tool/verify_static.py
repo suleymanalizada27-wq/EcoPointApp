@@ -2,8 +2,8 @@
 """Offline static checks (no Dart SDK needed):
  1. syntax check of every .dart file via tree-sitter (if installed)
  2. every relative / package:ecopoint imports resolves to a file
- 3. every context.tr('key') literal exists in all 4 string tables
- 4. all 4 string tables have identical key sets
+ 3. every context.tr('key') literal exists in all string tables
+ 4. all string tables have identical key sets
 Run: python3 tool/verify_static.py
 """
 import re, sys, pathlib
@@ -54,7 +54,7 @@ for f in files:
 def table(code):
     txt = (lib / 'app/localization' / f'strings_{code}.dart').read_text()
     return set(re.findall(r"^\s*'([a-z0-9_]+)'\s*:", txt, re.M))
-tables = {c: table(c) for c in ('az', 'en', 'ru', 'tr')}
+tables = {c: table(c) for c in ('az', 'en', 'ru', 'tr', 'es', 'de', 'it', 'zh', 'ja', 'ko', 'ar', 'fa', 'hi', 'pt', 'vi', 'fr')}
 base = tables['en']
 for c, t in tables.items():
     for k in sorted(base - t): errors.append(f'L10N {c} missing {k}')
@@ -65,7 +65,7 @@ for f in files:
     used |= set(lit.findall(f.read_text()))
 for k in sorted(used - base):
     errors.append(f'L10N key used but undefined: {k}')
-print(f'l10n: {len(base)} keys x 4 langs, {len(used)} literal keys used')
+print(f'l10n: {len(base)} keys x {len(tables)} langs, {len(used)} literal keys used')
 
 if errors:
     print('\n'.join(errors)); sys.exit(1)

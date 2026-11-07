@@ -34,24 +34,10 @@ class SettingsScreen extends ConsumerWidget {
           Text(context.tr('settings_language'),
               style: context.text.titleSmall),
           const SizedBox(height: Sp.xs),
-          EpCard(
-            padding: const EdgeInsets.symmetric(vertical: Sp.xs),
-            child: Column(
-              children: [
-                for (final l in AppLocalizations.supportedLocales)
-                  RadioListTile<String>(
-                    value: l.languageCode,
-                    groupValue: locale.languageCode,
-                    activeColor: c.emerald,
-                    title: Text(AppLocalizations.nativeName(l.languageCode)),
-                    onChanged: (v) {
-                      if (v != null) {
-                        ref.read(localeProvider.notifier).setLanguage(v);
-                      }
-                    },
-                  ),
-              ],
-            ),
+          _LanguagePicker(
+            current: locale.languageCode,
+            onSelected: (code) =>
+                ref.read(localeProvider.notifier).setLanguage(code),
           ),
           const SizedBox(height: Sp.lg),
           Text(context.tr('settings_theme'), style: context.text.titleSmall),
@@ -256,6 +242,125 @@ class AboutScreen extends StatelessWidget {
             icon: const Icon(Icons.open_in_new_rounded, size: 18),
             label: Text(context.tr('about_open_site')),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+
+/// Language list with a flag for every language and a search box that matches
+/// the native name, the English name or the language code.
+class _LanguagePicker extends StatefulWidget {
+  const _LanguagePicker({required this.current, required this.onSelected});
+
+  final String current;
+  final ValueChanged<String> onSelected;
+
+  @override
+  State<_LanguagePicker> createState() => _LanguagePickerState();
+}
+
+class _LanguagePickerState extends State<_LanguagePicker> {
+  final TextEditingController _search = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.ep;
+    final codes = [
+      for (final l in AppLocalizations.supportedLocales)
+        if (AppLocalizations.matchesQuery(l.languageCode, _query))
+          l.languageCode,
+    ];
+
+    return EpCard(
+      padding: const EdgeInsets.symmetric(vertical: Sp.xs),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(Sp.sm, Sp.xs, Sp.sm, Sp.xs),
+            child: TextField(
+              controller: _search,
+              onChanged: (v) => setState(() => _query = v),
+              textInputAction: TextInputAction.search,
+              style: context.text.bodyLarge,
+              decoration: InputDecoration(
+                hintText: context.tr('search'),
+                hintStyle:
+                    context.text.bodyMedium?.copyWith(color: c.textTertiary),
+                prefixIcon: Icon(Icons.search_rounded, color: c.textSecondary),
+                suffixIcon: _query.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: context.tr('close'),
+                        icon: Icon(Icons.close_rounded,
+                            color: c.textSecondary),
+                        onPressed: () {
+                          _search.clear();
+                          setState(() => _query = '');
+                        },
+                      ),
+                filled: true,
+                fillColor: c.surface,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(Rad.pill),
+                  borderSide: BorderSide(color: c.outline),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(Rad.pill),
+                  borderSide: BorderSide(color: c.outline),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(Rad.pill),
+                  borderSide: BorderSide(color: c.emerald, width: 1.6),
+                ),
+              ),
+            ),
+          ),
+          if (codes.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(Sp.md),
+              child: Text(
+                context.tr('lang_no_results'),
+                style: context.text.bodyMedium
+                    ?.copyWith(color: c.textSecondary),
+              ),
+            )
+          else
+            for (final code in codes)
+              RadioListTile<String>(
+                value: code,
+                groupValue: widget.current,
+                activeColor: c.emerald,
+                title: Row(
+                  children: [
+                    Text(AppLocalizations.flag(code),
+                        style: const TextStyle(fontSize: 24)),
+                    const SizedBox(width: Sp.sm),
+                    Flexible(
+                      child: Text(
+                        AppLocalizations.nativeName(code),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                subtitle: AppLocalizations.englishName(code) ==
+                        AppLocalizations.nativeName(code)
+                    ? null
+                    : Text(AppLocalizations.englishName(code)),
+                onChanged: (v) {
+                  if (v != null) widget.onSelected(v);
+                },
+              ),
         ],
       ),
     );

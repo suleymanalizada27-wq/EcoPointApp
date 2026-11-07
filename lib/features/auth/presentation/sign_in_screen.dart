@@ -107,7 +107,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     (v ?? '').isEmpty ? context.tr('auth_err_password_short') : null,
               ),
               Align(
-                alignment: Alignment.centerRight,
+                alignment: AlignmentDirectional.centerEnd,
                 child: TextButton(
                   onPressed: () => context.push('/forgot-password'),
                   child: Text(context.tr('auth_forgot_password')),

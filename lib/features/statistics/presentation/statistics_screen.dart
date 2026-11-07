@@ -248,7 +248,7 @@ class _Tile extends StatelessWidget {
           const SizedBox(height: Sp.xs),
           FittedBox(
             fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
+            alignment: AlignmentDirectional.centerStart,
             child: Text(value, style: context.text.headlineSmall),
           ),
           Text(label,
@@ -308,7 +308,7 @@ class ImpactCard extends StatelessWidget {
             const SizedBox(height: 6),
             FittedBox(
               fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: Text.rich(TextSpan(children: [
                 TextSpan(text: value, style: context.text.titleLarge),
                 TextSpan(

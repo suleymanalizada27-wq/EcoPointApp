@@ -339,6 +339,7 @@ const Map<String, String> stringsAz = {
   'profile_user_id': 'İstifadəçi ID',
   'settings_title': 'Parametrlər',
   'settings_language': 'Dil',
+  'lang_no_results': 'Dil tapılmadı',
   'settings_theme': 'Görünüş',
   'theme_system': 'Sistem',
   'theme_light': 'Açıq',

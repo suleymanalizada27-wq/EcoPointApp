@@ -40,7 +40,7 @@ class Reward {
   bool get inStock => active && (stock == null || stock! > 0);
 
   String nameFor(String languageCode) =>
-      names[languageCode] ?? names['az'] ?? names['en'] ?? id;
+      names[languageCode] ?? names['en'] ?? names['az'] ?? id;
 
   IconData get icon => RewardIcons.byKey(iconKey, category);
 

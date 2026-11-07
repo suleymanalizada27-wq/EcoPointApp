@@ -338,6 +338,7 @@ const Map<String, String> stringsTr = {
   'profile_user_id': 'Kullanıcı ID',
   'settings_title': 'Ayarlar',
   'settings_language': 'Dil',
+  'lang_no_results': 'Dil bulunamadı',
   'settings_theme': 'Görünüm',
   'theme_system': 'Sistem',
   'theme_light': 'Açık',

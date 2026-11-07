@@ -100,3 +100,21 @@ describe('runSmartPush', () => {
     expect((await runSmartPush({ store, push, now: baku('2026-03-15', 12, 3) })).sent).toBe(0);
   });
 });
+
+import { smartText as _smartText, asLang as _asLang, dailyReminderText as _daily } from '../src/lib/notify-text';
+describe('spanish texts', () => {
+  it('asLang accepts es and falls back to az for unknown', () => {
+    expect(_asLang('es')).toBe('es');
+    expect(_asLang('xx')).toBe('az');
+  });
+  it('builds personal Spanish messages with real numbers', () => {
+    const t = _smartText('es', 'rewardClose', { name: 'Ana', reward: 'Cupón', gap: 40 });
+    expect(t.body).toContain('Ana, ');
+    expect(t.body).toContain('40 EP');
+    expect(_daily('es', 3).body).toContain('3 días');
+    for (const l of ['de', 'it', 'zh', 'ja', 'ko', 'ar', 'fa', 'hi', 'pt', 'vi', 'fr'] as const) {
+      expect(_smartText(l, 'rewardClose', { name: 'Ana', reward: 'X', gap: 40 }).body).toContain('40 EP');
+      expect(_asLang(l)).toBe(l);
+    }
+  });
+});

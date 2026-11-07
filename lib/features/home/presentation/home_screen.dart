@@ -335,7 +335,7 @@ class _SummaryRow extends ConsumerWidget {
               else
                 FittedBox(
                   fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
+                  alignment: AlignmentDirectional.centerStart,
                   child: Text(Fmt.number(value),
                       style: context.text.titleLarge),
                 ),

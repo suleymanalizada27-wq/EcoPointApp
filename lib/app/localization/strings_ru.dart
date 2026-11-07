@@ -338,6 +338,7 @@ const Map<String, String> stringsRu = {
   'profile_user_id': 'ID пользователя',
   'settings_title': 'Настройки',
   'settings_language': 'Язык',
+  'lang_no_results': 'Язык не найден',
   'settings_theme': 'Оформление',
   'theme_system': 'Системная',
   'theme_light': 'Светлая',

@@ -48,7 +48,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(Sp.gutter, Sp.sm, Sp.xs, 0),
+              padding: const EdgeInsetsDirectional.fromSTEB(Sp.gutter, Sp.sm, Sp.xs, 0),
               child: Row(
                 children: [
                   const BrandMark(size: 36),

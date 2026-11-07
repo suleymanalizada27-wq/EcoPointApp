@@ -115,7 +115,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
           ),
           SliverToBoxAdapter(
             child: Align(
-              alignment: Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: TextButton.icon(
                 onPressed: () => context.push('/purchases'),
                 icon: const Icon(Icons.receipt_long_rounded, size: 18),
@@ -269,8 +269,8 @@ class RewardCard extends ConsumerWidget {
                     child: Icon(reward.icon, size: 44, color: c.emerald),
                   ),
                   if (!reward.inStock)
-                    Positioned(
-                      left: 6,
+                    PositionedDirectional(
+                      start: 6,
                       top: 6,
                       child: EpBadge(
                         label: context.tr('reward_out_of_stock'),
@@ -278,8 +278,8 @@ class RewardCard extends ConsumerWidget {
                       ),
                     ),
                   if (reward.kind != RewardKind.item)
-                    Positioned(
-                      left: 6,
+                    PositionedDirectional(
+                      start: 6,
                       top: 6,
                       child: EpBadge(
                         label: context.tr('reward_partner'),
@@ -399,7 +399,7 @@ class _CategoryChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.ep;
     return Padding(
-      padding: const EdgeInsets.only(right: Sp.xs),
+      padding: const EdgeInsetsDirectional.only(end: Sp.xs),
       child: Semantics(
         button: true,
         selected: selected,
