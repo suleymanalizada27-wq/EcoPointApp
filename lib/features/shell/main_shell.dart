@@ -6,9 +6,11 @@ import '../../app/localization/app_localizations.dart';
 import '../../app/theme/ep_colors.dart';
 import '../../app/theme/tokens.dart';
 import '../../core/services/push_service.dart';
+import '../../core/services/widget_sync.dart';
 import '../auth/data/auth_repository.dart';
 import '../../core/services/invite_link.dart';
 import 'notification_primer.dart';
+import 'shortcuts_host.dart';
 
 /// Hosts the four tabs with a bottom bar and a raised centre scan button.
 class MainShell extends ConsumerWidget {
@@ -24,6 +26,8 @@ class MainShell extends ConsumerWidget {
     ref.watch(pushRegistrationProvider);
     ref.watch(pushTopicProvider);
     ref.watch(pushListenersProvider);
+    // Home-screen widget (Android): balance + streak.
+    ref.watch(widgetSyncProvider);
     final c = context.ep;
 
     void go(int i) =>
@@ -35,6 +39,7 @@ class MainShell extends ConsumerWidget {
         shell,
         const NotificationPrimerHost(),
         const InviteLinkHost(),
+        const ShortcutsHost(),
       ]),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Semantics(

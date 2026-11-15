@@ -65,7 +65,7 @@ Platform folders created and patched.
 
 Still required (not automated, needs YOUR Firebase account):
   1. dart pub global activate flutterfire_cli
-  2. flutterfire configure --project=ecopoint-b3d60 --platforms=android,ios
+  2. flutterfire configure --project=ecopoint-suleyman-2026 --platforms=android,ios
      (overwrites lib/firebase_options.dart with real values and downloads
       google-services.json / GoogleService-Info.plist)
   3. Android Google sign-in: add your debug/release SHA-1 + SHA-256 in the

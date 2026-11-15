@@ -14,6 +14,8 @@ import '../core/services/invite_link.dart';
 import '../features/admin/presentation/admin_bins_screen.dart';
 import '../features/admin/presentation/admin_home_screen.dart';
 import '../features/admin/presentation/admin_misc_screens.dart';
+import '../features/admin/presentation/admin_push_screen.dart';
+import '../features/admin/presentation/admin_reports_screen.dart';
 import '../features/admin/presentation/admin_rewards_screen.dart';
 import '../features/admin/presentation/admin_stats_screen.dart';
 import '../features/admin/presentation/admin_users_screen.dart';
@@ -182,6 +184,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/admin/users', builder: (_, __) => const AdminUsersScreen()),
       GoRoute(path: '/admin/rewards', builder: (_, __) => const AdminRewardsScreen()),
       GoRoute(path: '/admin/bins', builder: (_, __) => const AdminBinsScreen()),
+      GoRoute(path: '/admin/push', builder: (_, __) => const AdminPushScreen()),
+      GoRoute(path: '/admin/reports', builder: (_, __) => const AdminReportsScreen()),
       GoRoute(path: '/admin/transport', builder: (_, __) => const AdminTransportScreen()),
       GoRoute(path: '/admin/coupons', builder: (_, __) => const AdminCouponsScreen()),
       GoRoute(path: '/admin/broadcast', builder: (_, __) => const AdminBroadcastScreen()),

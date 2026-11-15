@@ -72,12 +72,12 @@ class _BinState extends ConsumerState<_BinForm> {
   late final _lat = TextEditingController(text: widget.bin?.lat?.toString() ?? '');
   late final _lng = TextEditingController(text: widget.bin?.lng?.toString() ?? '');
   String? _code;
-  int? _expires;
+  late final _grams = TextEditingController(text: '300');
   bool _busy = false;
 
   @override
   void dispose() {
-    for (final c in [_id, _name, _loc, _lat, _lng]) {
+    for (final c in [_id, _name, _loc, _lat, _lng, _grams]) {
       c.dispose();
     }
     super.dispose();
@@ -107,6 +107,23 @@ class _BinState extends ConsumerState<_BinForm> {
     if (ok) ref.invalidate(binsProvider);
   }
 
+  Future<void> _simulate() async {
+    final id = _id.text.trim();
+    final grams = int.tryParse(_grams.text.trim()) ?? 0;
+    if (id.isEmpty) {
+      showEpToast(context, 'Əvvəl qutunun ID-sini yazın', kind: ToastKind.error);
+      return;
+    }
+    try {
+      final r = await ref.read(adminApiProvider).simulateDeposit(id, grams);
+      if (mounted) {
+        showEpToast(context, 'Qutu təsdiq etdi: +${r['ep']} EP', kind: ToastKind.success);
+      }
+    } catch (e) {
+      if (mounted) showEpToast(context, adminErrorText(e), kind: ToastKind.error);
+    }
+  }
+
   Future<void> _issue() async {
     final id = _id.text.trim();
     if (id.isEmpty) {
@@ -114,11 +131,10 @@ class _BinState extends ConsumerState<_BinForm> {
       return;
     }
     try {
-      final r = await ref.read(adminApiProvider).issueBinCode(id, 3600);
+      final r = await ref.read(adminApiProvider).issueBinCode(id);
       if (!mounted) return;
       setState(() {
         _code = '${r['code']}';
-        _expires = (r['expiresAt'] as num?)?.toInt();
       });
     } catch (e) {
       if (mounted) showEpToast(context, adminErrorText(e), kind: ToastKind.error);
@@ -152,7 +168,7 @@ class _BinState extends ConsumerState<_BinForm> {
         EpButton(label: 'Yadda saxla', onPressed: _save, loading: _busy),
         const SizedBox(height: Sp.lg),
         EpButton(
-          label: 'İmzalı QR kod yarat (1 saat)',
+          label: 'Sabit QR kodu göstər (qutuya çap üçün)',
           kind: EpButtonKind.secondary,
           onPressed: _issue,
         ),
@@ -167,9 +183,28 @@ class _BinState extends ConsumerState<_BinForm> {
           ),
           const SizedBox(height: Sp.sm),
           SelectableText(_code!, textAlign: TextAlign.center),
-          Text('Bitir: ${fmtTs((_expires ?? 0) * 1000)}',
+          const Text('Sabit kod: vaxtı bitmir, özü EP vermir. Qutu təsdiq edəndə EP verilir.',
               textAlign: TextAlign.center),
         ],
+        const SizedBox(height: Sp.lg),
+        const Divider(),
+        const Text('Virtual qutu (sınaq)',
+            style: TextStyle(fontWeight: FontWeight.w700)),
+        const SizedBox(height: Sp.xs),
+        const Text(
+            '1) Öz telefonunda bu qutunun QR-ni skan et. 2) Burada "Zibil at" bas: qutu təsdiq göndərir, EP skan edənə düşür. Serverdə SIM_ENABLED=1 olmalıdır.'),
+        const SizedBox(height: Sp.sm),
+        EpTextField(
+          label: 'Çəki (qram, 0 = sabit skan mükafatı)',
+          controller: _grams,
+          keyboardType: TextInputType.number,
+        ),
+        const SizedBox(height: Sp.sm),
+        EpButton(
+          label: 'Zibil at (virtual)',
+          kind: EpButtonKind.secondary,
+          onPressed: _simulate,
+        ),
       ]),
     );
   }

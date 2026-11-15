@@ -14,7 +14,8 @@
     "qr": "tsx tools/issue-bin-qr.ts",
     "serve": "npm run build && firebase emulators:start --only functions,database,auth",
     "deploy": "npm run build && firebase deploy --only functions,database",
-    "start": "node lib/server-main.js"
+    "start": "node lib/server-main.js",
+    "tick": "node lib/tick-main.js"
   },
   "dependencies": {
     "express": "^4.22.3",

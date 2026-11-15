@@ -1,7 +1,7 @@
 import { BUILT_IN_CATALOG } from '../catalog';
-import { MONTHLY } from '../lib/config';
-import { bakuHour, dayKey, liveStreak } from '../lib/rules';
-import { smartText, type Lang, type SmartKind, type SmartVars } from '../lib/notify-text';
+import { MISSIONS, MONTHLY } from '../lib/config';
+import { dayKey, liveStreak, missionComplete, weekKey } from '../lib/rules';
+import { extraText, smartText, TIP_COUNT, type Lang, type SmartKind, type SmartVars } from '../lib/notify-text';
 import type { Store } from '../store';
 import { forEachPushUser, userLang, type ReminderEnv, type RunResult } from './reminders';
 
@@ -9,7 +9,10 @@ import { forEachPushUser, userLang, type ReminderEnv, type RunResult } from './r
 export const SEND_FROM = 9;
 export const SEND_UNTIL = 21; // exclusive
 const DEFAULT_HOUR = 12;
-const WINDOW_HOURS = 3;
+/** Daily amount: adaptive between these (v2). */
+export const MIN_CAP = 4;
+export const MAX_CAP = 9;
+const COMEBACK_CAP = 2;
 
 /** Days before the same kind may be sent again to the same person. */
 const COOLDOWN_DAYS: Record<SmartKind, number> = {
@@ -140,41 +143,172 @@ async function rewardList(store: Store, lang: Lang): Promise<RewardLite[]> {
     .map((r: any) => ({ id: String(r.id), name: String(r.name?.[lang] ?? r.name?.en ?? r.name?.az ?? r.id), ep: r.ep as number }));
 }
 
+/** Minutes east of UTC of the person's most recent device (default Baku). */
+export async function userTz(store: Store, uid: string): Promise<number> {
+  const rows = await store.get<Record<string, { tz?: unknown; ts?: number }>>(`pushTokens/${uid}`);
+  let best: { tz?: unknown; ts?: number } | null = null;
+  for (const v of Object.values(rows ?? {})) if (!best || (v?.ts ?? 0) >= (best.ts ?? 0)) best = v;
+  return typeof best?.tz === 'number' ? best.tz : 240;
+}
+
+/** Local day key and hour for an offset in minutes. */
+export function localClock(now: number, tzMin: number): { day: string; hour: number } {
+  const d = new Date(now + tzMin * 60_000);
+  return { day: d.toISOString().slice(0, 10), hour: d.getUTCHours() };
+}
+
+export type Freq = 'low' | 'normal' | 'high';
+
+/** Reads the frequency choice (legacy `notifyFewer` meant "low"). */
+export function freqOf(prefs: { notifyFreq?: unknown; notifyFewer?: unknown }): Freq {
+  if (prefs.notifyFreq === 'low' || prefs.notifyFreq === 'normal' || prefs.notifyFreq === 'high') {
+    return prefs.notifyFreq;
+  }
+  return prefs.notifyFewer === true ? 'low' : 'normal';
+}
+
 /**
- * Hourly job. Sends at most ONE personal push per person per day, at the
- * person's own preferred hour (default 12:00), only between 09:00 and 21:00
- * Baku time, never the same kind inside its cool-down, and only what the
- * person allowed in notification settings.
+ * How many pushes today. "low" = 2, "high" = 9. "normal" adapts between 4 and
+ * 9: +1 for every day in the last 7 on which the person tapped a push. After
+ * 7 days without a scan everyone is in comeback mode (2 a day at most).
+ */
+export function dailyCap(opensLast7: number, inactiveDays: number | null, freq: unknown): number {
+  if (inactiveDays !== null && inactiveDays >= 7) return COMEBACK_CAP;
+  if (freq === 'low') return 2;
+  if (freq === 'high') return MAX_CAP;
+  return Math.min(MAX_CAP, MIN_CAP + Math.max(0, Math.min(5, opensLast7)));
+}
+
+/** Hours of the day outside the person's quiet hours (default 22:00–09:00). */
+export function allowedHours(quietFrom: unknown, quietTo: unknown): number[] {
+  const f = typeof quietFrom === 'number' && Number.isInteger(quietFrom) && quietFrom >= 0 && quietFrom <= 23 ? quietFrom : 22;
+  const t = typeof quietTo === 'number' && Number.isInteger(quietTo) && quietTo >= 0 && quietTo <= 23 ? quietTo : 9;
+  const out: number[] = [];
+  for (let h = 0; h < 24; h++) {
+    const quiet = f === t ? false : f < t ? h >= f && h < t : h >= f || h < t;
+    if (!quiet) out.push(h);
+  }
+  return out;
+}
+
+/** Evenly spread send hours inside the allowed hours. */
+export function slotHours(cap: number, allowed: number[] = allowedHours(undefined, undefined)): number[] {
+  const n = Math.max(1, Math.min(MAX_CAP, cap, allowed.length));
+  return Array.from({ length: n }, (_, i) => allowed[Math.floor((i * allowed.length) / n)]);
+}
+
+/** Highest-priority personal extra: milestone → mission → leaderboard. */
+export function pickExtra(
+  f: { name: string; streak: number; checkedInToday: boolean },
+  scansToday: number,
+  claimedToday: Set<string>,
+  rank: { rank: number; gap: number | null } | null,
+  lastSent: Partial<Record<string, number>>,
+  now: number,
+  allow: { activity: boolean; missions: boolean },
+): { kind: 'milestone' | 'mission' | 'leaderboard'; vars: Record<string, number>; route: string } | null {
+  const gapOk = (k: string, days: number) => !lastSent[k] || now - (lastSent[k] as number) >= days * 86_400_000;
+  if (allow.activity && f.checkedInToday && [7, 14, 30, 60, 100].includes(f.streak) && gapOk('milestone', 20)) {
+    return { kind: 'milestone', vars: { streak: f.streak }, route: '/challenges' };
+  }
+  if (allow.missions && gapOk('mission', 1)) {
+    let best: { ep: number; left: number } | null = null;
+    for (const [id, m] of Object.entries(MISSIONS) as Array<[keyof typeof MISSIONS, (typeof MISSIONS)[keyof typeof MISSIONS]]>) {
+      if (claimedToday.has(id)) continue;
+      const progress = m.kind === 'scansToday' ? scansToday : f.streak;
+      if (missionComplete(id, scansToday, f.streak)) {
+        best = { ep: m.ep, left: 0 };
+        break;
+      }
+      const left = m.goal - progress;
+      if (m.kind === 'scansToday' && progress >= 1 && left <= 2 && (!best || left < best.left)) {
+        best = { ep: m.ep, left };
+      }
+    }
+    if (best) return { kind: 'mission', vars: { ep: best.ep, left: best.left }, route: '/challenges' };
+  }
+  if (allow.missions && rank && gapOk('leaderboard', 2)) {
+    if (rank.rank <= 3) return { kind: 'leaderboard', vars: { rank: rank.rank }, route: '/leaderboard' };
+    if (rank.gap !== null && rank.gap > 0 && rank.gap <= 60) {
+      return { kind: 'leaderboard', vars: { rank: rank.rank, gap: rank.gap }, route: '/leaderboard' };
+    }
+  }
+  return null;
+}
+
+export interface RankRow {
+  rank: number;
+  gap: number | null;
+}
+
+/** This week's ranking (EP), computed once per run. */
+export async function weeklyRanks(store: Store, now: number): Promise<Map<string, RankRow>> {
+  const board = (await store.get<Record<string, { ep?: number }>>(`weeklyBoard/${weekKey(now)}`)) ?? {};
+  const rows = Object.entries(board)
+    .map(([uid, v]) => ({ uid, ep: num(v?.ep) }))
+    .filter((r) => r.ep > 0)
+    .sort((a, b) => b.ep - a.ep);
+  const out = new Map<string, RankRow>();
+  rows.forEach((r, i) => out.set(r.uid, { rank: i + 1, gap: i === 0 ? null : rows[i - 1].ep - r.ep + 1 }));
+  return out;
+}
+
+/** Counts a sent/opened push for the admin statistics (server-side only). */
+export async function countPush(store: Store, now: number, field: 'sent' | 'opened', kind: string): Promise<void> {
+  try {
+    await store.transaction(`pushStats/${dayKey(now)}/${field}/${kind}`, (c) => (typeof c === 'number' ? c : 0) + 1);
+  } catch {
+    /* statistics must never block a push */
+  }
+}
+
+/** Admin master switch (config/pushDisabled). */
+export async function pushIsDisabled(store: Store): Promise<boolean> {
+  return (await store.get<boolean>('config/pushDisabled')) === true;
+}
+
+/**
+ * Hourly job (v2). Each person has up to `dailyCap` slots spread over the
+ * hours that are not their quiet hours (device time zone). A slot sends the
+ * most useful message that is still valid at send time, otherwise stays
+ * silent. Slots are claimed atomically, so overlapping ticks or two
+ * schedulers never double-send.
  */
 export async function runSmartPush(env: ReminderEnv): Promise<RunResult> {
   const { store, now } = env;
-  const hour = bakuHour(now);
-  if (hour < SEND_FROM || hour >= SEND_UNTIL) return { considered: 0, sent: 0 };
-  const today = dayKey(now);
-  const month = today.slice(0, 7);
-  const [y, m] = month.split('-').map(Number);
-  const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
-  const daysLeft = Math.max(0, daysInMonth - Number(today.slice(8, 10)));
-
+  if (await pushIsDisabled(store)) return { considered: 0, sent: 0 };
   const rewardsByLang: Partial<Record<Lang, RewardLite[]>> = {};
+  let ranks: Map<string, RankRow> | null = null;
 
   return forEachPushUser(env, async (uid) => {
-    const log = (await store.get<any>(`pushLog/${uid}`)) ?? {};
-    if (log.lastDay === today) return false;
-
-    const habit = await store.get<Record<string, unknown>>(`users/${uid}/habit`);
-    const sendHour = sendHourFor(habit);
-    if (hour < sendHour || hour >= sendHour + WINDOW_HOURS) return false;
+    const tz = await userTz(store, uid);
+    const local = localClock(now, tz);
 
     const prefs = (await store.get<any>(`users/${uid}/prefs`)) ?? {};
-    const allow = { activity: prefs.notifyActivity !== false, offers: prefs.notifyOffers !== false };
-    if (!allow.activity && !allow.offers) return false;
+    const allowed = allowedHours(prefs.quietFrom, prefs.quietTo);
+    if (!allowed.includes(local.hour)) return false;
+    const allow = {
+      activity: prefs.notifyActivity !== false,
+      offers: prefs.notifyOffers !== false,
+      missions: prefs.notifyMissions !== false,
+      tips: prefs.notifyTips !== false,
+    };
+    if (!allow.activity && !allow.offers && !allow.missions && !allow.tips) return false;
+
+    const log = (await store.get<any>(`pushLog/${uid}`)) ?? {};
+    const sentToday: number = num(log.count?.[local.day]);
+    const opens = Object.keys(log.opens ?? {}).filter((d) => d >= localClock(now - 7 * 86_400_000, tz).day).length;
+
+    const today = dayKey(now);
+    const month = today.slice(0, 7);
+    const [y, m] = month.split('-').map(Number);
+    const daysLeft = Math.max(0, new Date(Date.UTC(y, m, 0)).getUTCDate() - Number(today.slice(8, 10)));
 
     const [name, balance, streakRaw, daily, scansMonth, claims, lang] = await Promise.all([
       store.get<string>(`users/${uid}/name`),
       store.get<number>(`users/${uid}/balance`),
       store.get<any>(`users/${uid}/streak`),
-      store.get<Record<string, { scans?: number }>>(`users/${uid}/daily`),
+      store.get<Record<string, { scans?: number; ep?: number }>>(`users/${uid}/daily`),
       store.get<number>(`users/${uid}/monthly/${month}/scans`),
       store.get<Record<string, unknown>>(`users/${uid}/claims`),
       userLang(store, uid),
@@ -184,10 +318,20 @@ export async function runSmartPush(env: ReminderEnv): Promise<RunResult> {
     for (const [d, v] of Object.entries(daily ?? {})) {
       if (num(v?.scans) > 0 && (!lastScanDay || d > lastScanDay)) lastScanDay = d;
     }
+    const inactive = lastScanDay ? daysBetweenKeys(lastScanDay, today) : null;
+    const cap = dailyCap(opens, inactive, freqOf(prefs));
+    if (sentToday >= cap) return false;
+    if (!slotHours(cap, allowed).includes(local.hour)) return false;
+
     const claimedMonthly = new Set(
       Object.keys(claims ?? {})
         .filter((k) => k.startsWith('m_') && k.endsWith(`_${month}`))
         .map((k) => k.slice(0, k.length - month.length - 1)),
+    );
+    const claimedToday = new Set(
+      Object.keys(claims ?? {})
+        .filter((k) => k.endsWith(`_${today}`))
+        .map((k) => k.slice(0, k.length - today.length - 1)),
     );
     const facts: Facts = {
       name: String(name ?? '').trim().split(/\s+/)[0]?.slice(0, 20) ?? '',
@@ -199,7 +343,7 @@ export async function runSmartPush(env: ReminderEnv): Promise<RunResult> {
       daysLeftInMonth: daysLeft,
       balance: num(balance),
       lastScanDay,
-      daysSinceScan: lastScanDay ? daysBetweenKeys(lastScanDay, today) : null,
+      daysSinceScan: inactive,
     };
     // A brand-new account has nothing to report yet.
     if (!lastScanDay && facts.balance === 0 && !facts.streak) return false;
@@ -207,20 +351,65 @@ export async function runSmartPush(env: ReminderEnv): Promise<RunResult> {
     rewardsByLang[lang] ??= await rewardList(store, lang);
     const lastSent: Partial<Record<SmartKind, number>> = log.kinds ?? {};
     const pick = pickMessage(facts, rewardsByLang[lang] ?? [], allow, lastSent, num(log.comebacks), now);
-    if (!pick) return false;
 
-    // Claim "today" atomically so a restart or overlapping tick never double-sends.
-    const claim = await store.transaction(`pushLog/${uid}/lastDay`, (cur) => (cur === today ? undefined : today));
+    let text: { title: string; body: string } | null = null;
+    let kind: string = '';
+    let route = '/home';
+    if (pick) {
+      text = smartText(lang, pick.kind, pick.vars);
+      kind = pick.kind;
+      route = pick.route;
+    } else {
+      if (allow.missions) ranks ??= await weeklyRanks(store, now);
+      const extra = pickExtra(
+        facts,
+        num(daily?.[today]?.scans),
+        claimedToday,
+        ranks?.get(uid) ?? null,
+        log.kinds ?? {},
+        now,
+        allow,
+      );
+      if (extra) {
+        text = extraText(lang, extra.kind, { name: facts.name, ...extra.vars });
+        kind = extra.kind;
+        route = extra.route;
+      } else if (allow.tips) {
+        const todayRow = daily?.[today];
+        const tipsToday = num(log.tips?.[local.day]);
+        if (local.hour >= 18 && num(todayRow?.ep) > 0 && log.recapDay !== local.day) {
+          text = extraText(lang, 'recap', { name: facts.name, ep: num(todayRow?.ep), scans: num(todayRow?.scans) });
+          kind = 'recap';
+        } else if (tipsToday < Math.max(2, cap - 3)) {
+          const index = (num(log.tipIndex) + Number(today.slice(8, 10))) % TIP_COUNT;
+          text = extraText(lang, 'tip', { name: facts.name, index });
+          kind = 'tip';
+          route = '/scan';
+        }
+      }
+    }
+    if (!text) return false;
+
+    const slotId = `${local.day}_${String(local.hour).padStart(2, '0')}`;
+    const claim = await store.transaction(`pushLog/${uid}/slots/${slotId}`, (cur) => (cur ? undefined : now));
     if (!claim.committed) return false;
 
-    const text = smartText(lang, pick.kind, pick.vars);
-    await env.push.toUser(uid, { ...text, route: pick.route });
+    await env.push.toUser(uid, { ...text, route, kind, id: slotId });
+    await store.push(`users/${uid}/notifications`, { title: text.title, body: text.body, ts: now, kind });
+    await countPush(store, now, 'sent', kind);
     await store.update(`pushLog/${uid}`, {
       last: now,
-      lastKind: pick.kind,
-      [`kinds/${pick.kind}`]: now,
-      ...(pick.kind === 'comeback' ? { comebacks: num(log.comebacks) + 1 } : {}),
+      lastKind: kind,
+      lastDay: today,
+      [`count/${local.day}`]: sentToday + 1,
+      ...(kind !== 'tip' && kind !== 'recap' ? { [`kinds/${kind}`]: now } : {}),
+      ...(pick?.kind === 'comeback' ? { comebacks: num(log.comebacks) + 1 } : {}),
+      ...(kind === 'recap' ? { recapDay: local.day } : {}),
+      ...(kind === 'tip' ? { [`tips/${local.day}`]: num(log.tips?.[local.day]) + 1, tipIndex: num(log.tipIndex) + 1 } : {}),
     });
+    // Housekeeping: keep only the last few days of slot markers.
+    const old = Object.keys(log.slots ?? {}).filter((k) => k.slice(0, 10) < localClock(now - 3 * 86_400_000, tz).day);
+    await Promise.all(old.map((k) => store.remove(`pushLog/${uid}/slots/${k}`)));
     return true;
   });
 }

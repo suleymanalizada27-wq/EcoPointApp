@@ -83,6 +83,46 @@ class _SkeletonBoxState extends State<SkeletonBox>
   }
 }
 
+/// A few calm placeholder rows shown while a list loads (instead of a spinner).
+class SkeletonList extends StatelessWidget {
+  const SkeletonList({super.key, this.count = 5});
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: context.tr('loading'),
+      child: ExcludeSemantics(
+        child: ListView(
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(Sp.gutter),
+          children: [
+            for (var i = 0; i < count; i++) ...[
+              Row(
+                children: const [
+                  SkeletonBox(height: 48, width: 48, radius: 24),
+                  SizedBox(width: Sp.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SkeletonBox(height: 14),
+                        SizedBox(height: Sp.xs),
+                        SkeletonBox(height: 12, width: 140),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: Sp.md),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Friendly empty state with optional action.
 class EmptyView extends StatelessWidget {
   const EmptyView({
@@ -213,7 +253,7 @@ class AsyncBody<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return value.when(
       data: data,
-      loading: () => loading ?? const LoadingView(),
+      loading: () => loading ?? const SkeletonList(),
       error: (e, _) => ErrorView(error: e, onRetry: onRetry),
     );
   }

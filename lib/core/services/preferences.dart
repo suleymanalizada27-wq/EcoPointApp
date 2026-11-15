@@ -15,6 +15,9 @@ abstract final class PrefKeys {
   static const String theme = 'ep-theme';
   static const String onboarded = 'ep-onboarded';
   static const String notifAsks = 'ep-notif-asks';
+  static const String dynamicColor = 'ep-dynamic-color';
+  static const String updateDismissed = 'ep-update-dismissed';
+  static const String firstStepsHidden = 'ep-first-steps-hidden';
 }
 
 /// App language. Azerbaijani is the default.
@@ -75,3 +78,18 @@ class OnboardingController extends Notifier<bool> {
 
 final onboardedProvider =
     NotifierProvider<OnboardingController, bool>(OnboardingController.new);
+
+/// "Use system colours" (Android 12+). Off by default so the brand look stays.
+class DynamicColorController extends Notifier<bool> {
+  @override
+  bool build() =>
+      ref.read(sharedPrefsProvider).getBool(PrefKeys.dynamicColor) ?? false;
+
+  Future<void> set(bool v) async {
+    state = v;
+    await ref.read(sharedPrefsProvider).setBool(PrefKeys.dynamicColor, v);
+  }
+}
+
+final dynamicColorProvider =
+    NotifierProvider<DynamicColorController, bool>(DynamicColorController.new);

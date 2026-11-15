@@ -10,7 +10,7 @@ import { AdminStore } from './admin-store';
 import { AppError } from './errors';
 import type { Deps } from './services/context';
 import { createCoupon as svc_createCoupon, purchaseReward as svc_purchaseReward, requestTransportTopUp as svc_requestTransportTopUp } from './services/market';
-import { redeemQr as svc_redeemQr } from './services/qr';
+import { cancelSession as svc_cancelSession, openSession as svc_openSession, sessionStatus as svc_sessionStatus } from './services/sessions';
 import { lookupUsers as svc_lookupUsers, transferEp as svc_transferEp } from './services/transfer';
 import {
   applyReferral as svc_applyReferral,
@@ -18,12 +18,11 @@ import {
   claimDailyCheckIn as svc_claimDailyCheckIn,
 } from './services/gamification';
 import { deleteAccountData as svc_deleteAccountData, ensureProfile as svc_ensureProfile, updateProfile as svc_updateProfile } from './services/profile';
-import { redeemDeviceWeight as svc_redeemDeviceWeight } from './services/devices';
 import {
   adminAdjustBalance as svc_adminAdjustBalance,
   adminBroadcast as svc_adminBroadcast,
   adminResolveTransport as svc_adminResolveTransport,
-  issueBinCode as svc_issueBinCode,
+  binQr as svc_binQr,
 } from './services/admin';
 
 initializeApp();
@@ -71,12 +70,16 @@ const data = (req: CallableRequest): Record<string, unknown> =>
 
 // ───────────────────────────── earning ─────────────────────────────
 
-export const redeemQr = onCall({ ...base, secrets: [QR_HMAC_SECRET] }, (req) =>
-  run(() => svc_redeemQr(deps(), QR_HMAC_SECRET.value(), requireUid(req), data(req).payload)),
+export const openSession = onCall({ ...base, secrets: [QR_HMAC_SECRET] }, (req) =>
+  run(() => svc_openSession(deps(), QR_HMAC_SECRET.value(), requireUid(req), data(req).payload)),
 );
 
-export const redeemDeviceWeight = onCall(base, (req) =>
-  run(() => svc_redeemDeviceWeight(deps(), requireUid(req), { deviceId: data(req).deviceId })),
+export const sessionStatus = onCall(base, (req) =>
+  run(() => svc_sessionStatus(deps(), requireUid(req), { sessionId: data(req).sessionId })),
+);
+
+export const cancelSession = onCall(base, (req) =>
+  run(() => svc_cancelSession(deps(), requireUid(req), { sessionId: data(req).sessionId })),
 );
 
 export const claimDailyCheckIn = onCall(base, (req) =>
@@ -210,7 +213,7 @@ export const adminResolveTransport = onCall(base, (req) =>
 export const adminIssueBinCode = onCall({ ...base, secrets: [QR_HMAC_SECRET] }, (req) =>
   run(async () => {
     requireAdmin(req);
-    return svc_issueBinCode(QR_HMAC_SECRET.value(), data(req).binId, data(req).ttlSeconds, Date.now());
+    return svc_binQr(QR_HMAC_SECRET.value(), data(req).binId);
   }),
 );
 

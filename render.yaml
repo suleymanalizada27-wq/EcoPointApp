@@ -27,3 +27,9 @@ services:
         value: az.ecopoint.pro
       - key: ANDROID_SHA256
         sync: false
+      - key: SIM_ENABLED
+        value: "1"
+      - key: APP_LATEST_VERSION
+        sync: false
+      - key: APP_UPDATE_NOTES
+        sync: false

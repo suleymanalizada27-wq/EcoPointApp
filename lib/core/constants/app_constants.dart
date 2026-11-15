@@ -6,7 +6,7 @@
 abstract final class AppConstants {
   static const String appName = 'EcoPoint';
   /// Keep in sync with pubspec.yaml `version`.
-  static const String appVersion = '1.0.0';
+  static const String appVersion = '3.0.0';
   /// Base URL of the Node backend (see firebase/functions + README). Override
   /// at build time:  --dart-define=BACKEND_URL=https://your-service.onrender.com
   /// OAuth *web* client id of the Firebase project (Authentication → Sign-in
@@ -28,9 +28,9 @@ abstract final class AppConstants {
       'https://gamma.app/docs/EcoPoint-Agll-Zibil-Daha-Cox-Mukafat-vvx39v1c26436s1';
 
   /// Firebase project this app belongs to (the existing web app's project).
-  static const String firebaseProjectId = 'ecopoint-b3d60';
+  static const String firebaseProjectId = 'ecopoint-suleyman-2026';
   static const String databaseUrl =
-      'https://ecopoint-b3d60-default-rtdb.firebaseio.com';
+      'https://ecopoint-suleyman-2026-default-rtdb.firebaseio.com';
 
   /// OpenStreetMap raster tiles — no API key required.
   static const String osmTileUrl =

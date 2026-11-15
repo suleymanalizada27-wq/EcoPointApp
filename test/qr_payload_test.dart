@@ -6,28 +6,20 @@ void main() {
   const uid = 'k3JqP9xZ2mN8vB5cL1wT7yU4aD6e';
 
   group('bin codes', () {
-    test('parses a well-formed code', () {
-      final p = QrPayload.parse('EP1:bin-01:abc123:1900000000:$sig');
+    test('parses a well-formed static code', () {
+      final p = QrPayload.parse('EP2:bin-01:$sig');
       expect(p.kind, QrKind.bin);
       expect(p.binId, 'bin-01');
-      expect(p.nonce, 'abc123');
-      expect(p.expiresAt!.millisecondsSinceEpoch, 1900000000 * 1000);
       expect(p.isValid, isTrue);
     });
 
-    test('rejects wrong part count, bad ids, bad expiry, bad signature', () {
-      expect(QrPayload.parse('EP1:bin:n:1900000000').kind, QrKind.invalid);
-      expect(QrPayload.parse('EP1:bi n:n:1900000000:$sig').kind,
+    test('rejects wrong part count, bad ids, bad signature and old EP1 codes',
+        () {
+      expect(QrPayload.parse('EP2:bin').kind, QrKind.invalid);
+      expect(QrPayload.parse('EP2:bi n:$sig').kind, QrKind.invalid);
+      expect(QrPayload.parse('EP2:bin:zz').kind, QrKind.invalid);
+      expect(QrPayload.parse('EP1:bin-01:abc123:1900000000:$sig').kind,
           QrKind.invalid);
-      expect(QrPayload.parse('EP1:bin:n:soon:$sig').kind, QrKind.invalid);
-      expect(QrPayload.parse('EP1:bin:n:0:$sig').kind, QrKind.invalid);
-      expect(QrPayload.parse('EP1:bin:n:1900000000:zz').kind, QrKind.invalid);
-    });
-
-    test('isExpired is a client-side hint relative to now', () {
-      final p = QrPayload.parse('EP1:bin:n:1000:$sig');
-      expect(p.isExpired(DateTime.fromMillisecondsSinceEpoch(999000)), isFalse);
-      expect(p.isExpired(DateTime.fromMillisecondsSinceEpoch(1000000)), isTrue);
     });
   });
 
@@ -51,7 +43,7 @@ void main() {
   });
 
   test('a bin payload never yields a user id and vice versa', () {
-    expect(QrPayload.parse('EP1:b:n:1900000000:$sig').userId, isNull);
+    expect(QrPayload.parse('EP2:b:$sig').userId, isNull);
     expect(QrPayload.parse(uid).binId, isNull);
   });
 }

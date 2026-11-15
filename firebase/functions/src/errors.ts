@@ -27,6 +27,9 @@ export class AppError extends Error {
 export const Errors = {
   invalidQr: (m?: string) => new AppError('invalid-argument', 'invalid-qr', m),
   expiredQr: () => new AppError('failed-precondition', 'expired-qr', 'QR code expired'),
+  binBusy: () => new AppError('failed-precondition', 'bin-busy', 'Bin is in use by someone else'),
+  noSession: () => new AppError('failed-precondition', 'no-session', 'No open session at this bin'),
+  binDisabled: () => new AppError('failed-precondition', 'bin-disabled', 'Bin is out of service'),
   duplicate: (m?: string) => new AppError('already-exists', 'duplicate', m),
   rateLimited: () => new AppError('resource-exhausted', 'rate-limited', 'Too many requests'),
   dailyLimit: () => new AppError('resource-exhausted', 'daily-limit', 'Daily limit reached'),

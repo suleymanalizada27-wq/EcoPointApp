@@ -1,9 +1,7 @@
+import { cleanText, dayKey, isPositiveInt, isProActive, isUid } from '../lib/rules';
 import { buildCode } from '../lib/qr';
-import { cleanText, isPositiveInt, isProActive, isUid } from '../lib/rules';
 import { Errors } from '../errors';
 import type { Deps } from './context';
-import { secureRng } from './context';
-import { randomCode } from '../lib/rules';
 import { credit, debit, increment, notify } from './wallet';
 
 /** Admin-only (custom claim `admin: true`, enforced in index.ts). */
@@ -70,22 +68,6 @@ export async function adminResolveTransport(
   await notify(store, req.uid, '🚌 BakıKart', 'Top-up was rejected; EP refunded', now, push);
   await store.push('adminLog', { by: adminUid, action: 'transport-reject', id: input.requestId, ts: now });
   return { status: 'rejected' };
-}
-
-/** Issues a signed single-use bin code (testing / provisioning tool). */
-export function issueBinCode(
-  secret: string,
-  binId: unknown,
-  ttlSeconds: unknown,
-  nowMs: number,
-): { code: string; expiresAt: number } {
-  if (typeof binId !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(binId)) {
-    throw Errors.invalid('Invalid bin id');
-  }
-  const ttl = isPositiveInt(ttlSeconds, 10, 7 * 86_400) ? ttlSeconds : 300;
-  const exp = Math.floor(nowMs / 1000) + ttl;
-  const nonce = randomCode(12, secureRng).toLowerCase();
-  return { code: buildCode(secret, binId, nonce, exp), expiresAt: exp };
 }
 
 // ───────────────────────── admin console ─────────────────────────
@@ -239,6 +221,7 @@ export async function adminUpsertDevice(
     name: cleanText(input.name, 60) || id,
     location: cleanText(input.location, 80),
   };
+  if (typeof input.disabled === 'boolean') record.disabled = input.disabled;
   const lat = input.lat;
   const lng = input.lng;
   if (lat !== undefined && lat !== null && lat !== '') {
@@ -385,4 +368,57 @@ export async function adminExportCsv(
     };
   }
   throw Errors.invalid('Unknown export');
+}
+
+/** The bin's static QR payload (print it on the bin) — never expires, carries no reward. */
+export function binQr(secret: string, binId: unknown): { code: string } {
+  if (typeof binId !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(binId)) {
+    throw Errors.invalid('Invalid bin id');
+  }
+  return { code: buildCode(secret, binId) };
+}
+
+// ───────────────────────── notification statistics ─────────────────────────
+
+export interface PushStatRow {
+  kind: string;
+  sent: number;
+  opened: number;
+  /** opened / sent, 0..1 */
+  rate: number;
+}
+
+/** Sent vs. tapped notifications per kind over the last `days` days (default 14). */
+export async function adminPushStats(
+  { store, now }: Deps,
+  input: { days?: unknown },
+): Promise<{ days: number; disabled: boolean; rows: PushStatRow[] }> {
+  const days = typeof input.days === 'number' && Number.isInteger(input.days) && input.days >= 1 && input.days <= 60 ? input.days : 14;
+  const sent: Record<string, number> = {};
+  const opened: Record<string, number> = {};
+  for (let i = 0; i < days; i++) {
+    const day = dayKey(now - i * 86_400_000);
+    const row = await store.get<{ sent?: Record<string, number>; opened?: Record<string, number> }>(`pushStats/${day}`);
+    for (const [k, v] of Object.entries(row?.sent ?? {})) sent[k] = (sent[k] ?? 0) + Number(v);
+    for (const [k, v] of Object.entries(row?.opened ?? {})) opened[k] = (opened[k] ?? 0) + Number(v);
+  }
+  const kinds = new Set([...Object.keys(sent), ...Object.keys(opened)]);
+  const rows = [...kinds]
+    .map((kind) => {
+      const s = sent[kind] ?? 0;
+      const o = opened[kind] ?? 0;
+      return { kind, sent: s, opened: o, rate: s > 0 ? Math.min(1, o / s) : 0 };
+    })
+    .sort((a, b) => b.sent - a.sent);
+  return { days, disabled: (await store.get<boolean>('config/pushDisabled')) === true, rows };
+}
+
+/** Master switch for all automatic notifications (smart push + bin alerts). */
+export async function adminSetPushEnabled(
+  { store }: Deps,
+  input: { enabled: unknown },
+): Promise<{ disabled: boolean }> {
+  if (typeof input.enabled !== 'boolean') throw Errors.invalid('enabled must be boolean');
+  await store.set('config/pushDisabled', !input.enabled);
+  return { disabled: !input.enabled };
 }

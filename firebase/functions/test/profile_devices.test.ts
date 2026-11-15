@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { MemoryStore } from '../src/store';
 import { deleteAccountData, ensureProfile, updateProfile } from '../src/services/profile';
-import { redeemDeviceWeight } from '../src/services/devices';
-import { adminAdjustBalance, issueBinCode } from '../src/services/admin';
+import { adminAdjustBalance, binQr } from '../src/services/admin';
 import { parseCode, verifySignature } from '../src/lib/qr';
 import { ALICE, BOB, NOW, SECRET, balanceOf, deps, expectReason, seedBin, seedUser } from './helpers';
 
@@ -67,53 +66,6 @@ describe('deleteAccountData', () => {
   });
 });
 
-describe('redeemDeviceWeight', () => {
-  async function setup(extra: Record<string, unknown> = {}) {
-    const s = new MemoryStore();
-    await seedUser(s, ALICE);
-    await seedUser(s, BOB);
-    await seedBin(s, 'dev1', { weight: 250, weightEventId: 7, ...extra });
-    return s;
-  }
-
-  it('pays 10 EP per full 100 g and the reading is single-use', async () => {
-    const s = await setup();
-    const r = await redeemDeviceWeight(deps(s), ALICE, { deviceId: 'dev1' });
-    expect(r).toMatchObject({ ep: 20, grams: 250, balance: 20 });
-    await expectReason(redeemDeviceWeight(deps(s, NOW + 60_000), BOB, { deviceId: 'dev1' }), 'duplicate');
-    expect(await balanceOf(s, BOB)).toBe(0);
-    // a new deposit gets a new event id
-    await s.update('devices/dev1', { weightEventId: 8, lastSeen: NOW + 60_000 });
-    expect((await redeemDeviceWeight(deps(s, NOW + 61_000), BOB, { deviceId: 'dev1' })).ep).toBe(20);
-  });
-
-  it('rejects bins without weightEventId, offline bins, tiny and absurd readings', async () => {
-    const s = await setup({ weightEventId: null });
-    await expectReason(redeemDeviceWeight(deps(s), ALICE, { deviceId: 'dev1' }), 'invalid-input');
-    await expectReason(redeemDeviceWeight(deps(s), ALICE, { deviceId: 'nope' }), 'not-found');
-
-    const off = await setup({ lastSeen: NOW - 3_600_000 });
-    await expectReason(redeemDeviceWeight(deps(off), ALICE, { deviceId: 'dev1' }), 'invalid-input');
-    const tiny = await setup({ weight: 60 });
-    await expectReason(redeemDeviceWeight(deps(tiny), ALICE, { deviceId: 'dev1' }), 'invalid-input');
-    const huge = await setup({ weight: 50_000 });
-    await expectReason(redeemDeviceWeight(deps(huge), ALICE, { deviceId: 'dev1' }), 'invalid-input');
-    expect(await balanceOf(huge, ALICE)).toBe(0);
-  });
-
-  it('enforces the per-bin cooldown and the daily weight cap', async () => {
-    const s = await setup();
-    await redeemDeviceWeight(deps(s), ALICE, { deviceId: 'dev1' });
-    await s.update('devices/dev1', { weightEventId: 8 });
-    await expectReason(redeemDeviceWeight(deps(s, NOW + 5_000), BOB, { deviceId: 'dev1' }), 'rate-limited');
-
-    const capped = await setup();
-    await capped.set(`users/${ALICE}/daily/2026-03-15`, { ep: 0, scans: 0, grams: 4_900 });
-    await expectReason(redeemDeviceWeight(deps(capped), ALICE, { deviceId: 'dev1' }), 'daily-limit');
-    expect(await capped.get('weightEvents/dev1_7')).toBeNull();
-  });
-});
-
 describe('admin', () => {
   it('adjusts balances both ways, never below zero, and logs', async () => {
     const s = new MemoryStore();
@@ -125,11 +77,10 @@ describe('admin', () => {
     expect(Object.keys((await s.get<any>('adminLog'))!)).toHaveLength(2);
   });
 
-  it('issues verifiable bin codes with bounded TTL', () => {
-    const { code, expiresAt } = issueBinCode(SECRET, 'bin-01', 99_999_999, NOW);
-    expect(expiresAt).toBe(Math.floor(NOW / 1000) + 300); // out-of-range ttl falls back to default
-    const parsed = parseCode(code)!;
-    expect(verifySignature(SECRET, parsed)).toBe(true);
-    expect(() => issueBinCode(SECRET, '../x', 60, NOW)).toThrow();
+  it('issues the static bin QR and rejects bad ids', () => {
+    const { code } = binQr(SECRET, 'bin-01');
+    expect(code).toMatch(/^EP2:bin-01:/);
+    expect(verifySignature(SECRET, parseCode(code)!)).toBe(true);
+    expect(() => binQr(SECRET, '../x')).toThrow();
   });
 });

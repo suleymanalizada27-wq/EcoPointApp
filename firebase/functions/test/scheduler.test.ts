@@ -2,9 +2,11 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { MemoryStore } from '../src/store';
 import { MemoryPusher } from '../src/push';
 import { tick } from '../src/scheduler';
-import { registerPushToken, unregisterPushToken } from '../src/services/push-tokens';
+import { ackPush, registerPushToken, unregisterPushToken } from '../src/services/push-tokens';
 import { smartText, streakRiskText, weeklySummaryText } from '../src/lib/notify-text';
-import { sendHourFor } from '../src/services/smart-push';
+import { allowedHours, dailyCap, sendHourFor, slotHours } from '../src/services/smart-push';
+import { weekKey } from '../src/lib/rules';
+import { adminPushStats, adminSetPushEnabled } from '../src/services/admin';
 import { ALICE, BOB, seedUser } from './helpers';
 
 const CAROL = 'carolCarolCarolCarol03';
@@ -27,56 +29,75 @@ describe('scheduled reminders', () => {
     push = new MemoryPusher();
   });
 
-  it('smart push: one personal message per person, honouring prefs and check-in state', async () => {
+  it('smart push v2: personal daily message, tip for the checked-in, nothing for opted-out', async () => {
     await setup(store, ALICE, 'ru', { streak: { count: 4, lastDay: '2026-03-14', history: [] } });
     await setup(store, BOB, 'az', { streak: { count: 2, lastDay: '2026-03-15', history: [] } });
     await setup(store, CAROL, 'en', { prefs: { notifyActivity: false, notifyOffers: false } });
 
     const r = await tick({ store, push }, baku('2026-03-15', 12, 5));
-    expect(r.smartPush).toEqual({ considered: 3, sent: 1 });
-    expect(push.user).toEqual([
-      { uid: ALICE, ...smartText('ru', 'daily', { name: 'alice', streak: 4 }), route: '/home' },
-    ]);
-  });
-
-  it('runs at most once per person per day, even if ticked again or restarted', async () => {
-    await setup(store, ALICE, 'az', {
-      streak: { count: 2, lastDay: '2026-03-14', history: [] },
-      daily: { '2026-03-10': { scans: 1, ep: 50 } },
+    expect(r.smartPush).toEqual({ considered: 3, sent: 2 });
+    const alice = push.user.find((m) => m.uid === ALICE);
+    expect(alice).toEqual({
+      uid: ALICE,
+      ...smartText('ru', 'daily', { name: 'alice', streak: 4 }),
+      route: '/home',
+      kind: 'daily',
+      id: '2026-03-15_12',
     });
-    await tick({ store, push }, baku('2026-03-15', 12, 5));
-    await tick({ store, push }, baku('2026-03-15', 12, 6));
-    await tick({ store, push }, baku('2026-03-15', 13, 0));
-    await tick({ store, push }, baku('2026-03-15', 14, 0));
-    expect(push.user).toHaveLength(1);
-    // …and again the next day.
-    await tick({ store, push }, baku('2026-03-16', 12, 1));
-    expect(push.user).toHaveLength(2);
+    // Bob's 2-day streak already completes the "streak2" mission: claim it.
+    expect(push.user.find((m) => m.uid === BOB)?.kind).toBe('mission');
+    expect(push.user.find((m) => m.uid === CAROL)).toBeUndefined();
   });
 
-  it('sends only between 09:00 and 21:00, at the person\'s own hour; catches up if the server slept', async () => {
+  it('never exceeds the daily cap (4 for a person who never taps) and never sends twice in one slot', async () => {
     await setup(store, ALICE, 'az', { streak: { count: 2, lastDay: '2026-03-14', history: [] } });
-    // Default hour is 12: not yet at 09:00–11:59, not at night.
-    expect(await tick({ store, push }, baku('2026-03-15', 9, 0))).toMatchObject({ smartPush: { sent: 0 } });
-    expect(await tick({ store, push }, baku('2026-03-15', 23, 30))).toEqual({});
-    expect(push.user).toHaveLength(0);
-    // Woke up at 14:40 → still inside the 3-hour window after 12:00.
-    const r = await tick({ store, push }, baku('2026-03-15', 14, 40));
-    expect(r.smartPush?.sent).toBe(1);
+    for (let h = 9; h <= 20; h++) {
+      await tick({ store, push }, baku('2026-03-15', h, 5));
+      await tick({ store, push }, baku('2026-03-15', h, 6));
+    }
+    // Slots 9, 12, 15, 18: daily, finished mission, then two tips.
+    expect(push.user.map((m) => m.kind)).toEqual(['daily', 'mission', 'tip', 'tip']);
+    expect(push.user.map((m) => m.id)).toEqual(['2026-03-15_09', '2026-03-15_12', '2026-03-15_15', '2026-03-15_18']);
   });
 
-  it('learns the preferred hour from scans (one hour before the usual scan time)', async () => {
-    await setup(store, ALICE, 'az', {
-      streak: { count: 2, lastDay: '2026-03-14', history: [] },
-      habit: { h18: 5, h9: 1 },
-    });
-    expect(sendHourFor({ h18: 5, h9: 1 })).toBe(17);
-    expect(sendHourFor({ h2: 9 })).toBe(9); // clamped to 09:00
-    expect(sendHourFor({ h18: 1 })).toBe(12); // too little data → default
-    await tick({ store, push }, baku('2026-03-15', 12, 5));
+  it('sends only inside 09:00–21:00 local time', async () => {
+    await setup(store, ALICE, 'az', { streak: { count: 2, lastDay: '2026-03-14', history: [] } });
+    expect(await tick({ store, push }, baku('2026-03-15', 7, 0))).toMatchObject({ smartPush: { sent: 0 } });
+    expect(await tick({ store, push }, baku('2026-03-15', 23, 30))).toMatchObject({ smartPush: { sent: 0 } });
     expect(push.user).toHaveLength(0);
-    await tick({ store, push }, baku('2026-03-15', 17, 5));
-    expect(push.user).toHaveLength(1);
+  });
+
+  it('slot maths: cap 4..9 spread evenly; engagement raises the cap; inactive users get 2', () => {
+    expect(slotHours(4)).toEqual([9, 12, 15, 18]);
+    expect(slotHours(9)).toEqual([9, 10, 11, 13, 14, 16, 17, 19, 20]);
+    expect(dailyCap(0, 1, undefined)).toBe(4);
+    expect(dailyCap(5, 1, undefined)).toBe(9);
+    expect(dailyCap(20, 1, 'normal')).toBe(9);
+    expect(dailyCap(5, 1, 'low')).toBe(2);
+    expect(dailyCap(0, 1, 'high')).toBe(9);
+    expect(allowedHours(undefined, undefined)).toEqual([9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]);
+    expect(allowedHours(20, 12)).toContain(12);
+    expect(allowedHours(20, 12)).not.toContain(23);
+    expect(slotHours(3, allowedHours(20, 12))).toHaveLength(3);
+    expect(dailyCap(5, 9, undefined)).toBe(2);
+    expect(sendHourFor({ h18: 5, h9: 1 })).toBe(17);
+  });
+
+  it('uses the device time zone: the first slot is 09:00 on the device clock (Istanbul = 10:00 Baku)', async () => {
+    await setup(store, ALICE, 'tr', { streak: { count: 2, lastDay: '2026-03-14', history: [] } });
+    await registerPushToken({ store, now: 5 }, ALICE, { token: 'tokenTZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', lang: 'tr', tz: 180 });
+    await tick({ store, push }, baku('2026-03-15', 10, 5)); // 06:05 UTC = 09:05 Istanbul
+    expect(push.user[0]?.id).toBe('2026-03-15_09');
+  });
+
+  it('opening pushes raises the cap for the next days', async () => {
+    await setup(store, ALICE, 'az', { streak: { count: 2, lastDay: '2026-03-14', history: [] } });
+    for (const d of ['10', '11', '12', '13', '14']) {
+      await ackPush({ store, now: baku('2026-03-15', 8) }, ALICE, { id: `2026-03-${d}_12`, kind: 'tip' });
+    }
+    for (let h = 9; h <= 20; h++) await tick({ store, push }, baku('2026-03-15', h, 5));
+    expect(push.user).toHaveLength(8); // cap 9: daily, mission, 6 tips
+    expect(await store.get(`pushLog/${ALICE}/openKinds/tip`)).toBe(5);
   });
 
   it('streak risk: only a live streak of 3+ days that was not continued today', async () => {
@@ -122,5 +143,96 @@ describe('scheduled reminders', () => {
     const b = Object.values((await store.get<Record<string, any>>(`pushTokens/${BOB}`))!)[0];
     expect(a.lang).toBe('tr');
     expect(b.lang).toBe('az');
+  });
+
+  // ───────────── v2: frequency, quiet hours, switches, new kinds, stats ─────────────
+
+  const day = '2026-03-15';
+  const runDay = async (d = day) => {
+    for (let h = 0; h <= 23; h++) await tick({ store, push }, baku(d, h, 5));
+  };
+
+  it('"high" sends up to 9 a day, "low" only 2', async () => {
+    await setup(store, ALICE, 'en', { streak: { count: 2, lastDay: '2026-03-14', history: [] }, prefs: { notifyFreq: 'high' } });
+    await runDay();
+    expect(push.user.length).toBeGreaterThanOrEqual(8);
+    expect(push.user.length).toBeLessThanOrEqual(9);
+
+    const s2 = new MemoryStore();
+    const p2 = new MemoryPusher();
+    await setup(s2, BOB, 'en', { streak: { count: 2, lastDay: '2026-03-14', history: [] }, prefs: { notifyFreq: 'low' } });
+    for (let h = 0; h <= 23; h++) await tick({ store: s2, push: p2 }, baku(day, h, 5));
+    expect(p2.user).toHaveLength(2);
+  });
+
+  it('quiet hours: custom range moves the window; nothing is sent inside it', async () => {
+    await setup(store, ALICE, 'en', {
+      streak: { count: 2, lastDay: '2026-03-14', history: [] },
+      prefs: { quietFrom: 13, quietTo: 18 },
+    });
+    await runDay();
+    const hours = push.user.map((m) => Number(m.id!.slice(11)));
+    expect(hours.length).toBeGreaterThan(0);
+    for (const h of hours) expect(h < 13 || h >= 18).toBe(true);
+  });
+
+  it('per-type switches: tips off, missions off', async () => {
+    await setup(store, ALICE, 'en', {
+      streak: { count: 2, lastDay: '2026-03-14', history: [] },
+      prefs: { notifyTips: false, notifyMissions: false },
+    });
+    await runDay();
+    expect(push.user.every((m) => m.kind === 'daily')).toBe(true);
+    expect(push.user).toHaveLength(1);
+  });
+
+  it('mission close, leaderboard and streak milestone messages come from real data', async () => {
+    await seedUser(store, ALICE, { streak: { count: 1, lastDay: day, history: [] } });
+    await registerPushToken({ store, now: 1 }, ALICE, { token: tok('ALIC'), lang: 'en' });
+    await store.set(`users/${ALICE}/daily/${day}`, { scans: 2, ep: 30 });
+    await store.set(`users/${ALICE}/daily/2026-03-14`, { scans: 1, ep: 10 });
+    await tick({ store, push }, baku(day, 12, 5));
+    const first = push.user.find((m) => m.uid === ALICE)!;
+    expect(first.kind).toBe('mission'); // 2 of 3 scans, 30 EP waiting
+    expect(first.body).toContain('1 more scan');
+
+    // leaderboard: Alice 4th, 30 EP behind the 3rd
+    await seedUser(store, BOB, {});
+    const wk = weekKey(baku(day, 12));
+    await store.set(`weeklyBoard/${wk}`, {
+      ['u1']: { ep: 500 }, ['u2']: { ep: 400 }, ['u3']: { ep: 130 }, [ALICE]: { ep: 100 },
+    });
+    await tick({ store, push }, baku(day, 15, 5));
+    expect(push.user.filter((m) => m.uid === ALICE).map((m) => m.kind)).toContain('leaderboard');
+    expect(push.user.find((m) => m.kind === 'leaderboard')!.body).toContain('31 EP');
+  });
+
+  it('streak milestone fires on 7/14/30… once', async () => {
+    await setup(store, ALICE, 'en', { streak: { count: 7, lastDay: day, history: [] } });
+    await tick({ store, push }, baku(day, 12, 5));
+    expect(push.user[0].kind).toBe('milestone');
+    expect(push.user[0].body).toContain('7-day');
+  });
+
+  it('every smart push lands in the in-app inbox, is counted, and tapping counts as opened', async () => {
+    await setup(store, ALICE, 'az', { streak: { count: 2, lastDay: '2026-03-14', history: [] } });
+    await tick({ store, push }, baku(day, 12, 5));
+    const inbox = Object.values((await store.get<Record<string, any>>(`users/${ALICE}/notifications`)) ?? {});
+    expect(inbox).toHaveLength(1);
+    expect(inbox[0]).toMatchObject({ kind: 'daily' });
+    await ackPush({ store, now: baku(day, 12, 30) }, ALICE, { id: push.user[0].id, kind: 'daily' });
+    const stats = await adminPushStats({ store, now: baku(day, 13) }, {});
+    expect(stats.rows.find((r) => r.kind === 'daily')).toMatchObject({ sent: 1, opened: 1, rate: 1 });
+  });
+
+  it('admin master switch stops automatic pushes', async () => {
+    await setup(store, ALICE, 'az', { streak: { count: 2, lastDay: '2026-03-14', history: [] } });
+    expect(await adminSetPushEnabled({ store, now: 0 }, { enabled: false })).toEqual({ disabled: true });
+    await tick({ store, push }, baku(day, 12, 5));
+    expect(push.user).toHaveLength(0);
+    await adminSetPushEnabled({ store, now: 0 }, { enabled: true });
+    await tick({ store, push }, baku(day, 15, 5));
+    expect(push.user.length).toBe(1);
+    expect((await adminPushStats({ store, now: baku(day, 13) }, { days: 3 })).disabled).toBe(false);
   });
 });

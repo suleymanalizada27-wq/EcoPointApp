@@ -41,6 +41,12 @@ class UserProfile {
     this.notifyActivity = true,
     this.notifyNews = true,
     this.notifyOffers = true,
+    this.notifyMissions = true,
+    this.notifyTips = true,
+    this.notifyBins = true,
+    this.notifyFreq = 'normal',
+    this.quietFrom = 22,
+    this.quietTo = 9,
   });
 
   final String uid;
@@ -56,6 +62,16 @@ class UserProfile {
   final bool notifyActivity;
   final bool notifyNews;
   final bool notifyOffers;
+  final bool notifyMissions;
+  final bool notifyTips;
+  final bool notifyBins;
+
+  /// 'low' (2 a day), 'normal' (adaptive 4-9) or 'high' (9).
+  final String notifyFreq;
+
+  /// Quiet hours, local time: no pushes from [quietFrom] until [quietTo].
+  final int quietFrom;
+  final int quietTo;
 
   /// Pro is active only while not expired (the legacy flag never expired).
   bool isProAt(DateTime now) {
@@ -94,6 +110,25 @@ class UserProfile {
       notifyOffers: prefs['notifyOffers'] == null
           ? true
           : asBool(prefs['notifyOffers']),
+      notifyMissions: prefs['notifyMissions'] == null
+          ? true
+          : asBool(prefs['notifyMissions']),
+      notifyTips:
+          prefs['notifyTips'] == null ? true : asBool(prefs['notifyTips']),
+      notifyBins:
+          prefs['notifyBins'] == null ? true : asBool(prefs['notifyBins']),
+      notifyFreq: switch (prefs['notifyFreq']) {
+        'low' => 'low',
+        'high' => 'high',
+        _ => prefs['notifyFewer'] == true ? 'low' : 'normal',
+      },
+      quietFrom: _hour(prefs['quietFrom'], 22),
+      quietTo: _hour(prefs['quietTo'], 9),
     );
   }
+}
+
+int _hour(Object? v, int fallback) {
+  final n = v is num ? v.toInt() : fallback;
+  return n < 0 || n > 23 ? fallback : n;
 }

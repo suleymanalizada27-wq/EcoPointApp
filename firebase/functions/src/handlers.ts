@@ -1,12 +1,11 @@
 import { Errors } from './errors';
 import type { Deps } from './services/context';
 import { createCoupon, purchaseReward, requestTransportTopUp } from './services/market';
-import { redeemQr } from './services/qr';
+import { cancelSession, openSession, sessionStatus, simulateDeposit } from './services/sessions';
 import { lookupUsers, transferEp } from './services/transfer';
 import { applyReferral, claimChallenge, claimDailyCheckIn, claimMonthly } from './services/gamification';
 import { deleteAccountData, ensureProfile, updateProfile } from './services/profile';
-import { redeemDeviceWeight } from './services/devices';
-import { registerPushToken, sendTestPush, unregisterPushToken } from './services/push-tokens';
+import { ackPush, registerPushToken, sendTestPush, unregisterPushToken } from './services/push-tokens';
 import {
   adminAdjustBalance,
   adminBroadcast,
@@ -25,8 +24,11 @@ import {
   adminSetPro,
   adminUpsertDevice,
   adminUpsertReward,
-  issueBinCode,
+  binQr,
+  adminPushStats,
+  adminSetPushEnabled,
 } from './services/admin';
+import { adminListReports, adminReportPhoto, adminResolveReport, reportBin, toggleFavBin } from './services/bins';
 import { reportError } from './services/errors-report';
 import { adminStats } from './services/stats';
 
@@ -59,9 +61,21 @@ const admin = (c: Ctx): string => {
 
 /** Single source of truth for every backend operation the app can call. */
 export const HANDLERS: Record<string, Handler> = {
-  redeemQr: (c) => redeemQr(c.deps, c.secret, c.caller.uid, c.data.payload),
-  redeemDeviceWeight: (c) =>
-    redeemDeviceWeight(c.deps, c.caller.uid, { deviceId: c.data.deviceId }),
+  openSession: (c) => openSession(c.deps, c.secret, c.caller.uid, c.data.payload),
+  sessionStatus: (c) => sessionStatus(c.deps, c.caller.uid, { sessionId: c.data.sessionId }),
+  cancelSession: (c) => cancelSession(c.deps, c.caller.uid, { sessionId: c.data.sessionId }),
+  reportBin: (c) => reportBin(c.deps, c.caller.uid, c.data),
+  toggleFavBin: (c) => toggleFavBin(c.deps, c.caller.uid, { binId: c.data.binId, on: c.data.on }),
+  adminListReports: (c) => (admin(c), adminListReports(c.deps)),
+  adminReportPhoto: (c) => (admin(c), adminReportPhoto(c.deps, c.data.id)),
+  adminResolveReport: (c) =>
+    adminResolveReport(c.deps, admin(c), { id: c.data.id, clearProblem: c.data.clearProblem }),
+  adminPushStats: (c) => (admin(c), adminPushStats(c.deps, { days: c.data.days })),
+  adminSetPushEnabled: (c) => (admin(c), adminSetPushEnabled(c.deps, { enabled: c.data.enabled })),
+  adminSimulateDeposit: (c) => {
+    admin(c);
+    return simulateDeposit(c.deps, c.secret, { binId: c.data.binId, grams: c.data.grams });
+  },
   claimDailyCheckIn: (c) => claimDailyCheckIn(c.deps, c.caller.uid, c.data.day),
   claimChallenge: (c) =>
     claimChallenge(c.deps, c.caller.uid, { challengeId: c.data.challengeId, day: c.data.day }),
@@ -113,7 +127,9 @@ export const HANDLERS: Record<string, Handler> = {
       token: c.data.token,
       platform: c.data.platform,
       lang: c.data.lang,
+      tz: c.data.tz,
     }),
+  ackPush: (c) => ackPush(c.deps, c.caller.uid, { id: c.data.id, kind: c.data.kind }),
   whoami: async (c) => ({ isAdmin: c.caller.isAdmin, email: c.caller.email ?? null }),
   reportError: (c) => reportError(c.deps, c.caller.uid, c.data),
   sendTestPush: (c) => sendTestPush(c.deps, c.caller.uid),
@@ -150,6 +166,6 @@ export const HANDLERS: Record<string, Handler> = {
   adminStats: (c) => (admin(c), adminStats(c.deps.store, c.deps.now)),
   adminIssueBinCode: async (c) => {
     admin(c);
-    return issueBinCode(c.secret, c.data.binId, c.data.ttlSeconds, c.deps.now);
+    return binQr(c.secret, c.data.binId);
   },
 };

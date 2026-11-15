@@ -20,22 +20,75 @@ class QrRedeemResult {
   final String binId;
 }
 
+/// A scan opened a short session at a bin. Nothing is paid yet.
+class QrSession {
+  const QrSession({
+    required this.sessionId,
+    required this.binId,
+    required this.binName,
+    required this.expiresAt,
+  });
+
+  final String sessionId;
+  final String binId;
+  final String binName;
+  final DateTime expiresAt;
+}
+
+enum QrSessionState { open, done, failed, cancelled, expired }
+
+class QrSessionStatus {
+  const QrSessionStatus(this.state, {this.result, this.reason});
+  final QrSessionState state;
+  final QrRedeemResult? result;
+  final String? reason;
+}
+
 class QrRepository {
   QrRepository(this._backend);
   final BackendService _backend;
 
-  /// Sends the raw QR to the backend. **EP are only credited if the server
-  /// verifies the signature, expiry, single-use nonce, rate limits and daily
-  /// cap.** The client never decides the amount.
-  Future<QrRedeemResult> redeem(QrPayload payload) async {
-    final res = await _backend.call('redeemQr', {'payload': payload.raw});
-    return QrRedeemResult(
-      ep: asInt(res['ep']),
-      baseEp: asInt(res['baseEp']),
-      multiplier: asInt(res['multiplier'], 1),
-      balance: asInt(res['balance']),
+  /// Tells the server which bin the person stands at. **No EP are credited
+  /// here**: the bin confirms the deposit itself and the server pays the
+  /// person whose session is open (signature, limits and caps are server-side).
+  Future<QrSession> open(QrPayload payload) async {
+    final res = await _backend.call('openSession', {'payload': payload.raw});
+    return QrSession(
+      sessionId: asString(res['sessionId']),
       binId: asString(res['binId']),
+      binName: asString(res['binName']),
+      expiresAt: DateTime.fromMillisecondsSinceEpoch(asInt(res['expiresAt'])),
     );
+  }
+
+  Future<QrSessionStatus> status(QrSession s) async {
+    final res = await _backend.call('sessionStatus', {'sessionId': s.sessionId});
+    final state = switch (asString(res['status'])) {
+      'done' => QrSessionState.done,
+      'failed' => QrSessionState.failed,
+      'cancelled' => QrSessionState.cancelled,
+      'expired' => QrSessionState.expired,
+      _ => QrSessionState.open,
+    };
+    QrRedeemResult? result;
+    final r = res['result'];
+    if (state == QrSessionState.done && r is Map) {
+      result = QrRedeemResult(
+        ep: asInt(r['ep']),
+        baseEp: asInt(r['baseEp']),
+        multiplier: asInt(r['multiplier'], 1),
+        balance: asInt(r['balance']),
+        binId: asString(res['binId']),
+      );
+    }
+    return QrSessionStatus(state,
+        result: result, reason: res['reason'] as String?);
+  }
+
+  Future<void> cancel(QrSession s) async {
+    try {
+      await _backend.call('cancelSession', {'sessionId': s.sessionId});
+    } catch (_) {}
   }
 }
 

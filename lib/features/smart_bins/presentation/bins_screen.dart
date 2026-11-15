@@ -390,11 +390,16 @@ class _MapTab extends StatelessWidget {
                         point: LatLng(bin.lat!, bin.lng!),
                         width: 44,
                         height: 44,
-                        child: GestureDetector(
-                          onTap: () => showBinDetail(context, bin),
-                          child: _BinPin(
-                            bin: bin,
-                            online: bin.isOnline(now),
+                        child: Semantics(
+                          button: true,
+                          label: bin.name,
+                          excludeSemantics: true,
+                          child: GestureDetector(
+                            onTap: () => showBinDetail(context, bin),
+                            child: _BinPin(
+                              bin: bin,
+                              online: bin.isOnline(now),
+                            ),
                           ),
                         ),
                       ),
@@ -440,10 +445,14 @@ class _BinPin extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.ep;
-    final tone = online ? fillColor(c, bin.fillPercent) : c.textTertiary;
+    final tone = bin.problem
+        ? c.danger
+        : online
+            ? fillColor(c, bin.fillPercent)
+            : c.textTertiary;
     return Semantics(
       button: true,
-      label: '${bin.name}, ${bin.fillPercent}%',
+      label: '${bin.name}, ${bin.fillPercent}%${bin.problem ? ', ⚠' : ''}',
       child: Container(
         decoration: BoxDecoration(
           color: tone,
@@ -453,8 +462,10 @@ class _BinPin extends StatelessWidget {
             BoxShadow(color: Color(0x55000000), blurRadius: 8),
           ],
         ),
-        child: const Icon(Icons.recycling_rounded,
-            size: 22, color: Colors.white),
+        child: Icon(
+            bin.problem ? Icons.build_rounded : Icons.recycling_rounded,
+            size: 22,
+            color: Colors.white),
       ),
     );
   }

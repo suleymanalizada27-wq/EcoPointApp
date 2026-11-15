@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -28,6 +29,8 @@ class PurchaseHistoryScreen extends ConsumerWidget {
             return EmptyView(
               icon: Icons.shopping_bag_outlined,
               message: context.tr('reward_history_empty'),
+              actionLabel: context.tr('nav_rewards'),
+              onAction: () => context.go('/rewards'),
             );
           }
           return ListView.separated(

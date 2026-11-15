@@ -80,6 +80,8 @@ class PushService {
         'platform': _platform,
         // The server writes reminders in the user's app language.
         'lang': _lang,
+        // Minutes east of UTC: pushes are spread over the person's own 09–21.
+        'tz': DateTime.now().timeZoneOffset.inMinutes,
       });
     } catch (_) {
       // Retried on the next app start; push is optional.
@@ -152,6 +154,16 @@ const Set<String> kPushRoutes = {
 };
 const Set<String> _tabRoutes = {'/home', '/rewards', '/bins', '/profile'};
 
+/// Tells the server the person tapped a push, so the daily amount can adapt.
+void ackPushTap(Ref ref, Map<String, dynamic> data) {
+  final id = data['id'];
+  if (id is! String) return;
+  unawaited(ref
+      .read(backendServiceProvider)
+      .call('ackPush', {'id': id, 'kind': data['kind']})
+      .then<void>((_) {}, onError: (_) {}));
+}
+
 void openPushRoute(GoRouter router, Object? raw) {
   final route = raw is String && kPushRoutes.contains(raw) ? raw : '/notifications';
   if (_tabRoutes.contains(route)) {
@@ -178,13 +190,18 @@ final pushListenersProvider = Provider<void>((ref) {
         behavior: SnackBarBehavior.floating,
         action: SnackBarAction(
           label: 'OK',
-          onPressed: () => openPushRoute(ref.read(routerProvider), m.data['route']),
+          onPressed: () {
+            ackPushTap(ref, m.data);
+            openPushRoute(ref.read(routerProvider), m.data['route']);
+          },
         ),
       ));
   }));
 
-  void open(RemoteMessage m) =>
-      openPushRoute(ref.read(routerProvider), m.data['route']);
+  void open(RemoteMessage m) {
+    ackPushTap(ref, m.data);
+    openPushRoute(ref.read(routerProvider), m.data['route']);
+  }
   subs.add(FirebaseMessaging.onMessageOpenedApp.listen(open));
   FirebaseMessaging.instance.getInitialMessage().then((m) {
     if (m != null) open(m);

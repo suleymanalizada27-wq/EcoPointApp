@@ -3,7 +3,7 @@ import type { Server } from 'node:http';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../src/server';
 import { MemoryStore } from '../src/store';
-import { buildCode } from '../src/lib/qr';
+import { buildCode, depositMac, deviceKey } from '../src/lib/qr';
 import { ALICE, BOB, NOW, SECRET, seedBin, seedUser } from './helpers';
 
 const store = new MemoryStore();
@@ -77,8 +77,8 @@ describe('HTTP transport', () => {
   });
 
   it('rejects missing / invalid tokens and unknown functions', async () => {
-    expect((await call('redeemQr', {})).status).toBe(401);
-    expect((await call('redeemQr', {}, 'forged')).status).toBe(401);
+    expect((await call('openSession', {})).status).toBe(401);
+    expect((await call('openSession', {}, 'forged')).status).toBe(401);
     const unknown = await call('nope', {}, 'alice');
     expect(unknown.status).toBe(404);
     expect((await call('__proto__', {}, 'alice')).status).toBe(404);
@@ -103,16 +103,32 @@ describe('HTTP transport', () => {
     expect(self.json.error.reason).toBe('self-transfer');
   });
 
-  it('redeemQr pays once and forged codes are rejected', async () => {
-    const exp = Math.floor(NOW / 1000) + 300;
-    const good = buildCode(SECRET, 'bin-01', 'httpnonce1', exp);
-    const ok = await call('redeemQr', { payload: good }, 'bob');
-    expect(ok.status).toBe(200);
-    expect(ok.json.result).toMatchObject({ ep: 50 });
-    const again = await call('redeemQr', { payload: good }, 'bob');
-    expect(again.json.error.reason).toBe('duplicate');
-    const forged = await call('redeemQr', { payload: buildCode('x', 'bin-01', 'httpnonce2', exp) }, 'bob');
+  it('scan opens a session, the bin confirms over HTTP, the scanner is paid once', async () => {
+    const before = (await store.get<number>(`users/${BOB}/balance`)) ?? 0;
+    const open = await call('openSession', { payload: buildCode(SECRET, 'bin-01') }, 'bob');
+    expect(open.status).toBe(200);
+    const sid = open.json.result.sessionId;
+    const forged = await call('openSession', { payload: buildCode('x', 'bin-01') }, 'alice');
     expect(forged.json.error.reason).toBe('invalid-qr');
+    const oldFormat = await call('redeemQr', { payload: 'EP1:bin-01:n:99:abc' }, 'bob');
+    expect(oldFormat.status).toBe(404);
+
+    const post = async (body: unknown) => {
+      const r = await fetch(`${base}/device/deposit`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      return { status: r.status, json: (await r.json()) as any };
+    };
+    const msg = { binId: 'bin-01', eventId: 'httpev1', grams: 300, ts: clock };
+    expect((await post({ ...msg, mac: 'f'.repeat(64) })).status).toBe(403);
+    const ok = await post({ ...msg, ts: clock + 5_000, mac: depositMac(deviceKey(SECRET, 'bin-01'), { ...msg, ts: clock + 5_000 }) });
+    expect(ok.status).toBe(200);
+    expect(ok.json.result).toMatchObject({ ep: 30 });
+    const st = await call('sessionStatus', { sessionId: sid }, 'bob');
+    expect(st.json.result.status).toBe('done');
+    expect(await store.get(`users/${BOB}/balance`)).toBe(before + 30);
   });
 
   it('admin functions require the admin claim', async () => {

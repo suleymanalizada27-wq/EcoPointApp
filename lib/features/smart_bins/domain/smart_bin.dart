@@ -20,6 +20,7 @@ class SmartBin {
     this.lat,
     this.lng,
     this.supportsWeightRedeem = false,
+    this.problem = false,
   });
 
   final String id;
@@ -35,6 +36,9 @@ class SmartBin {
   /// True when the firmware publishes `weightEventId`, which the backend
   /// needs to make a weight reading single-use.
   final bool supportsWeightRedeem;
+
+  /// Reported as not working by several people (or confirmed by an admin).
+  final bool problem;
 
   bool get hasCoordinates =>
       lat != null &&
@@ -67,6 +71,7 @@ class SmartBin {
       lat: asDoubleOrNull(m['lat']),
       lng: asDoubleOrNull(m['lng']),
       supportsWeightRedeem: m['weightEventId'] != null,
+      problem: m['problem'] == true,
     );
   }
 }

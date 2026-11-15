@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/theme/ep_colors.dart';
 import '../../app/theme/tokens.dart';
+import 'motion_widgets.dart';
 
 /// Standard surface card. One radius, one border, one padding — everywhere.
 class EpCard extends StatelessWidget {
@@ -33,6 +34,16 @@ class EpCard extends StatelessWidget {
       gradient: gradient,
       borderRadius: radius,
       border: Border.all(color: borderColor ?? c.outline),
+      boxShadow: Theme.of(context).brightness == Brightness.dark
+          ? null
+          : [
+              BoxShadow(
+                color: (gradient != null ? c.emerald : Colors.black)
+                    .withValues(alpha: gradient != null ? 0.18 : 0.045),
+                blurRadius: gradient != null ? 26 : 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
     );
 
     final inner = Padding(padding: padding, child: child);
@@ -51,6 +62,8 @@ class EpCard extends StatelessWidget {
               ),
             ),
     );
+
+    if (onTap != null) card = PressScale(child: card);
 
     if (semanticLabel != null) {
       card = Semantics(

@@ -1,6 +1,7 @@
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
 import { AppError } from './errors';
 import { HANDLERS, type Caller } from './handlers';
+import { deviceDeposit } from './services/sessions';
 import path from 'node:path';
 import { deleteAccountHtml, inviteHtml, privacyHtml } from './pages';
 import { normalizeCode } from './lib/rules';
@@ -25,6 +26,13 @@ export interface ServerEnv {
   publicUrl?: string;
   /** Optional device-push channel (FCM). */
   push?: PushSender;
+  /** Latest published app version (shown as an update notice in the app). */
+  appLatestVersion?: string;
+  /** Oldest version still considered fine (older ones are told the update matters). */
+  appMinVersion?: string;
+  appNotes?: string;
+  /** Allow the admin virtual-bin simulator (SIM_ENABLED=1). */
+  sim?: boolean;
   now?: () => number;
   log?: (msg: string, err?: unknown) => void;
 }
@@ -38,11 +46,25 @@ export interface ServerEnv {
 export function createApp(env: ServerEnv): Express {
   const app = express();
   app.disable('x-powered-by');
-  app.use(express.json({ limit: '16kb' }));
+  // Small bodies everywhere; only a problem report may carry a (shrunk) photo.
+  const smallJson = express.json({ limit: '16kb' });
+  const photoJson = express.json({ limit: '450kb' });
+  app.use((req, res, next) => (req.path === '/api/reportBin' ? photoJson(req, res, next) : smallJson(req, res, next)));
 
   // Cheap endpoint used by the keep-alive pinger and the app's warm-up call.
   app.get('/health', (_req, res) => {
     res.json({ ok: true, ts: (env.now ?? Date.now)() });
+  });
+
+  // The app asks this once per start to show "a new version is available".
+  app.get('/app-version', (_req, res) => {
+    res.set('Cache-Control', 'public, max-age=300');
+    res.json({
+      latest: env.appLatestVersion ?? null,
+      min: env.appMinVersion ?? null,
+      url: env.downloadUrl ?? null,
+      notes: env.appNotes ?? null,
+    });
   });
 
   // Public pages that app stores require.
@@ -92,6 +114,28 @@ export function createApp(env: ServerEnv): Express {
       .send(inviteHtml({ code, inviter, baseUrl: base.replace(/\/+$/, ''), downloadUrl: env.downloadUrl }));
   });
 
+  // Smart bins confirm a deposit here. No user token: the message is signed with
+  // the bin's own HMAC key (derived from the server secret), see lib/qr.ts.
+  app.post('/device/deposit', async (req: Request, res: Response) => {
+    const body = req.body && typeof req.body === 'object' ? (req.body as Record<string, unknown>) : {};
+    try {
+      const result = await deviceDeposit(
+        { store: env.store, now: (env.now ?? Date.now)(), push: env.push },
+        env.secret,
+        body,
+      );
+      return res.json({ result });
+    } catch (e) {
+      if (e instanceof AppError) {
+        return res
+          .status(HTTP_STATUS[e.code] ?? 400)
+          .json({ error: { code: e.code, reason: e.reason, message: e.message } });
+      }
+      env.log?.('Unhandled error in device deposit', e);
+      return res.status(500).json({ error: { code: 'internal', reason: 'internal', message: 'Internal error' } });
+    }
+  });
+
   app.post('/api/:name', async (req: Request, res: Response) => {
     const send = (status: number, code: string, reason: string, message: string) =>
       res.status(status).json({ error: { code, reason, message } });
@@ -118,7 +162,7 @@ export function createApp(env: ServerEnv): Express {
 
     try {
       const result = await handler({
-        deps: { store: env.store, now: (env.now ?? Date.now)(), push: env.push },
+        deps: { store: env.store, now: (env.now ?? Date.now)(), push: env.push, sim: env.sim },
         secret: env.secret,
         caller,
         data,

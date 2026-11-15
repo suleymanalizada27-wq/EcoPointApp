@@ -11,6 +11,7 @@ import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/ep_button.dart';
 import '../../../core/widgets/ep_card.dart';
 import '../../../core/widgets/ep_feedback.dart';
+import '../../../core/widgets/motion_widgets.dart';
 import '../data/gamification_repository.dart';
 import '../domain/gamification.dart';
 
@@ -32,6 +33,7 @@ class _StreakCardState extends ConsumerState<StreakCard> {
       final r = await ref.read(gamificationRepositoryProvider).checkIn();
       if (!mounted) return;
       HapticFeedback.mediumImpact();
+      if (r.bonus > 0) HapticFeedback.heavyImpact();
       showEpToast(
         context,
         r.bonus > 0
@@ -68,9 +70,12 @@ class _StreakCardState extends ConsumerState<StreakCard> {
         children: [
           Row(
             children: [
-              IconTile(
-                icon: Icons.local_fire_department_rounded,
-                color: c.warning,
+              PulseScale(
+                active: streak.count > 0 && done,
+                child: IconTile(
+                  icon: Icons.local_fire_department_rounded,
+                  color: c.warning,
+                ),
               ),
               const SizedBox(width: Sp.sm),
               Expanded(

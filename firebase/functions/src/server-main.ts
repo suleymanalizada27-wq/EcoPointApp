@@ -44,6 +44,10 @@ const app = createApp({
     .filter(Boolean),
   publicUrl: process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || undefined,
   secret: need('QR_HMAC_SECRET'),
+  sim: process.env.SIM_ENABLED === '1',
+  appLatestVersion: process.env.APP_LATEST_VERSION || undefined,
+  appMinVersion: process.env.APP_MIN_VERSION || undefined,
+  appNotes: (process.env.APP_UPDATE_NOTES || '').slice(0, 200) || undefined,
   verifyToken: async (token) => {
     const d = await getAuth().verifyIdToken(token);
     return {

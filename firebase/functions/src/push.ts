@@ -5,6 +5,9 @@ export interface PushMessage {
   body: string;
   /** In-app screen to open when the notification is tapped (whitelisted by the app). */
   route?: string;
+  /** Kind + id let the app confirm a tap ("opened") so frequency can adapt. */
+  kind?: string;
+  id?: string;
 }
 
 /**
@@ -35,7 +38,7 @@ export interface MessagingLike {
     tokens: string[];
     notification: { title: string; body: string };
     data?: Record<string, string>;
-    android?: { priority: 'high' | 'normal' };
+    android?: { priority: 'high' | 'normal'; notification?: { tag?: string } };
   }): Promise<{
     responses: Array<{ success: boolean; error?: { code?: string } }>;
   }>;
@@ -45,6 +48,19 @@ export interface MessagingLike {
     data?: Record<string, string>;
     android?: { priority: 'high' | 'normal' };
   }): Promise<string>;
+}
+
+/** A newer message of the same kind replaces the older one in the tray. */
+function androidOpts(msg: PushMessage): { priority: 'high'; notification?: { tag: string } } {
+  return msg.kind ? { priority: 'high', notification: { tag: msg.kind } } : { priority: 'high' };
+}
+
+function pushData(msg: PushMessage): { data?: Record<string, string> } {
+  const data: Record<string, string> = {};
+  if (msg.route) data.route = msg.route;
+  if (msg.kind) data.kind = msg.kind;
+  if (msg.id) data.id = msg.id;
+  return Object.keys(data).length ? { data } : {};
 }
 
 export const NEWS_TOPIC = 'news';
@@ -79,8 +95,8 @@ export class FcmPusher implements PushSender {
       const res = await this.messaging.sendEachForMulticast({
         tokens: entries.map(([, v]) => v.token as string),
         notification: { title: msg.title, body: msg.body },
-        ...(msg.route ? { data: { route: msg.route } } : {}),
-        android: { priority: 'high' },
+        ...pushData(msg),
+        android: androidOpts(msg),
       });
       // Drop tokens FCM says are gone (app uninstalled, token rotated).
       for (const r of res.responses) {
@@ -112,7 +128,7 @@ export class FcmPusher implements PushSender {
       await this.messaging.send({
         topic: NEWS_TOPIC,
         notification: { title: msg.title, body: msg.body },
-        ...(msg.route ? { data: { route: msg.route } } : {}),
+        ...pushData(msg),
         android: { priority: 'high' },
       });
     } catch (e) {

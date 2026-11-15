@@ -1,0 +1,38 @@
+# Free scheduler for EcoPoint notifications (works even when the Render server sleeps).
+# Needs two repository secrets (Settings → Secrets and variables → Actions):
+#   FIREBASE_SERVICE_ACCOUNT  – the service-account JSON (one line)
+#   DATABASE_URL              – https://<project>-default-rtdb.<region>.firebasedatabase.app
+# GitHub may delay scheduled runs by 10–30 minutes and disables schedules after
+# 60 days without repository activity (see keepalive.yml).
+name: push-tick
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+concurrency:
+  group: push-tick
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: firebase/functions/package-lock.json
+      - name: Install and build
+        working-directory: firebase/functions
+        run: |
+          npm ci
+          npm run build
+      - name: Run due jobs
+        working-directory: firebase/functions
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npm run tick

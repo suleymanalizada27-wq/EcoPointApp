@@ -7,6 +7,7 @@ import '../../../app/theme/ep_colors.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../core/services/firebase_providers.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/motion_widgets.dart';
 import '../../../core/widgets/ep_avatar.dart';
 import '../../../core/widgets/ep_button.dart';
 import '../../../core/widgets/ep_card.dart';
@@ -26,6 +27,8 @@ import '../../statistics/presentation/ep_bar_chart.dart';
 import '../../statistics/presentation/statistics_screen.dart';
 import '../../wallet/data/wallet_providers.dart';
 import '../../wallet/domain/activity_aggregator.dart';
+import 'first_steps_card.dart';
+import 'update_banner.dart';
 
 String _greetingKey(DateTime now) {
   final h = now.hour;
@@ -53,18 +56,23 @@ class HomeScreen extends ConsumerWidget {
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 120),
-          children: const [
-            OfflineBanner(),
-            _Header(),
-            _BalanceHero(),
-            _SummaryRow(),
-            _WeekCard(),
-            _MissionsSection(),
-            _ImpactSection(),
-            _InviteCard(),
-            _LeaderboardSection(),
-            _FeaturedRewards(),
-            _BinsSection(),
+          children: [
+            const OfflineBanner(),
+            const UpdateBanner(),
+            for (final (i, w) in const <Widget>[
+              _Header(),
+              _BalanceHero(),
+              FirstStepsCard(),
+              _SummaryRow(),
+              _WeekCard(),
+              _MissionsSection(),
+              _ImpactSection(),
+              _InviteCard(),
+              _LeaderboardSection(),
+              _FeaturedRewards(),
+              _BinsSection(),
+            ].indexed)
+              FadeSlideIn(index: i, child: w),
           ],
         ),
       ),

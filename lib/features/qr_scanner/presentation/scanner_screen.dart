@@ -15,6 +15,7 @@ import '../../../core/utils/qr_payload.dart';
 import '../../../core/widgets/ep_button.dart';
 import '../../../core/widgets/ep_card.dart';
 import '../../../core/widgets/ep_feedback.dart';
+import '../../../core/widgets/motion_widgets.dart';
 import '../../../core/widgets/state_views.dart';
 import '../data/qr_repository.dart';
 
@@ -137,21 +138,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     }
 
     // Bin code.
-    if (payload.isExpired(DateTime.now())) {
-      HapticFeedback.heavyImpact();
-      _hint(context.tr('scan_expired'));
-      return;
-    }
-
     _locked = true;
     HapticFeedback.mediumImpact();
     setState(() => _message = context.tr('scan_processing'));
     await _controller?.stop();
+    QrSession session;
     try {
-      final result = await ref.read(qrRepositoryProvider).redeem(payload);
-      if (!mounted) return;
-      HapticFeedback.heavyImpact();
-      await _showSuccess(result);
+      session = await ref.read(qrRepositoryProvider).open(payload);
     } on Failure catch (f) {
       if (!mounted) return;
       HapticFeedback.heavyImpact();
@@ -162,7 +155,38 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       setState(() => _message = null);
       _locked = false;
       await _controller?.start();
+      return;
     }
+    if (!mounted) return;
+    setState(() => _message = null);
+
+    // The bin itself confirms the deposit; we only wait for that.
+    final outcome = await showModalBottomSheet<QrSessionStatus>(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (_) => _WaitSheet(session: session),
+    );
+    if (!mounted) return;
+    final done = outcome?.result;
+    if (outcome != null && outcome.state == QrSessionState.done && done != null) {
+      HapticFeedback.heavyImpact();
+      await _showSuccess(done);
+      return;
+    }
+    if (outcome != null) {
+      HapticFeedback.heavyImpact();
+      final key = outcome.state == QrSessionState.failed
+          ? (outcome.reason == 'daily-limit'
+              ? 'scan_daily_limit'
+              : 'error_generic')
+          : 'scan_wait_expired';
+      showEpToast(context, context.tr(key), kind: ToastKind.error);
+    }
+    _lastRaw = raw;
+    _lastRawAt = DateTime.now();
+    _locked = false;
+    await _controller?.start();
   }
 
   Future<void> _showSuccess(QrRedeemResult r) async {
@@ -172,7 +196,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       enableDrag: false,
       builder: (ctx) {
         final c = ctx.ep;
-        return SafeArea(
+        return Stack(children: [
+          SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(Sp.gutter, 0, Sp.gutter, Sp.lg),
             child: Column(
@@ -229,7 +254,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
               ],
             ),
           ),
-        );
+          ),
+          const Positioned.fill(child: ConfettiBurst()),
+        ]);
       },
     );
     if (!mounted) return;
@@ -564,4 +591,134 @@ class _CornerPainter extends CustomPainter {
   @override
   bool shouldRepaint(_CornerPainter old) =>
       old.progress != progress || old.color != color || old.showLine != showLine;
+}
+
+/// "Put your waste into the bin": polls the server until the bin confirms.
+class _WaitSheet extends ConsumerStatefulWidget {
+  const _WaitSheet({required this.session});
+  final QrSession session;
+
+  @override
+  ConsumerState<_WaitSheet> createState() => _WaitSheetState();
+}
+
+class _WaitSheetState extends ConsumerState<_WaitSheet> {
+  Timer? _poll;
+  Timer? _tick;
+  int _left = 0;
+  bool _busy = false;
+  bool _closed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _left = _secondsLeft();
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() => _left = _secondsLeft());
+    });
+    _poll = Timer.periodic(const Duration(seconds: 2), (_) => _check());
+    _check();
+  }
+
+  int _secondsLeft() {
+    final n =
+        widget.session.expiresAt.difference(DateTime.now()).inSeconds;
+    return n < 0 ? 0 : n;
+  }
+
+  @override
+  void dispose() {
+    _poll?.cancel();
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  void _finish(QrSessionStatus? s) {
+    if (_closed || !mounted) return;
+    _closed = true;
+    Navigator.of(context).pop(s);
+  }
+
+  Future<void> _check() async {
+    if (_busy || _closed) return;
+    _busy = true;
+    try {
+      final st = await ref.read(qrRepositoryProvider).status(widget.session);
+      if (st.state != QrSessionState.open) {
+        _finish(st.state == QrSessionState.cancelled ? null : st);
+      }
+    } catch (_) {
+      // Network hiccup: the next poll retries; the countdown still ends it.
+    } finally {
+      _busy = false;
+    }
+    if (_secondsLeft() <= 0 && !_closed) {
+      // One last look, then give up.
+      try {
+        final st = await ref.read(qrRepositoryProvider).status(widget.session);
+        _finish(st);
+      } catch (_) {
+        _finish(const QrSessionStatus(QrSessionState.expired));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.ep;
+    return PopScope(
+      canPop: false,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(Sp.gutter, Sp.md, Sp.gutter, Sp.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: SizedBox(
+                  width: 64,
+                  height: 64,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 5,
+                    color: c.emerald,
+                    semanticsLabel: context.tr('scan_wait_title'),
+                  ),
+                ),
+              ),
+              const SizedBox(height: Sp.md),
+              Text(context.tr('scan_wait_title'),
+                  textAlign: TextAlign.center, style: context.text.titleLarge),
+              const SizedBox(height: Sp.xs),
+              Text(
+                widget.session.binName,
+                textAlign: TextAlign.center,
+                style: context.text.bodyMedium?.copyWith(color: c.textSecondary),
+              ),
+              const SizedBox(height: Sp.xs),
+              Text(context.tr('scan_wait_body'),
+                  textAlign: TextAlign.center,
+                  style:
+                      context.text.bodyMedium?.copyWith(color: c.textSecondary)),
+              const SizedBox(height: Sp.sm),
+              Text(context.tr('scan_wait_left', {'n': _left}),
+                  textAlign: TextAlign.center,
+                  style: context.text.labelLarge
+                      ?.copyWith(color: c.textTertiary)),
+              const SizedBox(height: Sp.lg),
+              EpButton(
+                label: context.tr('scan_wait_cancel'),
+                kind: EpButtonKind.ghost,
+                onPressed: () async {
+                  await ref.read(qrRepositoryProvider).cancel(widget.session);
+                  _finish(null);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

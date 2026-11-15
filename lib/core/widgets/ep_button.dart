@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../app/theme/ep_colors.dart';
 import '../../app/theme/tokens.dart';
+import 'motion_widgets.dart';
 
 enum EpButtonKind { primary, accent, secondary, ghost, danger }
 
@@ -123,7 +124,11 @@ class EpButton extends StatelessWidget {
       enabled: enabled,
       label: semanticLabel ?? label,
       excludeSemantics: true,
-      child: expand ? SizedBox(width: double.infinity, child: button) : button,
+      child: PressScale(
+        enabled: enabled,
+        scale: 0.96,
+        child: expand ? SizedBox(width: double.infinity, child: button) : button,
+      ),
     );
   }
 }

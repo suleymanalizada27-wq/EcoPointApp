@@ -1,18 +1,20 @@
 /**
- * Mint a signed single-use bin QR code (for provisioning / testing).
+ * Prints a bin's static QR payload (print it as a QR image on the bin; it never
+ * expires and carries no reward) and the bin's own deposit key.
  *
- *   QR_HMAC_SECRET=... npm run qr -- bin-01 [ttlSeconds]
+ *   QR_HMAC_SECRET=... npm run qr -- bin-01
  *
- * The secret must equal the Firebase secret `QR_HMAC_SECRET`. Never commit it.
+ * The secret must equal the server's `QR_HMAC_SECRET`. Never commit it.
+ * A bin signs each deposit message with the printed device key (see README).
  */
-import { issueBinCode } from '../src/services/admin';
+import { binQr } from '../src/services/admin';
+import { deviceKey } from '../src/lib/qr';
 
 const secret = process.env.QR_HMAC_SECRET;
-const [binId, ttl] = process.argv.slice(2);
+const [binId] = process.argv.slice(2);
 if (!secret || !binId) {
-  console.error('usage: QR_HMAC_SECRET=... npm run qr -- <binId> [ttlSeconds]');
+  console.error('usage: QR_HMAC_SECRET=... npm run qr -- <binId>');
   process.exit(1);
 }
-const { code, expiresAt } = issueBinCode(secret, binId, ttl ? Number(ttl) : 300, Date.now());
-console.log(code);
-console.error(`expires ${new Date(expiresAt * 1000).toISOString()}`);
+console.log(binQr(secret, binId).code);
+console.error(`device key (keep secret, goes into the bin firmware): ${deviceKey(secret, binId)}`);

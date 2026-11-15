@@ -6,7 +6,6 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/services/backend_service.dart';
 import '../../../core/services/firebase_providers.dart';
 import '../../../core/utils/json_utils.dart';
-import '../../../core/utils/request_id.dart';
 import '../domain/smart_bin.dart';
 
 class BinsRepository {
@@ -28,13 +27,35 @@ class BinsRepository {
     });
   }
 
-  /// Server reads the device's own reading and pays EP. Returns EP earned.
-  Future<int> redeemWeight(String deviceId) async {
-    final res = await _backend.call('redeemDeviceWeight', {
-      'deviceId': deviceId,
-      'requestId': newRequestId(),
+  /// Sends a problem report (optionally with a small base64 JPEG photo).
+  Future<void> report({
+    required String binId,
+    required String kind,
+    String note = '',
+    String? photoBase64,
+  }) async {
+    await _backend.call('reportBin', {
+      'binId': binId,
+      'kind': kind,
+      'note': note,
+      if (photoBase64 != null) 'photo': photoBase64,
     });
-    return asInt(res['ep']);
+  }
+
+  /// Stars / un-stars a bin; the server notifies starred bins when they fill up.
+  Future<void> setFavourite(String binId, bool on) async {
+    await _backend.call('toggleFavBin', {'binId': binId, 'on': on});
+  }
+
+  Stream<Set<String>> favourites(String uid) {
+    return _db.ref('users/$uid/favBins').onValue.map((event) {
+      final out = <String>{};
+      for (final child in event.snapshot.children) {
+        final key = child.key;
+        if (key != null) out.add(key);
+      }
+      return out;
+    });
   }
 }
 
@@ -48,6 +69,13 @@ final binsRepositoryProvider = Provider<BinsRepository>(
 final binsProvider = StreamProvider<List<SmartBin>>(
   (ref) => ref.watch(binsRepositoryProvider).bins(),
 );
+
+/// The signed-in person's starred bins.
+final favBinsProvider = StreamProvider<Set<String>>((ref) {
+  final uid = ref.watch(uidProvider);
+  if (uid == null) return Stream.value(<String>{});
+  return ref.watch(binsRepositoryProvider).favourites(uid);
+});
 
 /// Result of asking for the device location.
 class LocationState {

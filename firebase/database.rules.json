@@ -11,6 +11,13 @@
           "notifyActivity": { ".validate": "newData.isBoolean()" },
           "notifyNews": { ".validate": "newData.isBoolean()" },
           "notifyOffers": { ".validate": "newData.isBoolean()" },
+          "notifyFewer": { ".validate": "newData.isBoolean()" },
+          "notifyMissions": { ".validate": "newData.isBoolean()" },
+          "notifyTips": { ".validate": "newData.isBoolean()" },
+          "notifyBins": { ".validate": "newData.isBoolean()" },
+          "notifyFreq": { ".validate": "newData.isString() && (newData.val() === 'low' || newData.val() === 'normal' || newData.val() === 'high')" },
+          "quietFrom": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 23" },
+          "quietTo": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 23" },
           "$other": { ".validate": false }
         }
       }

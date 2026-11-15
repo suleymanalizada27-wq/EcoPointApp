@@ -12,6 +12,33 @@ abstract final class AppTheme {
   static ThemeData get dark => _build(EpColors.dark, Brightness.dark);
   static ThemeData get light => _build(EpColors.light, Brightness.light);
 
+  /// Same theme, but with the accent taken from the system wallpaper colours
+  /// (Android 12+ "Material You"). Only the accent changes; surfaces and text
+  /// keep their tested contrast.
+  static ThemeData withAccent(Color accent, Brightness b) {
+    final base = b == Brightness.dark ? EpColors.dark : EpColors.light;
+    // A readable accent: keep it dark enough on light, light enough on dark.
+    final hsl = HSLColor.fromColor(accent);
+    final adj = hsl
+        .withLightness(
+            b == Brightness.dark
+                ? hsl.lightness.clamp(0.55, 0.75)
+                : hsl.lightness.clamp(0.28, 0.42))
+        .withSaturation(hsl.saturation.clamp(0.35, 0.9))
+        .toColor();
+    final deep = HSLColor.fromColor(adj)
+        .withLightness((HSLColor.fromColor(adj).lightness * 0.55).clamp(0.12, 0.35))
+        .toColor();
+    return _build(
+      base.copyWith(
+        emerald: adj,
+        emeraldDeep: deep,
+        heroGradient: [adj, deep, Color.lerp(deep, base.bg, 0.6) ?? deep],
+      ),
+      b,
+    );
+  }
+
   /// Arabic, Persian and Hindi need a font that actually contains their
   /// glyphs, and they must not use letter spacing: any non-zero spacing breaks
   /// the joining of cursive letters (Arabic script) and conjuncts

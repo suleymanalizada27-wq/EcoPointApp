@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -80,6 +81,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   return EmptyView(
                     icon: Icons.receipt_long_outlined,
                     message: context.tr('history_empty'),
+                    actionLabel: context.tr('nav_scan'),
+                    onAction: () => context.push('/scan'),
                   );
                 }
                 return ListView.separated(

@@ -15,6 +15,9 @@ class Failure implements Exception {
   static const String insufficientBalance = 'insufficient-balance';
   static const String invalidQr = 'invalid-qr';
   static const String expiredQr = 'expired-qr';
+  static const String binBusy = 'bin-busy';
+  static const String binDisabled = 'bin-disabled';
+  static const String noSession = 'no-session';
   static const String duplicate = 'duplicate';
   static const String rateLimited = 'rate-limited';
   static const String dailyLimit = 'daily-limit';
@@ -38,6 +41,12 @@ class Failure implements Exception {
         return 'scan_invalid';
       case expiredQr:
         return 'scan_expired';
+      case binBusy:
+        return 'scan_bin_busy';
+      case binDisabled:
+        return 'scan_bin_disabled';
+      case noSession:
+        return 'scan_wait_expired';
       case duplicate:
         return 'scan_duplicate';
       case rateLimited:
@@ -111,6 +120,12 @@ class Failure implements Exception {
         return Failure(invalidQr, message);
       case 'expired-qr':
         return Failure(expiredQr, message);
+      case 'bin-busy':
+        return Failure(binBusy, message);
+      case 'bin-disabled':
+        return Failure(binDisabled, message);
+      case 'no-session':
+        return Failure(noSession, message);
       case 'duplicate':
         return Failure(duplicate, message);
       case 'rate-limited':

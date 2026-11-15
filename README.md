@@ -16,7 +16,7 @@ to friends, climb the leaderboard.
 ```bash
 bash tool/bootstrap.sh          # flutter create android/ios + permissions/minSdk patch
 dart pub global activate flutterfire_cli
-flutterfire configure --project=ecopoint-b3d60 --platforms=android,ios
+flutterfire configure --project=ecopoint-suleyman-2026 --platforms=android,ios
 flutter analyze && flutter test
 flutter run
 ```
@@ -52,13 +52,13 @@ client writes except `users/{uid}/prefs`.**
 
 | Operation | Callable | Protections |
 |---|---|---|
-| Bin QR → EP | `redeemQr` | HMAC-SHA256 signature, expiry, single-use nonce (transactional), per-user rate limits (3 s / 10 per hour), daily EP cap, ban list |
-| Weight → EP | `redeemDeviceWeight` | server reads the bin's own reading; single-use via `weightEventId`; freshness, min/max, cooldown, daily gram cap |
+| Scan bin QR | `openSession` / `sessionStatus` / `cancelSession` | HMAC-signed static QR, one open session per bin (3 min), per-user rate limits, ban list; **pays nothing** |
+| Bin confirms deposit → EP | `POST /device/deposit` (no user token) | message signed with the bin's own HMAC key, clock skew ≤ 5 min, one open session closes exactly once, `eventId` idempotent, daily EP/gram caps; pays the person who scanned |
 | Transfer | `transferEp` | atomic debit (never negative), credit, refund on failure, idempotent `requestId`, limits |
 | Rewards / coupons / BakıKart | `purchaseReward`, `createCoupon`, `requestTransportTopUp` | server-side prices & stock, idempotent; BakıKart is a *pending request* an admin resolves (`adminResolveTransport`, refunds on reject) |
 | Streak / missions / referral | `claimDailyCheckIn`, `claimChallenge`, `applyReferral` | server recomputes progress; once-per-day claims; one referrer per account, capped |
 | Profile / deletion | `ensureProfile`, `updateProfile`, `deleteAccountData` | validated/sanitised; keeps the public `leaderboard/` projection in sync |
-| Admin | `adminAdjustBalance`, `adminBroadcast`, `adminResolveTransport`, `adminIssueBinCode` | require custom claim `admin: true` |
+| Admin | `adminAdjustBalance`, `adminBroadcast`, `adminResolveTransport`, `adminIssueBinCode`, `adminSimulateDeposit` | require custom claim `admin: true` |
 
 The client only ever *parses* QR payloads (`QrPayload`) to pick a flow; it never awards EP.
 `leaderboard/` is a public projection so clients no longer read other users' private records.
@@ -67,12 +67,25 @@ The client only ever *parses* QR payloads (`QrPayload`) to pick a flow; it never
 The old PWA writes balances directly; the new rules (rightly) reject that. Migrate users to the
 Flutter app (or retire the PWA) before deploying `database.rules.json`.
 
-### Bin QR codes
-Format `EP1:<binId>:<nonce>:<expUnixSec>:<sig32hex>`; `sig = HMAC-SHA256(secret, "binId:nonce:exp")[:32]`.
-Each code is **single-use**, so a printed sticker works once. Production needs the bin (ESP32) or a
-display/back-office to mint a fresh code per deposit, or an admin tool (`adminIssueBinCode`,
-`npm run qr -- bin-01`). **Bin firmware changes are required and are not part of this repo.**
-`devices/{id}` must exist, and for weight redemption the firmware must publish a changing `weightEventId`.
+### Bin QR codes and deposits (static QR model)
+The QR printed on a bin is **static** and carries no reward: `EP2:<binId>:<sig32hex>`,
+`sig = HMAC-SHA256(secret, "EP2:<binId>")[:32]`. Flow: the person scans it → `openSession` (server verifies the
+signature, the bin exists and is not `disabled`, one person per bin at a time, 3 min) → the app shows "put your
+waste in the bin" and polls `sessionStatus` → the bin sends `POST /device/deposit` and the server credits the
+person whose session is open. Print the code with the admin screen (or `npm run qr -- bin-01`, which also prints
+the bin's device key).
+
+Deposit message (JSON): `{binId, eventId, grams, ts, mac}`; `ts` = bin clock in epoch ms (±5 min), `eventId` unique per
+deposit (re-sending it returns the first result), `grams` 0 when the bin has no scale (then a flat 50 EP), and
+`mac = HMAC-SHA256(deviceKey, "<binId>.<eventId>.<grams>.<ts>")` as lower-case hex, where
+`deviceKey = HMAC-SHA256(QR_HMAC_SECRET, "devkey:<binId>")` (printed by `npm run qr`). 10 EP per 100 g.
+Errors: `no-session` (nobody scanned; nothing is burned, the bin may retry), `forbidden` (bad MAC),
+`daily-limit`, `bin-disabled`.
+
+**There are no real bins yet.** The admin screen has a *virtual bin*: scan the bin's QR with your phone, then press
+"Zibil at" → the server builds a correctly signed deposit and sends it through the same code as a real bin.
+It works only when the server has `SIM_ENABLED=1` (leave it off in production once real bins exist).
+**Bin firmware is not part of this repo.** The old expiring `EP1` codes and `redeemDeviceWeight` were removed.
 
 ## Backend (two ways to run it)
 
@@ -92,7 +105,7 @@ the Flutter client in this repo calls the HTTP server (A). To use B you must swi
 
 ```bash
 cd firebase/functions && npm install && npm test && npm run build
-firebase login && firebase use ecopoint-b3d60
+firebase login && firebase use ecopoint-suleyman-2026
 firebase functions:secrets:set QR_HMAC_SECRET        # long random string; never commit
 firebase deploy --only database,functions            # needs the Blaze plan
 firebase database:set /rewards firebase/seed/rewards.json   # optional: seed the catalog
@@ -125,7 +138,7 @@ sign-out · account deletion · offline banner + RTDB offline cache.
 ## Verification
 
 Actually run in the sandbox:
-- `firebase/functions`: `npm test` → **123 tests pass** (QR forgery/replay/expiry/concurrency, double-spend, idempotency, refunds, caps, rules, push tokens/delivery, personalized smart notifications); `tsc` builds; building and starting from the repo root (`npm run build`, `npm start`) works.
+- `firebase/functions`: `npm test` → **140 tests pass** (static QR forgery, session/deposit flow, replay and idempotency, concurrency, double-spend, idempotency, refunds, caps, rules, push tokens/delivery, personalized smart notifications); `tsc` builds; building and starting from the repo root (`npm run build`, `npm start`) works.
 - `python3 tool/verify_static.py`: Dart **syntax** of all files (tree-sitter), every import resolves, 338 localization keys identical across az/en/ru/tr, every `tr('…')` key exists.
 
 **Not** run in the sandbox (needs a device): Flutter compile, any real FCM delivery, Google sign-in, camera, location. The author's machine ran `flutter analyze`/`test` and a release APK before the push/Google/icon changes; those changes still need that check.
@@ -162,6 +175,17 @@ Honest gaps: Flutter code of these features is only syntax/import-checked in the
 Crashlytics, nearest free bin + directions, statistics share image, admin suspicious-activity list + CSV export, invite App Links (`/.well-known/assetlinks.json`).
 Unverified until run on a phone: Gradle plugin patch (Crashlytics), App Links verification, share image rendering, directions deep link.
 
-## Smart personal notifications
+## More features (v2 round)
+- **Problem reports:** a bin's sheet has "Report a problem" (broken/full/dirty/other + note + optional small photo, base64 in the database, no Firebase Storage needed). Two different people reporting "broken" mark the bin "not working" on the map; admins see the list with photos (`/admin/reports`) and resolve it.
+- **Favourite bins:** star a bin; when it crosses 85 % full the server pushes the people who starred it once (re-armed below 60 %). Respects the "activity" notification switch.
+- **Update notice:** `GET /app-version` returns `APP_LATEST_VERSION` / `APP_DOWNLOAD_URL` / `APP_UPDATE_NOTES` (Render env). The app shows a dismissible banner when the server version is newer than `AppConstants.appVersion` (keep it equal to pubspec).
+- **Launcher shortcuts** (long-press the icon): Scan, Balance. **Android 12+ system colours:** optional switch in Settings (accent only; contrast-tested surfaces stay).
+- **Home-screen widget (Android):** balance + streak. Native part is added by `tool/android_widget.ps1` (not by `flutter create`); the app tolerates its absence.
+- **First steps** checklist on Home (check-in, first deposit, first reward) from real data; skeleton lists while loading; confetti + haptics on a successful deposit; breathing flame on a done streak; system font scale up to 1.6x; text contrast raised to 4.5:1.
 
-Hourly job (`smart-push.ts`): at most one push per person per day, 09:00-21:00 Baku, at the hour the person usually scans. Priority: monthly reward ready -> monthly goal close -> reward within reach -> comeback (7+ days) -> daily check-in. Text uses the person's name and language. Toggles: `prefs/notifyActivity` (monthly/daily) and `prefs/notifyOffers` (reward/comeback). Tapping opens the relevant screen (route whitelist in `push_service.dart`). Requires `firebase deploy --only database`.
+## Smart personal notifications (v2)
+
+Hourly job (`smart-push.ts`). Each person gets **4-9 pushes a day** (adaptive): the base is 4, +1 for every day in the last 7 on which the person tapped a push (max 9); only 2 per day after 7 days without a scan (comeback mode); the "Fewer notifications" switch pins it to 4. The slots are spread evenly over the person's own 09:00-21:00 (device time zone `tz` sent at registration; default Baku). A slot sends the most useful message that is still true at send time (monthly reward ready -> monthly goal close -> reward within reach -> comeback -> daily check-in -> evening recap -> eco tip) and otherwise stays silent - the number is a maximum, content is never invented. Slots are claimed atomically (`pushLog/{uid}/slots`), so two schedulers never double-send. Tapping a push calls `ackPush` (stores only the day and kind). Prefs: `notifyActivity`, `notifyOffers`, `notifyFewer`. Tips/recap are written natively in az/en/ru/tr; other languages currently get these two kinds in English. Requires `firebase deploy --only database`.
+
+### Free scheduler without a sleeping server
+`.github/workflows/push-tick.yml` runs `npm run tick` (`tick-main.ts`) every 10 minutes on GitHub Actions. Add two repository secrets (Settings -> Secrets and variables -> Actions): `FIREBASE_SERVICE_ACCOUNT` (JSON, one line) and `DATABASE_URL`. GitHub may delay scheduled runs by 10-30 minutes and pauses schedules after 60 days without repository activity; `keepalive.yml` re-enables it monthly. The Render server's own scheduler can keep running: markers make double-runs harmless.

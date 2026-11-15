@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/localization/app_localizations.dart';
 import '../../../app/theme/ep_colors.dart';
@@ -12,6 +14,7 @@ import '../../../core/widgets/ep_feedback.dart';
 import '../data/bins_repository.dart';
 import '../domain/smart_bin.dart';
 import 'bin_navigation.dart';
+import 'bin_report_sheet.dart';
 import 'bins_screen.dart' show fillColor;
 
 void showBinDetail(BuildContext context, SmartBin bin) {
@@ -36,15 +39,15 @@ class BinDetailSheet extends ConsumerStatefulWidget {
 class _BinDetailSheetState extends ConsumerState<BinDetailSheet> {
   bool _busy = false;
 
-  Future<void> _redeem() async {
+  Future<void> _toggleFav(bool on) async {
     if (_busy) return;
     setState(() => _busy = true);
+    HapticFeedback.selectionClick();
     try {
-      final ep = await ref
-          .read(binsRepositoryProvider)
-          .redeemWeight(widget.binId);
+      await ref.read(binsRepositoryProvider).setFavourite(widget.binId, on);
       if (!mounted) return;
-      showEpToast(context, context.tr('bins_redeemed', {'n': ep}),
+      showEpToast(
+          context, context.tr(on ? 'bins_fav_added' : 'bins_fav_removed'),
           kind: ToastKind.success);
     } on Failure catch (f) {
       if (mounted) {
@@ -70,6 +73,7 @@ class _BinDetailSheetState extends ConsumerState<BinDetailSheet> {
     final tone = fillColor(c, bin.fillPercent);
     final location = ref.watch(locationProvider).valueOrNull;
     final dist = location?.distanceTo(bin);
+    final isFav = ref.watch(favBinsProvider).valueOrNull?.contains(widget.binId) ?? false;
 
     String lastSeenText() {
       final seen = bin.lastSeen;
@@ -103,10 +107,25 @@ class _BinDetailSheetState extends ConsumerState<BinDetailSheet> {
                     ),
                   ),
                   EpBadge(
-                    label: online
-                        ? context.tr('bins_online')
-                        : context.tr('bins_offline'),
-                    color: online ? c.emerald : c.textTertiary,
+                    label: bin.problem
+                        ? context.tr('bins_problem')
+                        : online
+                            ? context.tr('bins_online')
+                            : context.tr('bins_offline'),
+                    color: bin.problem
+                        ? c.danger
+                        : online
+                            ? c.emerald
+                            : c.textTertiary,
+                  ),
+                  IconButton(
+                    tooltip: context.tr(
+                        isFav ? 'bins_fav_remove' : 'bins_fav_add'),
+                    onPressed: _busy ? null : () => _toggleFav(!isFav),
+                    icon: Icon(
+                      isFav ? Icons.star_rounded : Icons.star_border_rounded,
+                      color: isFav ? c.warning : c.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -185,19 +204,25 @@ class _BinDetailSheetState extends ConsumerState<BinDetailSheet> {
                   onPressed: () => openDirections(context, bin),
                 ),
               ],
-              if (online && bin.supportsWeightRedeem) ...[
-                const SizedBox(height: Sp.lg),
-                Text(context.tr('bins_redeem_hint'),
-                    style: context.text.bodySmall),
-                const SizedBox(height: Sp.sm),
-                EpButton(
-                  label: context.tr('bins_redeem_weight'),
-                  icon: Icons.scale_rounded,
-                  kind: EpButtonKind.accent,
-                  loading: _busy,
-                  onPressed: _redeem,
-                ),
-              ],
+              const SizedBox(height: Sp.lg),
+              Text(context.tr('bins_deposit_hint'), style: context.text.bodySmall),
+              const SizedBox(height: Sp.sm),
+              EpButton(
+                label: context.tr('bins_scan_to_deposit'),
+                icon: Icons.qr_code_scanner_rounded,
+                kind: EpButtonKind.accent,
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  context.push('/scan');
+                },
+              ),
+              const SizedBox(height: Sp.xs),
+              EpButton(
+                label: context.tr('bins_report'),
+                icon: Icons.flag_outlined,
+                kind: EpButtonKind.ghost,
+                onPressed: () => showBinReportSheet(context, bin),
+              ),
             ],
           ),
         ),

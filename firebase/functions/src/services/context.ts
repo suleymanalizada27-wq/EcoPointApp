@@ -8,6 +8,8 @@ export interface Deps {
   now: number;
   /** Optional push channel (FCM in production, absent/fake in tests). */
   push?: PushSender;
+  /** Virtual-bin simulator allowed (SIM_ENABLED=1). Never on in production by default. */
+  sim?: boolean;
 }
 
 /** Cryptographically strong [0,1) generator for codes. */

@@ -70,6 +70,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 itemCount: 3,
                 onPageChanged: (i) => setState(() => _page = i),
                 itemBuilder: (context, i) => _Slide(
+                  active: i == _page,
                   icon: _icons[i],
                   title: context.tr('onb_${i + 1}_title'),
                   body: context.tr('onb_${i + 1}_body'),
@@ -134,7 +135,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 }
 
 class _Slide extends StatelessWidget {
-  const _Slide({required this.icon, required this.title, required this.body});
+  const _Slide({required this.active, required this.icon, required this.title, required this.body});
+  final bool active;
   final IconData icon;
   final String title;
   final String body;
@@ -142,13 +144,19 @@ class _Slide extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.ep;
+    final calm = MediaQuery.disableAnimationsOf(context);
+    final on = active || calm;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: Sp.gutter),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
+          AnimatedScale(
+            duration: calm ? Duration.zero : const Duration(milliseconds: 520),
+            curve: Curves.easeOutBack,
+            scale: on ? 1 : 0.7,
+            child: Container(
             width: 168,
             height: 168,
             decoration: BoxDecoration(
@@ -167,16 +175,31 @@ class _Slide extends StatelessWidget {
               ],
             ),
             child: Icon(icon, size: 76, color: c.lime),
-          ),
+          )),
           const SizedBox(height: Sp.xxl),
-          Semantics(
-            header: true,
-            child: Text(title, style: context.text.displayMedium),
-          ),
-          const SizedBox(height: Sp.sm),
-          Text(
-            body,
-            style: context.text.bodyLarge?.copyWith(color: c.textSecondary),
+          AnimatedSlide(
+            duration: calm ? Duration.zero : const Duration(milliseconds: 450),
+            curve: Curves.easeOutCubic,
+            offset: on ? Offset.zero : const Offset(0, 0.12),
+            child: AnimatedOpacity(
+              duration: calm ? Duration.zero : const Duration(milliseconds: 450),
+              opacity: on ? 1 : 0,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Semantics(
+                    header: true,
+                    child: Text(title, style: context.text.displayMedium),
+                  ),
+                  const SizedBox(height: Sp.sm),
+                  Text(
+                    body,
+                    style: context.text.bodyLarge
+                        ?.copyWith(color: c.textSecondary),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),

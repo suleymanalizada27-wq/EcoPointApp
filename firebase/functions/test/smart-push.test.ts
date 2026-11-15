@@ -84,10 +84,12 @@ describe('runSmartPush', () => {
       uid: ALICE,
       ...smartText('en', 'rewardClose', { name: 'Aysel', reward: 'Sugar-free Tea', gap: 30 }),
       route: '/rewards',
+      kind: 'rewardClose',
+      id: '2026-03-15_12',
     });
     expect(await store.get(`pushLog/${ALICE}/lastDay`)).toBe('2026-03-15');
-    // Same day again: nothing more.
-    const again = await runSmartPush({ store, push, now: baku('2026-03-15', 13, 3) });
+    // Same slot again: nothing more.
+    const again = await runSmartPush({ store, push, now: baku('2026-03-15', 12, 40) });
     expect(again.sent).toBe(0);
     expect(push.user).toHaveLength(1);
   });

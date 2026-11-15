@@ -13,6 +13,7 @@ import '../../../core/widgets/ep_button.dart';
 import '../../../core/widgets/ep_card.dart';
 import '../../../core/widgets/ep_feedback.dart';
 import '../../../core/widgets/ep_text_field.dart';
+import '../../../core/widgets/motion_widgets.dart';
 import '../../wallet/data/wallet_providers.dart';
 import '../data/marketplace_repository.dart';
 import '../domain/reward.dart';
@@ -109,6 +110,7 @@ class _RewardSheetState extends ConsumerState<RewardSheet> {
       HapticFeedback.heavyImpact();
       final lang = Localizations.localeOf(context).languageCode;
       final name = reward.nameFor(lang);
+      showConfetti(context); // root overlay: outlives the sheet
       Navigator.of(context).pop();
       showEpToast(
         context,

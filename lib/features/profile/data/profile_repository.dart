@@ -29,7 +29,7 @@ class ProfileRepository {
 
   /// Notification preferences live under `users/{uid}/prefs` (the only part
   /// of the user record clients may write directly).
-  Future<void> setPref(String uid, String key, bool value) async {
+  Future<void> setPref(String uid, String key, Object value) async {
     try {
       await _db.ref('${DbPaths.prefs(uid)}/$key').set(value);
     } catch (e) {

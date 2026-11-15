@@ -25,6 +25,7 @@ class SettingsScreen extends ConsumerWidget {
     final c = context.ep;
     final locale = ref.watch(localeProvider);
     final mode = ref.watch(themeModeProvider);
+    final dynamicOn = ref.watch(dynamicColorProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(context.tr('settings_title'))),
@@ -64,6 +65,14 @@ class SettingsScreen extends ConsumerWidget {
               onSelectionChanged: (s) =>
                   ref.read(themeModeProvider.notifier).setMode(s.first),
             ),
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: dynamicOn,
+            activeColor: c.emerald,
+            title: Text(context.tr('settings_dynamic_color')),
+            subtitle: Text(context.tr('settings_dynamic_color_sub')),
+            onChanged: (v) => ref.read(dynamicColorProvider.notifier).set(v),
           ),
           const SizedBox(height: Sp.lg),
           SettingsGroup(children: [
@@ -133,7 +142,7 @@ class NotificationPrefsScreen extends ConsumerWidget {
     final profile = ref.watch(profileProvider).valueOrNull;
     final uid = ref.watch(uidProvider);
 
-    Future<void> set(String key, bool v) async {
+    Future<void> set(String key, Object v) async {
       if (uid == null) return;
       try {
         await ref.read(profileRepositoryProvider).setPref(uid, key, v);
@@ -150,6 +159,54 @@ class NotificationPrefsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(Sp.gutter),
         children: [
+          Text(context.tr('notif_freq_title'), style: context.text.titleSmall),
+          const SizedBox(height: Sp.xs),
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<String>(
+              showSelectedIcon: false,
+              segments: [
+                ButtonSegment(
+                    value: 'low', label: Text(context.tr('notif_freq_low'))),
+                ButtonSegment(
+                    value: 'normal',
+                    label: Text(context.tr('notif_freq_normal'))),
+                ButtonSegment(
+                    value: 'high', label: Text(context.tr('notif_freq_high'))),
+              ],
+              selected: {profile?.notifyFreq ?? 'normal'},
+              onSelectionChanged: (s) => set('notifyFreq', s.first),
+            ),
+          ),
+          const SizedBox(height: Sp.xs),
+          Text(
+            context.tr('notif_freq_${profile?.notifyFreq ?? 'normal'}_sub'),
+            style:
+                context.text.bodySmall?.copyWith(color: context.ep.textTertiary),
+          ),
+          const SizedBox(height: Sp.md),
+          Text(context.tr('notif_quiet_title'), style: context.text.titleSmall),
+          const SizedBox(height: Sp.xs),
+          Row(
+            children: [
+              Expanded(
+                child: _HourPicker(
+                  label: context.tr('notif_quiet_from'),
+                  hour: profile?.quietFrom ?? 22,
+                  onChanged: (h) => set('quietFrom', h),
+                ),
+              ),
+              const SizedBox(width: Sp.sm),
+              Expanded(
+                child: _HourPicker(
+                  label: context.tr('notif_quiet_to'),
+                  hour: profile?.quietTo ?? 9,
+                  onChanged: (h) => set('quietTo', h),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: Sp.md),
           EpCard(
             padding: const EdgeInsets.symmetric(vertical: Sp.xs),
             child: Column(
@@ -168,6 +225,27 @@ class NotificationPrefsScreen extends ConsumerWidget {
                   onChanged: (v) => set('notifyOffers', v),
                 ),
                 SwitchListTile(
+                  value: profile?.notifyMissions ?? true,
+                  activeColor: context.ep.emerald,
+                  title: Text(context.tr('notif_pref_missions')),
+                  subtitle: Text(context.tr('notif_pref_missions_sub')),
+                  onChanged: (v) => set('notifyMissions', v),
+                ),
+                SwitchListTile(
+                  value: profile?.notifyBins ?? true,
+                  activeColor: context.ep.emerald,
+                  title: Text(context.tr('notif_pref_bins')),
+                  subtitle: Text(context.tr('notif_pref_bins_sub')),
+                  onChanged: (v) => set('notifyBins', v),
+                ),
+                SwitchListTile(
+                  value: profile?.notifyTips ?? true,
+                  activeColor: context.ep.emerald,
+                  title: Text(context.tr('notif_pref_tips')),
+                  subtitle: Text(context.tr('notif_pref_tips_sub')),
+                  onChanged: (v) => set('notifyTips', v),
+                ),
+                SwitchListTile(
                   value: profile?.notifyNews ?? true,
                   activeColor: context.ep.emerald,
                   title: Text(context.tr('notif_pref_news')),
@@ -182,6 +260,39 @@ class NotificationPrefsScreen extends ConsumerWidget {
                   ?.copyWith(color: context.ep.textTertiary)),
         ],
       ),
+    );
+  }
+}
+
+class _HourPicker extends StatelessWidget {
+  const _HourPicker({
+    required this.label,
+    required this.hour,
+    required this.onChanged,
+  });
+
+  final String label;
+  final int hour;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<int>(
+      value: hour,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+      ),
+      items: [
+        for (var h = 0; h < 24; h++)
+          DropdownMenuItem(
+            value: h,
+            child: Text('${h.toString().padLeft(2, '0')}:00'),
+          ),
+      ],
+      onChanged: (h) {
+        if (h != null) onChanged(h);
+      },
     );
   }
 }

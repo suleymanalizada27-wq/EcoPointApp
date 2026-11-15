@@ -48,7 +48,7 @@ class EpColors extends ThemeExtension<EpColors> {
     outline: Color(0xFF243A2F),
     textPrimary: Color(0xFFEAF3EC),
     textSecondary: Color(0xFF9DB3A6),
-    textTertiary: Color(0xFF6B8275),
+    textTertiary: Color(0xFF81998B), // ≥ 4.5:1 on every dark surface
     emerald: Color(0xFF2BC48A),
     emeraldDeep: Color(0xFF0E6B4B),
     lime: Color(0xFFC8F23A),
@@ -66,7 +66,7 @@ class EpColors extends ThemeExtension<EpColors> {
     outline: Color(0xFFD5E2D8),
     textPrimary: Color(0xFF0E1E16),
     textSecondary: Color(0xFF4C6455),
-    textTertiary: Color(0xFF7D9385),
+    textTertiary: Color(0xFF5A6F61), // ≥ 4.5:1 on every light surface
     emerald: Color(0xFF12935F),
     emeraldDeep: Color(0xFF0B6B47),
     lime: Color(0xFFB4DE1E),

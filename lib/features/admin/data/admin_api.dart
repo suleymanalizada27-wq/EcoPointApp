@@ -45,8 +45,32 @@ class AdminApi {
   Future<void> upsertDevice(Map<String, Object?> data) =>
       _b.call('adminUpsertDevice', data);
 
-  Future<Map<String, Object?>> issueBinCode(String binId, int ttlSeconds) =>
-      _b.call('adminIssueBinCode', {'binId': binId, 'ttlSeconds': ttlSeconds});
+  /// The bin's static QR payload (never expires, carries no reward).
+  Future<Map<String, Object?>> issueBinCode(String binId) =>
+      _b.call('adminIssueBinCode', {'binId': binId});
+
+  /// Virtual bin: sends a signed deposit through the real path (needs
+  /// SIM_ENABLED=1 on the server and an open scan session at that bin).
+  Future<Map<String, Object?>> simulateDeposit(String binId, int grams) =>
+      _b.call('adminSimulateDeposit', {'binId': binId, 'grams': grams});
+
+  Future<Map<String, Object?>> pushStats({int days = 14}) =>
+      _b.call('adminPushStats', {'days': days});
+
+  Future<Map<String, Object?>> setPushEnabled(bool enabled) =>
+      _b.call('adminSetPushEnabled', {'enabled': enabled});
+
+  Future<List<Map<String, Object?>>> reports() async =>
+      _list((await _b.call('adminListReports'))['reports']);
+
+  Future<String?> reportPhoto(String id) async {
+    final r = await _b.call('adminReportPhoto', {'id': id});
+    final p = r['photo'];
+    return p is String && p.isNotEmpty ? p : null;
+  }
+
+  Future<void> resolveReport(String id, {bool clearProblem = false}) =>
+      _b.call('adminResolveReport', {'id': id, 'clearProblem': clearProblem});
 
   Future<List<Map<String, Object?>>> transport() async =>
       _list((await _b.call('adminListTransport'))['requests']);

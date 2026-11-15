@@ -7,7 +7,8 @@ import {
   type ReminderEnv,
   type RunResult,
 } from './services/reminders';
-import { runSmartPush, SEND_FROM, SEND_UNTIL } from './services/smart-push';
+import { runSmartPush } from './services/smart-push';
+import { runBinFullAlerts } from './services/bins';
 import { runWeeklyPrizes } from './services/weekly-prizes';
 import type { Store } from './store';
 
@@ -31,6 +32,20 @@ export async function runMaintenance(env: ReminderEnv): Promise<RunResult> {
   for (const [id, e] of Object.entries(errs)) {
     if (Number(e?.ts) < env.now - 14 * 86_400_000) {
       await env.store.remove(`errorLogs/${id}`);
+      removed++;
+    }
+  }
+  const stats = (await env.store.get<Record<string, unknown>>('pushStats')) ?? {};
+  for (const day of Object.keys(stats)) {
+    if (day < dayKey(env.now - 60 * 86_400_000)) {
+      await env.store.remove(`pushStats/${day}`);
+      removed++;
+    }
+  }
+  const sessions = (await env.store.get<Record<string, any>>('qrSessions')) ?? {};
+  for (const [id, e] of Object.entries(sessions)) {
+    if (Number(e?.openedAt) < env.now - 86_400_000) {
+      await env.store.remove(`qrSessions/${id}`);
       removed++;
     }
   }
@@ -69,7 +84,9 @@ export async function runMaintenance(env: ReminderEnv): Promise<RunResult> {
 
 export const JOBS: Job[] = [
   { kind: 'maintenance', hour: 3, windowHours: 3, run: runMaintenance },
-  { kind: 'smartPush', hour: SEND_FROM, windowHours: SEND_UNTIL - SEND_FROM, hourly: true, run: runSmartPush },
+  // Runs every hour of the day; each person's own 09–21 window is checked inside.
+  { kind: 'smartPush', hour: 0, windowHours: 24, hourly: true, run: runSmartPush },
+  { kind: 'binFull', hour: 0, windowHours: 24, hourly: true, run: runBinFullAlerts },
   { kind: 'streakRisk', hour: 20, windowHours: 2, run: (e) => runStreakRisk(e) },
   { kind: 'weeklyPrizes', hour: 1, windowHours: 20, weekday: 1, run: runWeeklyPrizes },
   { kind: 'weeklySummary', hour: 10, windowHours: 8, weekday: 1, run: runWeeklySummary },
