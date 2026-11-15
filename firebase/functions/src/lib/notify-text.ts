@@ -521,3 +521,134 @@ export function smartText(lang: Lang, kind: SmartKind, v: SmartVars): Text {
   };
   return T[lang][kind]();
 }
+
+// ───────────────── extra daily kinds (v2: tips and evening recap) ─────────────────
+
+export type ExtraKind = 'tip' | 'recap' | 'mission' | 'leaderboard' | 'milestone';
+
+export const TIP_COUNT = 6;
+
+const TIPS: Record<'az' | 'en' | 'ru' | 'tr', string[]> = {
+  az: [
+    'Plastik butulkanı təmiz və qurudulmuş şəkildə at — təkrar emal asanlaşır.',
+    'Kağızı və kartonu yaş olmayan halda ayrıca topla.',
+    'Şüşə qabları atmazdan əvvəl qapaqlarını ayır.',
+    'Bir dəfəlik torba əvəzinə öz çantanı götür.',
+    'Metal qutuları əzmək yer qənaət edir.',
+    'Batareyaları adi zibilə atma — xüsusi qutulara təhvil ver.',
+  ],
+  en: [
+    'Rinse and dry plastic bottles before recycling — it makes sorting easier.',
+    'Keep paper and cardboard dry and separate from other waste.',
+    'Take lids off glass jars before you recycle them.',
+    'Bring your own bag instead of a single-use one.',
+    'Crushing metal cans saves space in the bin.',
+    'Never put batteries in normal waste — hand them in at a collection point.',
+  ],
+  ru: [
+    'Промой и просуши пластиковые бутылки перед сдачей — так проще сортировать.',
+    'Бумагу и картон храни сухими и отдельно от другого мусора.',
+    'Перед сдачей стеклянных банок сними крышки.',
+    'Бери свою сумку вместо одноразового пакета.',
+    'Сплющенные металлические банки занимают меньше места.',
+    'Батарейки нельзя выбрасывать с обычным мусором — сдавай в пункты приёма.',
+  ],
+  tr: [
+    'Plastik şişeleri geri dönüşümden önce durulayıp kurulayın — ayrıştırmayı kolaylaştırır.',
+    'Kâğıt ve kartonu kuru tutun, diğer atıklardan ayrı biriktirin.',
+    'Cam kavanozları atmadan önce kapaklarını çıkarın.',
+    'Tek kullanımlık poşet yerine kendi çantanızı getirin.',
+    'Metal kutuları ezmek çöp kutusunda yer kazandırır.',
+    'Pilleri normal çöpe atmayın — toplama noktalarına teslim edin.',
+  ],
+};
+
+export interface ExtraVars {
+  name: string;
+  ep?: number;
+  scans?: number;
+  index?: number;
+  /** mission: scans/streak days still missing (0 = ready to claim) */
+  left?: number;
+  /** leaderboard */
+  rank?: number;
+  gap?: number;
+  /** milestone */
+  streak?: number;
+}
+
+/**
+ * Tip / recap / mission / leaderboard / milestone text. Written natively for
+ * az, en, ru, tr; every other language currently falls back to English.
+ */
+export function extraText(lang: Lang, kind: ExtraKind, v: ExtraVars): Text {
+  const l: 'az' | 'en' | 'ru' | 'tr' = lang === 'az' || lang === 'ru' || lang === 'tr' ? lang : 'en';
+  const n = v.name ? `${v.name}, ` : '';
+  const ep = v.ep ?? 0;
+  const scans = v.scans ?? 0;
+  const left = v.left ?? 0;
+  const rank = v.rank ?? 0;
+  const gap = v.gap ?? 0;
+  const streak = v.streak ?? 0;
+  switch (kind) {
+    case 'tip': {
+      const i = (((v.index ?? 0) % TIP_COUNT) + TIP_COUNT) % TIP_COUNT;
+      const title = { az: '♻️ Günün məsləhəti', en: '♻️ Tip of the day', ru: '♻️ Совет дня', tr: '♻️ Günün ipucu' }[l];
+      return { title, body: TIPS[l][i] };
+    }
+    case 'recap':
+      return {
+        az: { title: '🌙 Günün xülasəsi', body: `${n}bu gün ${ep} EP qazandın${scans ? `, ${scans} skan` : ''}. Əla iş!` },
+        en: { title: '🌙 Today in review', body: `${n}you earned ${ep} EP today${scans ? ` from ${scans} scans` : ''}. Great work!` },
+        ru: { title: '🌙 Итоги дня', body: `${n}сегодня ты заработал ${ep} EP${scans ? `, сканирований: ${scans}` : ''}. Отличная работа!` },
+        tr: { title: '🌙 Günün özeti', body: `${n}bugün ${ep} EP kazandın${scans ? `, ${scans} tarama` : ''}. Harika iş!` },
+      }[l];
+    case 'mission':
+      return left <= 0
+        ? {
+            az: { title: '✅ Missiya tamamlandı', body: `${n}gündəlik missiyanı tamamladın. ${ep} EP mükafatını götür!` },
+            en: { title: '✅ Mission complete', body: `${n}you finished a daily mission. Claim your ${ep} EP!` },
+            ru: { title: '✅ Задание выполнено', body: `${n}ты выполнил ежедневное задание. Забери ${ep} EP!` },
+            tr: { title: '✅ Görev tamamlandı', body: `${n}günlük görevi tamamladın. ${ep} EP ödülünü al!` },
+          }[l]
+        : {
+            az: { title: '🎯 Missiyaya az qaldı', body: `${n}gündəlik missiyanı tamamlamaq üçün ${left} skan qalıb — ${ep} EP gözləyir.` },
+            en: { title: '🎯 Mission almost done', body: `${n}${left} more scan${left === 1 ? '' : 's'} to finish today’s mission — ${ep} EP waiting.` },
+            ru: { title: '🎯 Задание почти выполнено', body: `${n}осталось сканирований: ${left} — и ${ep} EP твои.` },
+            tr: { title: '🎯 Göreve az kaldı', body: `${n}günlük görev için ${left} tarama kaldı — ${ep} EP seni bekliyor.` },
+          }[l];
+    case 'leaderboard':
+      return rank >= 1 && rank <= 3
+        ? {
+            az: { title: '🏆 Liderbordda yüksəkdəsən', body: `${n}bu həftə ${rank}-ci yerdəsən. Mövqeyini qoru!` },
+            en: { title: '🏆 You’re near the top', body: `${n}you’re #${rank} on this week’s leaderboard. Keep it up!` },
+            ru: { title: '🏆 Ты в числе лидеров', body: `${n}на этой неделе ты на ${rank}-м месте. Так держать!` },
+            tr: { title: '🏆 Zirveye yakınsın', body: `${n}bu hafta ${rank}. sıradasın. Böyle devam!` },
+          }[l]
+        : {
+            az: { title: '📈 Növbəti yer çox yaxındır', body: `${n}liderbordda bir pillə yuxarı çıxmaq üçün cəmi ${gap} EP qalıb.` },
+            en: { title: '📈 The next place is close', body: `${n}only ${gap} EP to move up a place on the leaderboard.` },
+            ru: { title: '📈 Следующее место рядом', body: `${n}до следующего места в рейтинге всего ${gap} EP.` },
+            tr: { title: '📈 Bir sonraki sıra çok yakın', body: `${n}liderlik tablosunda bir basamak çıkmak için sadece ${gap} EP kaldı.` },
+          }[l];
+    case 'milestone':
+      return {
+        az: { title: '🔥 Seriya rekordu', body: `${n}${streak} günlük seriyaya çatdın. Möhtəşəm!` },
+        en: { title: '🔥 Streak milestone', body: `${n}you hit a ${streak}-day streak. Amazing!` },
+        ru: { title: '🔥 Рекорд серии', body: `${n}серия достигла ${streak} дн. Потрясающе!` },
+        tr: { title: '🔥 Seri rekoru', body: `${n}${streak} günlük seriye ulaştın. Harika!` },
+      }[l];
+  }
+}
+
+/** "Your favourite bin is almost full". az/en/ru/tr natively; other languages in English. */
+export function binFullText(lang: Lang, name: string, pct: number): Text {
+  const l: 'az' | 'en' | 'ru' | 'tr' = lang === 'az' || lang === 'ru' || lang === 'tr' ? lang : 'en';
+  const n = name.slice(0, 40);
+  return {
+    az: { title: '🗑️ Sevimli qutu dolmaq üzrədir', body: `«${n}» ${pct}% doludur. Başqa qutuya baxa bilərsən.` },
+    en: { title: '🗑️ Your favourite bin is almost full', body: `“${n}” is ${pct}% full. You may want to use another bin.` },
+    ru: { title: '🗑️ Ваш любимый контейнер почти полон', body: `«${n}» заполнен на ${pct}%. Возможно, стоит выбрать другой.` },
+    tr: { title: '🗑️ Favori kutun neredeyse dolu', body: `«${n}» %${pct} dolu. Başka bir kutu kullanmak isteyebilirsin.` },
+  }[l];
+}
