@@ -6,142 +6,144 @@
     android:layout_height="match_parent"
     android:background="@drawable/ep_widget_bg">
 
-    <ImageView
-        android:layout_width="190dp"
-        android:layout_height="190dp"
-        android:layout_gravity="top|end"
-        android:layout_marginTop="-70dp"
-        android:layout_marginEnd="-50dp"
-        android:importantForAccessibility="no"
-        android:src="@drawable/ep_widget_blob_a" />
-    <ImageView
-        android:layout_width="150dp"
-        android:layout_height="150dp"
-        android:layout_gravity="bottom|start"
-        android:layout_marginBottom="-60dp"
-        android:layout_marginStart="-40dp"
-        android:importantForAccessibility="no"
-        android:src="@drawable/ep_widget_blob_b" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         android:padding="18dp">
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1.25"
+            android:orientation="vertical">
 
-            <ImageView
-                android:layout_width="26dp"
-                android:layout_height="26dp"
-                android:background="@drawable/ep_widget_badge"
-                android:importantForAccessibility="no"
-                android:padding="5dp"
-                android:src="@drawable/ep_widget_leaf" />
-
-            <TextView
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+                <ImageView
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:contentDescription="EcoPoint"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ep_widget_logo" />
+                <TextView
                 android:id="@+id/ep_widget_label"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:text="EcoPoint"
-                android:textColor="#B3FFFFFF"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/ep_widget_streak"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/ep_widget_pill"
-                android:fontFamily="sans-serif-medium"
-                android:paddingStart="12dp"
-                android:paddingTop="4dp"
-                android:paddingEnd="12dp"
-                android:paddingBottom="4dp"
-                android:text=""
-                android:textColor="#FFC8F23A"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="bottom"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/ep_widget_balance"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-medium"
-                android:includeFontPadding="false"
-                android:maxLines="1"
-                android:text="—"
-                android:textColor="#FFFFFFFF"
-                android:textSize="44sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/ep_widget_unit"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginBottom="6dp"
-                android:includeFontPadding="false"
-                android:text="EP"
-                android:textColor="#FFC8F23A"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ProgressBar
-                android:id="@+id/ep_widget_progress"
-                style="@android:style/Widget.ProgressBar.Horizontal"
-                android:layout_width="0dp"
-                android:layout_height="7dp"
-                android:layout_weight="1"
-                android:max="100"
-                android:progress="0"
-                android:progressDrawable="@drawable/ep_widget_progress" />
-
-            <TextView
-                android:id="@+id/ep_widget_goal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
-                android:text=""
-                android:textColor="#E6FFFFFF"
-                android:textSize="12sp"
+                android:layout_weight="1"
+                android:letterSpacing="0.1"
+                android:maxLines="1"
+                android:text="EcoPoint"
+                android:textAllCaps="true"
+                android:textColor="#99FFFFFF"
+                android:textSize="11sp"
                 android:textStyle="bold" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="bottom"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/ep_widget_balance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:text="—"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="46sp" />
+
+                <TextView
+                    android:id="@+id/ep_widget_unit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginBottom="7dp"
+                    android:includeFontPadding="false"
+                    android:text="EP"
+                    android:textColor="#FFC8F23A"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/ep_widget_tagline"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:maxLines="1"
-            android:text=""
-            android:textColor="#CCFFFFFF"
-            android:textSize="13sp" />
+        <LinearLayout
+            android:id="@+id/ep_widget_panel"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="16dp"
+            android:layout_weight="1"
+            android:background="@drawable/ep_widget_panel"
+            android:orientation="vertical"
+            android:padding="14dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ep_widget_flame" />
+
+                <TextView
+                    android:id="@+id/ep_widget_streak"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:includeFontPadding="false"
+                    android:text=""
+                    android:textColor="#FFC8F23A"
+                    android:textSize="26sp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+                <ProgressBar
+                    android:id="@+id/ep_widget_progress"
+                    style="@android:style/Widget.ProgressBar.Horizontal"
+                    android:layout_width="0dp"
+                    android:layout_height="5dp"
+                    android:layout_weight="1"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressDrawable="@drawable/ep_widget_progress" />
+                <TextView
+                    android:id="@+id/ep_widget_goal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:includeFontPadding="false"
+                    android:text=""
+                    android:textColor="#B3FFFFFF"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
 </FrameLayout>

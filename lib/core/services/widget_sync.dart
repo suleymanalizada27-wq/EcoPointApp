@@ -13,7 +13,12 @@ import 'firebase_providers.dart';
 import 'preferences.dart';
 
 const _goals = [3, 7, 14, 30, 60, 100, 365];
-const _androidWidget = 'az.ecopoint.widget.EpWidgetProvider';
+const _androidWidgets = [
+  'az.ecopoint.widget.EpWidgetXsProvider',
+  'az.ecopoint.widget.EpWidgetProvider',
+  'az.ecopoint.widget.EpWidgetMProvider',
+  'az.ecopoint.widget.EpWidgetLProvider',
+];
 
 /// Keeps the Android home-screen widget (balance + streak) in step with the
 /// app. Best effort: if the widget was never added, or the native part is not
@@ -31,8 +36,7 @@ final widgetSyncProvider = Provider<void>((ref) {
       uid == null || balance == null ? '—' : Fmt.number(balance, lang);
   final streakText = uid == null || streak == null || streak.count <= 0
       ? ''
-      : '🔥 ${streak.count}';
-  final tagline = l.tr('onb_1_title');
+      : '${streak.count}';
   // Progress to the next streak milestone, e.g. 5/7 -> 71 %.
   final days = streak?.count ?? 0;
   final goal = _goals.firstWhere((g) => g > days, orElse: () => days);
@@ -43,11 +47,12 @@ final widgetSyncProvider = Provider<void>((ref) {
       await HomeWidget.saveWidgetData<String>('label', 'EcoPoint');
       await HomeWidget.saveWidgetData<String>('balance_num', balanceText);
       await HomeWidget.saveWidgetData<String>('unit', l.tr('ep_unit'));
-      await HomeWidget.saveWidgetData<String>('tagline', tagline);
       await HomeWidget.saveWidgetData<String>('streak', streakText);
       await HomeWidget.saveWidgetData<String>('goal_text', goalText);
       await HomeWidget.saveWidgetData<String>('goal_pct', '$goalPct');
-      await HomeWidget.updateWidget(qualifiedAndroidName: _androidWidget);
+      for (final w in _androidWidgets) {
+        await HomeWidget.updateWidget(qualifiedAndroidName: w);
+      }
     } catch (_) {}
   }());
 });

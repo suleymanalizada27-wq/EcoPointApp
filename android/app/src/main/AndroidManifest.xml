@@ -45,9 +45,21 @@
             android:value="2" />
     <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_stat_ecopoint"/>
         <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/ecopoint_notification"/>
-    <receiver android:name="az.ecopoint.widget.EpWidgetProvider" android:exported="false">
+    <receiver android:name="az.ecopoint.widget.EpWidgetProvider" android:label="EcoPoint 2x2" android:exported="false">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/ep_widget_info"/>
+        </receiver>
+    <receiver android:name="az.ecopoint.widget.EpWidgetXsProvider" android:label="EcoPoint 2x1" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/ep_widget_info_xs"/>
+        </receiver>
+    <receiver android:name="az.ecopoint.widget.EpWidgetMProvider" android:label="EcoPoint 3x2" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/ep_widget_info_m"/>
+        </receiver>
+    <receiver android:name="az.ecopoint.widget.EpWidgetLProvider" android:label="EcoPoint 4x2" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/ep_widget_info_l"/>
         </receiver>
     </application>
     <!-- Required to query activities that can process text, see:
