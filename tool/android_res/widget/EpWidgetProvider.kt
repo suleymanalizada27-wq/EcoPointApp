@@ -90,6 +90,25 @@ class EpWidgetProvider : HomeWidgetProvider() {
                 if (streak.isEmpty()) View.GONE else View.VISIBLE
             )
         }
+        // Progress to the next streak milestone (bar + "5/7"); hidden without a streak.
+        val pct = (data.getString("goal_pct", "0") ?: "0").toIntOrNull() ?: 0
+        val goalText = str("goal_text", "")
+        val progId = rid("ep_widget_progress", "id")
+        if (progId != 0) {
+            views.setProgressBar(progId, 100, pct.coerceIn(0, 100), false)
+            views.setViewVisibility(
+                progId,
+                if (streak.isEmpty()) View.GONE else View.VISIBLE
+            )
+        }
+        setText("ep_widget_goal", goalText)
+        val goalId = rid("ep_widget_goal", "id")
+        if (goalId != 0) {
+            views.setViewVisibility(
+                goalId,
+                if (goalText.isEmpty()) View.GONE else View.VISIBLE
+            )
+        }
         val rootId = rid("ep_widget_root", "id")
         views.setContentDescription(rootId, "EcoPoint $num $unit $streak")
 

@@ -23,14 +23,13 @@
         android:paddingStart="12dp"
         android:paddingEnd="12dp">
 
-        <TextView
-            android:layout_width="26dp"
-            android:layout_height="26dp"
-            android:background="@drawable/ep_widget_badge"
-            android:gravity="center"
-            android:importantForAccessibility="no"
-            android:text="🌿"
-            android:textSize="13sp" />
+        <ImageView
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:background="@drawable/ep_widget_badge"
+                android:importantForAccessibility="no"
+                android:padding="5dp"
+                android:src="@drawable/ep_widget_leaf" />
 
         <TextView
             android:id="@+id/ep_widget_balance"

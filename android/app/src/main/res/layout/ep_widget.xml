@@ -36,14 +36,13 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <TextView
+            <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:background="@drawable/ep_widget_badge"
-                android:gravity="center"
                 android:importantForAccessibility="no"
-                android:text="🌿"
-                android:textSize="12sp" />
+                android:padding="5dp"
+                android:src="@drawable/ep_widget_leaf" />
 
             <TextView
                 android:id="@+id/ep_widget_label"
@@ -119,11 +118,39 @@
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ProgressBar
+                        android:id="@+id/ep_widget_progress"
+                        style="@android:style/Widget.ProgressBar.Horizontal"
+                        android:layout_width="0dp"
+                        android:layout_height="6dp"
+                        android:layout_weight="1"
+                        android:max="100"
+                        android:progress="0"
+                        android:progressDrawable="@drawable/ep_widget_progress" />
+
+                    <TextView
+                        android:id="@+id/ep_widget_goal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text=""
+                        android:textColor="#E6FFFFFF"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
                 <TextView
                     android:id="@+id/ep_widget_tagline"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="8dp"
                     android:maxLines="2"
                     android:text=""
                     android:textColor="#CCFFFFFF"

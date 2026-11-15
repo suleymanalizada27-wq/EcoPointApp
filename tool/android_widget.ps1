@@ -12,7 +12,7 @@ if (-not (Test-Path $m)) {
   $res = Join-Path $root 'android\app\src\main\res'
   foreach ($d in 'layout','drawable','xml') { New-Item -ItemType Directory -Force (Join-Path $res $d) | Out-Null }
   foreach ($n in 'ep_widget','ep_widget_s','ep_widget_xs','ep_widget_l') { Copy-Item (Join-Path $src ($n + '.xml')) (Join-Path $res ('layout\' + $n + '.xml')) -Force }
-  foreach ($n in 'ep_widget_bg','ep_widget_blob_a','ep_widget_blob_b','ep_widget_badge','ep_widget_pill') { Copy-Item (Join-Path $src ($n + '.xml')) (Join-Path $res ('drawable\' + $n + '.xml')) -Force }
+  foreach ($n in 'ep_widget_bg','ep_widget_leaf','ep_widget_progress','ep_widget_blob_a','ep_widget_blob_b','ep_widget_badge','ep_widget_pill') { Copy-Item (Join-Path $src ($n + '.xml')) (Join-Path $res ('drawable\' + $n + '.xml')) -Force }
   Copy-Item (Join-Path $src 'ep_widget_info.xml') (Join-Path $res 'xml\ep_widget_info.xml') -Force
   $kt = Join-Path $root 'android\app\src\main\kotlin\az\ecopoint\widget'
   New-Item -ItemType Directory -Force $kt | Out-Null

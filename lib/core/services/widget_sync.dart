@@ -12,6 +12,7 @@ import '../../features/wallet/data/wallet_providers.dart';
 import 'firebase_providers.dart';
 import 'preferences.dart';
 
+const _goals = [3, 7, 14, 30, 60, 100, 365];
 const _androidWidget = 'az.ecopoint.widget.EpWidgetProvider';
 
 /// Keeps the Android home-screen widget (balance + streak) in step with the
@@ -32,6 +33,11 @@ final widgetSyncProvider = Provider<void>((ref) {
       ? ''
       : '🔥 ${streak.count}';
   final tagline = l.tr('onb_1_title');
+  // Progress to the next streak milestone, e.g. 5/7 -> 71 %.
+  final days = streak?.count ?? 0;
+  final goal = _goals.firstWhere((g) => g > days, orElse: () => days);
+  final goalText = days <= 0 ? '' : '$days/$goal';
+  final goalPct = days <= 0 || goal <= 0 ? 0 : (days * 100 ~/ goal).clamp(0, 100);
   unawaited(() async {
     try {
       await HomeWidget.saveWidgetData<String>('label', 'EcoPoint');
@@ -39,6 +45,8 @@ final widgetSyncProvider = Provider<void>((ref) {
       await HomeWidget.saveWidgetData<String>('unit', l.tr('ep_unit'));
       await HomeWidget.saveWidgetData<String>('tagline', tagline);
       await HomeWidget.saveWidgetData<String>('streak', streakText);
+      await HomeWidget.saveWidgetData<String>('goal_text', goalText);
+      await HomeWidget.saveWidgetData<String>('goal_pct', '$goalPct');
       await HomeWidget.updateWidget(qualifiedAndroidName: _androidWidget);
     } catch (_) {}
   }());
