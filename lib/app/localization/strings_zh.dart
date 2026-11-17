@@ -482,4 +482,17 @@ const Map<String, String> stringsZh = {
   'widget_motto_unstoppable': '势不可挡！',
   'widget_motto_legend': '传奇！',
   'widget_motto_hero': '环保英雄！',
+  // EcoFriend mascot
+  'ef_normal': '你准备好，我就准备好！',
+  'ef_breathing': '每一小步都很重要。',
+  'ef_thinking': '请稍等…',
+  'ef_excited': '太棒了！你获得了 EP！',
+  'ef_cheering': '今日目标已完成！🎉',
+  'ef_proud': '升级了！我为你骄傲！',
+  'ef_sad': '欢迎回来！一起回收吧。',
+  'ef_goal_progress': '今日目标：{done}/{total}',
+  'ef_empty': '这里还没有内容，开始吧！',
+  'ef_error': '出了点问题，再试一次吧。',
+  'ef_offline': '没有网络连接，我陪你等待。',
+  'ef_profile_hint': '我是 EcoFriend，每次回收都陪着你。',
 };

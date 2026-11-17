@@ -18,11 +18,12 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
                 <ImageView
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:contentDescription="EcoPoint"
+                android:id="@+id/ep_widget_mascot"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:contentDescription="EcoFriend"
                 android:scaleType="fitCenter"
-                android:src="@drawable/ep_widget_logo" />
+                android:src="@drawable/ecofriend_normal" />
                 <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

@@ -6,6 +6,7 @@ import '../../app/theme/ep_colors.dart';
 import '../../app/theme/tokens.dart';
 import '../errors/failure.dart';
 import '../services/firebase_providers.dart';
+import '../../features/ecofriend/presentation/ecofriend_view.dart';
 import 'ep_button.dart';
 
 /// Centered spinner for full-section loading.
@@ -132,8 +133,11 @@ class EmptyView extends StatelessWidget {
     this.title,
     this.actionLabel,
     this.onAction,
+    this.mascot = false,
   });
 
+  /// Show the (static) EcoFriend instead of the icon bubble.
+  final bool mascot;
   final IconData icon;
   final String message;
   final String? title;
@@ -149,15 +153,18 @@ class EmptyView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: c.emerald.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
+            if (mascot)
+              const EcoFriendHint(size: 112)
+            else
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: c.emerald.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 32, color: c.emerald),
               ),
-              child: Icon(icon, size: 32, color: c.emerald),
-            ),
             const SizedBox(height: Sp.md),
             Text(
               title ?? context.tr('empty_title'),
@@ -188,7 +195,9 @@ class EmptyView extends StatelessWidget {
 
 /// Error state with retry. Accepts any thrown object.
 class ErrorView extends StatelessWidget {
-  const ErrorView({super.key, required this.error, this.onRetry});
+  const ErrorView(
+      {super.key, required this.error, this.onRetry, this.mascot = true});
+  final bool mascot;
   final Object error;
   final VoidCallback? onRetry;
 
@@ -202,15 +211,18 @@ class ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: c.danger.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
+            if (mascot)
+              const EcoFriendHint(size: 104)
+            else
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: c.danger.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.cloud_off_rounded, size: 32, color: c.danger),
               ),
-              child: Icon(Icons.cloud_off_rounded, size: 32, color: c.danger),
-            ),
             const SizedBox(height: Sp.md),
             Text(
               context.tr(failure.l10nKey),

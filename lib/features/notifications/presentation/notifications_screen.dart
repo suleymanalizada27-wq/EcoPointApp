@@ -47,6 +47,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           if (list.isEmpty) {
             return EmptyView(
               icon: Icons.notifications_none_rounded,
+              mascot: true,
               message: context.tr('notif_empty'),
             );
           }

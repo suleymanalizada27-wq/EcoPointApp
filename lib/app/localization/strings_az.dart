@@ -545,4 +545,17 @@ const Map<String, String> stringsAz = {
   'widget_motto_unstoppable': 'Dayanılmaz!',
   'widget_motto_legend': 'Əfsanəsən!',
   'widget_motto_hero': 'Eko qəhrəman!',
+  // EcoFriend mascot
+  'ef_normal': 'Hazıram, başlayaq!',
+  'ef_breathing': 'Hər kiçik addım önəmlidir.',
+  'ef_thinking': 'Bir an…',
+  'ef_excited': 'Əla! EP qazandın!',
+  'ef_cheering': 'Günlük hədəf tamamlandı! 🎉',
+  'ef_proud': 'Yeni səviyyə! Səninlə fəxr edirəm!',
+  'ef_sad': 'Yenidən xoş gəldin! Birlikdə təkrar emal edək.',
+  'ef_goal_progress': 'Günlük hədəf: {done}/{total}',
+  'ef_empty': 'Hələlik burada heç nə yoxdur. Gəl başlayaq!',
+  'ef_error': 'Nəsə alınmadı. Yenidən cəhd edək.',
+  'ef_offline': 'Bağlantı yoxdur. Mən səninlə gözləyirəm.',
+  'ef_profile_hint': 'Mən EcoFriend-əm — hər təkrar emalda yanındayam.',
 };

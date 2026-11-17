@@ -543,4 +543,17 @@ const Map<String, String> stringsHi = {
   'widget_motto_unstoppable': 'अजेय!',
   'widget_motto_legend': 'लीजेंड!',
   'widget_motto_hero': 'इको हीरो!',
+  // EcoFriend mascot
+  'ef_normal': 'तुम तैयार तो मैं तैयार!',
+  'ef_breathing': 'हर छोटा कदम मायने रखता है।',
+  'ef_thinking': 'एक पल…',
+  'ef_excited': 'शानदार! तुमने EP कमाए!',
+  'ef_cheering': 'आज का लक्ष्य पूरा! 🎉',
+  'ef_proud': 'नया स्तर! मुझे तुम पर गर्व है!',
+  'ef_sad': 'वापसी पर स्वागत! चलो साथ में रीसायकल करें।',
+  'ef_goal_progress': 'आज का लक्ष्य: {done}/{total}',
+  'ef_empty': 'यहाँ अभी कुछ नहीं है। चलो शुरू करें!',
+  'ef_error': 'कुछ गड़बड़ हुई। फिर कोशिश करें।',
+  'ef_offline': 'कनेक्शन नहीं है। मैं तुम्हारे साथ इंतज़ार करूँगा।',
+  'ef_profile_hint': 'मैं EcoFriend हूँ — हर रीसायक्लिंग में तुम्हारे साथ।',
 };

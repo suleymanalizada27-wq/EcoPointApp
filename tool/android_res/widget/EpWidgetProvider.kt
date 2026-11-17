@@ -3,6 +3,7 @@ package az.ecopoint.widget
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.View
@@ -15,7 +16,14 @@ import es.antonborri.home_widget.HomeWidgetProvider
  * (home_widget plugin); this class only displays them. Resources are looked up
  * by name so it does not depend on the app's package name.
  *
- * Four entries in the widget picker (2x1, 2x2, 3x2, 4x2). The 2x2 one adapts
+ * EcoFriend: the mascot is a STATIC PNG here (RemoteViews cannot play animated
+ * WebP/video). The mood is resolved at render time from values written by the
+ * Flutter app (single source of truth, see widget_sync.dart): a recent
+ * backend-confirmed event (excited / cheering / proud) wins, then >= 7 days of
+ * inactivity -> sad, otherwise normal. Refresh = system AppWidget update
+ * (6 h, no WorkManager, no wake-locks) + whenever the app pushes new data.
+ *
+ * Five entries in the widget picker (2x1, 2x2, 3x2, 4x2, 4x4). The 2x2 one adapts
  * to its size; the others (subclasses below) always use their own layout.
  *
  * Safety net: every RemoteViews is test-inflated here (same class whitelist and
@@ -100,6 +108,27 @@ open class EpWidgetProvider : HomeWidgetProvider() {
             if (id != 0) views.setViewVisibility(id, if (show) View.VISIBLE else View.GONE)
         }
 
+        // ---- EcoFriend mood (static PNG) -------------------------------
+        val now = System.currentTimeMillis()
+        val efEvent = str("ef_event", "")
+        val efUntil = str("ef_until", "0").toLongOrNull() ?: 0L
+        val efLast = str("ef_last_active", "0").toLongOrNull() ?: 0L
+        val mood = when {
+            (efEvent == "excited" || efEvent == "cheering" || efEvent == "proud") &&
+                efUntil > now -> efEvent
+            efLast > 0L && now - efLast >= 7L * 24 * 3600 * 1000 -> "sad"
+            else -> "normal"
+        }
+        val mascotId = rid("ep_widget_mascot", "id")
+        if (mascotId != 0) {
+            var res = rid("ecofriend_$mood", "drawable")
+            if (res == 0) res = rid("ecofriend_normal", "drawable")
+            if (res != 0) views.setImageViewResource(mascotId, res)
+        }
+        val efMsg = str("ef_msg_$mood", "")
+        setText("ep_widget_msg", efMsg)
+        val isXl = layoutName == "ep_widget_xl"
+
         val num = str("balance_num", "—")
         val unit = str("unit", "EP")
         val streak = str("streak", "")
@@ -122,18 +151,35 @@ open class EpWidgetProvider : HomeWidgetProvider() {
         setText("ep_widget_balance", num)
         setText("ep_widget_unit", unit)
         setText("ep_widget_streak", streak)
-        setText("ep_widget_goal", goalText)
+        if (!isXl) setText("ep_widget_goal", goalText)
 
         // Streak chip / panel / progress exist only when there is a streak.
         vis("ep_widget_streak_chip", has)
         vis("ep_widget_panel", has)
         vis("ep_widget_bar_row", has)
         // Segmented progress bar: 10 segments, filled ones are shown.
-        val filled = ((pct + 5) / 10).coerceIn(0, 10)
-        for (i in 0 until 10) vis("ep_widget_seg_$i", has && i < filled)
+        val barPct = if (isXl)
+            ((data.getString("daily_pct", "0") ?: "0").toIntOrNull() ?: 0) else pct
+        val showBar = if (isXl) true else has
+        val filled = ((barPct + 5) / 10).coerceIn(0, 10)
+        for (i in 0 until 10) vis("ep_widget_seg_$i", showBar && i < filled)
+        if (isXl) {
+            setText("ep_widget_goal", str("daily_text", ""))
+            setText("ep_widget_week", str("week_text", ""))
+            setText("ep_widget_week_days", str("week_days", ""))
+            setText("ep_widget_level", str("level_text", ""))
+            setText("ep_widget_impact", str("impact_text", ""))
+            setText("ep_widget_btn_scan", str("lbl_scan", "Scan"))
+            setText("ep_widget_btn_missions", str("lbl_missions", "Missions"))
+            setText("ep_widget_btn_history", str("lbl_history", "History"))
+        }
+        if (layoutName == "ep_widget_l") {
+            val daily = str("daily_text", "")
+            if (daily.isNotEmpty()) setText("ep_widget_label", "EcoPoint · $daily")
+        }
 
         val rootId = rid("ep_widget_root", "id")
-        views.setContentDescription(rootId, "EcoPoint $num $unit" + if (has) ", $streak" else "")
+        views.setContentDescription(rootId, "EcoPoint $num $unit" + (if (has) ", $streak" else "") + (if (efMsg.isNotEmpty()) ". EcoFriend: $efMsg" else ""))
 
         val launch = context.packageManager.getLaunchIntentForPackage(pkg)
         if (launch != null) {
@@ -142,6 +188,28 @@ open class EpWidgetProvider : HomeWidgetProvider() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             views.setOnClickPendingIntent(rootId, pending)
+            if (isXl) {
+                // Reuses the app's existing quick_actions handler (ShortcutsHost):
+                // same intent a launcher shortcut sends. Unknown type => just opens the app.
+                fun link(viewName: String, type: String, code: Int) {
+                    val vid = rid(viewName, "id")
+                    if (vid == 0) return
+                    val i = Intent(launch).apply {
+                        action = Intent.ACTION_RUN
+                        putExtra("some unique action key", type)
+                    }
+                    views.setOnClickPendingIntent(
+                        vid,
+                        PendingIntent.getActivity(
+                            context, code, i,
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                        )
+                    )
+                }
+                link("ep_widget_btn_scan", "scan", 11)
+                link("ep_widget_btn_missions", "missions", 12)
+                link("ep_widget_btn_history", "history", 13)
+            }
         }
         return views
     }
@@ -160,4 +228,9 @@ class EpWidgetMProvider : EpWidgetProvider() {
 /** 4x2 */
 class EpWidgetLProvider : EpWidgetProvider() {
     override val forcedLayout: String? = "ep_widget_l"
+}
+
+/** 4x4 */
+class EpWidgetXlProvider : EpWidgetProvider() {
+    override val forcedLayout: String? = "ep_widget_xl"
 }

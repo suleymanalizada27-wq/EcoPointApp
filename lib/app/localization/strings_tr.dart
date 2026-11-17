@@ -544,4 +544,17 @@ const Map<String, String> stringsTr = {
   'widget_motto_unstoppable': 'Durdurulamaz!',
   'widget_motto_legend': 'Efsanesin!',
   'widget_motto_hero': 'Eko kahraman!',
+  // EcoFriend mascot
+  'ef_normal': 'Hazırım, başlayalım!',
+  'ef_breathing': 'Her küçük adım önemlidir.',
+  'ef_thinking': 'Bir an…',
+  'ef_excited': 'Harika! EP kazandın!',
+  'ef_cheering': 'Günlük hedef tamamlandı! 🎉',
+  'ef_proud': 'Yeni seviye! Seninle gurur duyuyorum!',
+  'ef_sad': 'Tekrar hoş geldin! Birlikte geri dönüştürelim.',
+  'ef_goal_progress': 'Günlük hedef: {done}/{total}',
+  'ef_empty': 'Henüz burada bir şey yok. Hadi başlayalım!',
+  'ef_error': 'Bir şeyler ters gitti. Tekrar deneyelim.',
+  'ef_offline': 'Bağlantı yok. Seninle bekliyorum.',
+  'ef_profile_hint': 'Ben EcoFriend — her geri dönüşümde yanındayım.',
 };

@@ -11,22 +11,25 @@ if (-not (Test-Path $m)) {
   $src = Join-Path $root 'tool\android_res\widget'
   $res = Join-Path $root 'android\app\src\main\res'
   foreach ($d in 'layout','drawable','xml') { New-Item -ItemType Directory -Force (Join-Path $res $d) | Out-Null }
-  foreach ($n in 'ep_widget','ep_widget_s','ep_widget_xs','ep_widget_l') { Copy-Item (Join-Path $src ($n + '.xml')) (Join-Path $res ('layout\' + $n + '.xml')) -Force }
-  foreach ($n in 'ep_widget_bg','ep_widget_flame','ep_widget_flame_1','ep_widget_flame_2','ep_widget_flame_3','ep_widget_seg_on','ep_widget_seg_off','ep_widget_divider','ep_widget_pill') { Copy-Item (Join-Path $src ($n + '.xml')) (Join-Path $res ('drawable\' + $n + '.xml')) -Force }
+  foreach ($n in 'ep_widget','ep_widget_s','ep_widget_xs','ep_widget_l','ep_widget_xl') { Copy-Item (Join-Path $src ($n + '.xml')) (Join-Path $res ('layout\' + $n + '.xml')) -Force }
+  foreach ($n in 'ep_widget_bg','ep_widget_flame','ep_widget_flame_1','ep_widget_flame_2','ep_widget_flame_3','ep_widget_seg_on','ep_widget_seg_off','ep_widget_divider','ep_widget_pill','ep_widget_btn') { Copy-Item (Join-Path $src ($n + '.xml')) (Join-Path $res ('drawable\' + $n + '.xml')) -Force }
   New-Item -ItemType Directory -Force (Join-Path $res 'drawable-nodpi') | Out-Null
   Copy-Item (Join-Path $src 'ep_widget_logo.png') (Join-Path $res 'drawable-nodpi\ep_widget_logo.png') -Force
-  foreach ($n in 'ep_widget_info','ep_widget_info_xs','ep_widget_info_m','ep_widget_info_l') { Copy-Item (Join-Path $src ($n + '.xml')) (Join-Path $res ('xml\' + $n + '.xml')) -Force }
+  # EcoFriend static PNGs (home-screen widgets cannot play animated WebP)
+  foreach ($n in 'normal','sad','excited','cheering','proud') { Copy-Item (Join-Path $src ('ecofriend\ecofriend_' + $n + '.png')) (Join-Path $res ('drawable-nodpi\ecofriend_' + $n + '.png')) -Force }
+  foreach ($n in 'ep_widget_info','ep_widget_info_xs','ep_widget_info_m','ep_widget_info_l','ep_widget_info_xl') { Copy-Item (Join-Path $src ($n + '.xml')) (Join-Path $res ('xml\' + $n + '.xml')) -Force }
   $kt = Join-Path $root 'android\app\src\main\kotlin\az\ecopoint\widget'
   New-Item -ItemType Directory -Force $kt | Out-Null
   Copy-Item (Join-Path $src 'EpWidgetProvider.kt') (Join-Path $kt 'EpWidgetProvider.kt') -Force
 
-  # Four picker entries: 2x1, 2x2 (adaptive), 3x2, 4x2. Idempotent per receiver.
+  # Five picker entries: 2x1, 2x2 (adaptive), 3x2, 4x2, 4x4. Idempotent per receiver.
   $t = [IO.File]::ReadAllText($m)
   $entries = @(
     @{ cls = 'EpWidgetXsProvider'; label = 'EcoPoint 2x1'; xml = 'ep_widget_info_xs' },
     @{ cls = 'EpWidgetProvider';   label = 'EcoPoint 2x2'; xml = 'ep_widget_info' },
     @{ cls = 'EpWidgetMProvider';  label = 'EcoPoint 3x2'; xml = 'ep_widget_info_m' },
-    @{ cls = 'EpWidgetLProvider';  label = 'EcoPoint 4x2'; xml = 'ep_widget_info_l' }
+    @{ cls = 'EpWidgetLProvider';  label = 'EcoPoint 4x2'; xml = 'ep_widget_info_l' },
+    @{ cls = 'EpWidgetXlProvider'; label = 'EcoPoint 4x4'; xml = 'ep_widget_info_xl' }
   )
   foreach ($e in $entries) {
     $full = 'az.ecopoint.widget.' + $e.cls

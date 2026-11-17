@@ -10,7 +10,16 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal"
-        android:padding="20dp">
+        android:padding="14dp">
+
+        <ImageView
+            android:id="@+id/ep_widget_mascot"
+            android:layout_width="84dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="10dp"
+            android:contentDescription="EcoFriend"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ecofriend_normal" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -80,6 +89,18 @@
                     android:textColor="#FFC8F23A"
                     android:textSize="16sp" />
             </LinearLayout>
+                <TextView
+                    android:id="@+id/ep_widget_msg"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:ellipsize="end"
+                    android:fontFamily="sans-serif-medium"
+                    android:includeFontPadding="false"
+                    android:maxLines="2"
+                    android:text=""
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="11sp" />
             </LinearLayout>
         </LinearLayout>
 

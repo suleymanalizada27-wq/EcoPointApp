@@ -494,4 +494,17 @@ const Map<String, String> stringsJa = {
   'widget_motto_unstoppable': '止まらない！',
   'widget_motto_legend': '伝説！',
   'widget_motto_hero': 'エコヒーロー！',
+  // EcoFriend mascot
+  'ef_normal': '準備できたら始めよう！',
+  'ef_breathing': '小さな一歩が大切です。',
+  'ef_thinking': '少々お待ちを…',
+  'ef_excited': 'やったね！EP を獲得！',
+  'ef_cheering': '今日の目標を達成！🎉',
+  'ef_proud': 'レベルアップ！誇らしいよ！',
+  'ef_sad': 'おかえり！一緒にリサイクルしよう。',
+  'ef_goal_progress': '今日の目標：{done}/{total}',
+  'ef_empty': 'まだ何もありません。始めよう！',
+  'ef_error': '問題が発生しました。もう一度試そう。',
+  'ef_offline': '接続がありません。一緒に待つよ。',
+  'ef_profile_hint': 'EcoFriend だよ。リサイクルのたびにそばにいるよ。',
 };

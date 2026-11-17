@@ -38,6 +38,11 @@ class _ShortcutsHostState extends State<ShortcutsHost> {
             router.push('/scan');
           } else if (type == 'balance') {
             router.go('/home');
+          } else if (type == 'missions') {
+            // Home-screen widget quick links (not launcher shortcuts).
+            router.push('/challenges');
+          } else if (type == 'history') {
+            router.push('/transactions');
           }
         });
       }

@@ -493,4 +493,17 @@ const Map<String, String> stringsKo = {
   'widget_motto_unstoppable': '멈출 수 없어요!',
   'widget_motto_legend': '전설!',
   'widget_motto_hero': '에코 영웅!',
+  // EcoFriend mascot
+  'ef_normal': '준비되면 시작해요!',
+  'ef_breathing': '작은 걸음도 소중해요.',
+  'ef_thinking': '잠시만요…',
+  'ef_excited': '대단해요! EP를 얻었어요!',
+  'ef_cheering': '오늘의 목표 달성! 🎉',
+  'ef_proud': '새 레벨! 정말 자랑스러워요!',
+  'ef_sad': '다시 오셨네요! 함께 재활용해요.',
+  'ef_goal_progress': '오늘의 목표: {done}/{total}',
+  'ef_empty': '아직 아무것도 없어요. 시작해 볼까요?',
+  'ef_error': '문제가 발생했어요. 다시 시도해요.',
+  'ef_offline': '연결이 없어요. 함께 기다릴게요.',
+  'ef_profile_hint': '저는 EcoFriend, 재활용할 때마다 함께해요.',
 };

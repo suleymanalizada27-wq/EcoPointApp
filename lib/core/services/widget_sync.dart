@@ -8,6 +8,7 @@ import 'package:home_widget/home_widget.dart';
 import '../../app/localization/app_localizations.dart';
 import '../utils/formatters.dart';
 import '../../features/challenges/data/gamification_repository.dart';
+import '../../features/ecofriend/application/ecofriend_controller.dart';
 import '../../features/wallet/data/wallet_providers.dart';
 import 'firebase_providers.dart';
 import 'preferences.dart';
@@ -27,6 +28,7 @@ const _androidWidgets = [
   'az.ecopoint.widget.EpWidgetProvider',
   'az.ecopoint.widget.EpWidgetMProvider',
   'az.ecopoint.widget.EpWidgetLProvider',
+  'az.ecopoint.widget.EpWidgetXlProvider',
 ];
 
 /// Keeps the Android home-screen widget (balance + streak) in step with the
@@ -39,6 +41,20 @@ final widgetSyncProvider = Provider<void>((ref) {
   final streak = ref.watch(streakProvider).valueOrNull;
   final locale = ref.watch(localeProvider);
   final l = AppLocalizations(locale);
+  // EcoFriend: same single source of truth as the Dashboard. The widget picks
+  // the mood itself at render time (event expiry / inactivity, see Kotlin),
+  // so it stays correct even while the app is closed.
+  final ef = ref.watch(ecoFriendProvider.select((s) => s.widget));
+  final missions = ref.watch(missionsProvider);
+  final dailyDone = missions.where((m) => m.complete).length;
+  final dailyTotal = missions.length;
+  final dailyPct =
+      dailyTotal == 0 ? 0 : (dailyDone * 100 ~/ dailyTotal).clamp(0, 100);
+  final weekly = ref.watch(weeklyActivityProvider).valueOrNull ?? const [];
+  final weekEp = weekly.fold<int>(0, (a, b) => a + b.earned);
+  final activeDays = weekly.where((b) => b.earned > 0).length;
+  final level = ref.watch(levelProgressProvider);
+  final impact = ref.watch(impactProvider);
 
   final lang = locale.languageCode;
   final balanceText =
@@ -64,6 +80,28 @@ final widgetSyncProvider = Provider<void>((ref) {
       await HomeWidget.saveWidgetData<String>('goal_pct', '$goalPct');
       await HomeWidget.saveWidgetData<String>('motto', motto);
       await HomeWidget.saveWidgetData<String>('tier', '$flame');
+      // --- EcoFriend (mood is resolved natively from these) ---
+      await HomeWidget.saveWidgetData<String>('ef_event', ef.eventMood);
+      await HomeWidget.saveWidgetData<String>('ef_until', '${ef.eventUntilMs}');
+      await HomeWidget.saveWidgetData<String>(
+          'ef_last_active', '${ef.lastActiveMs}');
+      for (final m in const ['normal', 'sad', 'excited', 'cheering', 'proud']) {
+        await HomeWidget.saveWidgetData<String>('ef_msg_$m', l.tr('ef_$m'));
+      }
+      await HomeWidget.saveWidgetData<String>('lbl_scan', l.tr('nav_scan'));
+      await HomeWidget.saveWidgetData<String>('lbl_missions', l.tr('ch_title'));
+      await HomeWidget.saveWidgetData<String>(
+          'lbl_history', l.tr('history_title'));
+      await HomeWidget.saveWidgetData<String>('level_text',
+          l.tr(level.current.l10nKey));
+      await HomeWidget.saveWidgetData<String>(
+          'daily_text', dailyTotal == 0 ? '' : '$dailyDone/$dailyTotal');
+      await HomeWidget.saveWidgetData<String>('daily_pct', '$dailyPct');
+      await HomeWidget.saveWidgetData<String>(
+          'week_text', '+${Fmt.number(weekEp, lang)} ${l.tr('ep_unit')}');
+      await HomeWidget.saveWidgetData<String>('week_days', '$activeDays/7');
+      await HomeWidget.saveWidgetData<String>(
+          'impact_text', '${impact.plasticGrams} g · ${impact.co2Grams} g CO₂');
       for (final w in _androidWidgets) {
         await HomeWidget.updateWidget(qualifiedAndroidName: w);
       }

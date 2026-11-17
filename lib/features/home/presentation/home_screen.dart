@@ -15,6 +15,7 @@ import '../../../core/widgets/ep_feedback.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../challenges/data/gamification_repository.dart';
 import '../../challenges/presentation/challenge_widgets.dart';
+import '../../ecofriend/presentation/ecofriend_view.dart';
 import '../../leaderboard/data/leaderboard_repository.dart';
 import '../../leaderboard/presentation/leaderboard_widgets.dart';
 import '../../marketplace/data/marketplace_repository.dart';
@@ -62,6 +63,7 @@ class HomeScreen extends ConsumerWidget {
             for (final (i, w) in const <Widget>[
               _Header(),
               _BalanceHero(),
+              EcoFriendCard(),
               FirstStepsCard(),
               _SummaryRow(),
               _WeekCard(),

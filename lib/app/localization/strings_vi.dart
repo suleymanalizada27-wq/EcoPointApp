@@ -544,4 +544,17 @@ const Map<String, String> stringsVi = {
   'widget_motto_unstoppable': 'Không thể cản!',
   'widget_motto_legend': 'Huyền thoại!',
   'widget_motto_hero': 'Anh hùng xanh!',
+  // EcoFriend mascot
+  'ef_normal': 'Bạn sẵn sàng là mình sẵn sàng!',
+  'ef_breathing': 'Mỗi bước nhỏ đều có ý nghĩa.',
+  'ef_thinking': 'Chờ một chút…',
+  'ef_excited': 'Tuyệt vời! Bạn vừa nhận được EP!',
+  'ef_cheering': 'Hoàn thành mục tiêu hôm nay! 🎉',
+  'ef_proud': 'Cấp mới! Mình rất tự hào về bạn!',
+  'ef_sad': 'Chào mừng bạn trở lại! Cùng tái chế nhé.',
+  'ef_goal_progress': 'Mục tiêu hôm nay: {done}/{total}',
+  'ef_empty': 'Chưa có gì ở đây. Bắt đầu nào!',
+  'ef_error': 'Đã có lỗi xảy ra. Thử lại nhé.',
+  'ef_offline': 'Không có kết nối. Mình chờ cùng bạn.',
+  'ef_profile_hint': 'Mình là EcoFriend — luôn bên bạn mỗi lần tái chế.',
 };

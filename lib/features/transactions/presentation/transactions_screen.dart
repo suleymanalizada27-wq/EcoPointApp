@@ -80,6 +80,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 if (list.isEmpty) {
                   return EmptyView(
                     icon: Icons.receipt_long_outlined,
+                    mascot: true,
                     message: context.tr('history_empty'),
                     actionLabel: context.tr('nav_scan'),
                     onAction: () => context.push('/scan'),

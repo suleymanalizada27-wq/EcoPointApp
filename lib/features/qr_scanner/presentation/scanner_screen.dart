@@ -17,6 +17,8 @@ import '../../../core/widgets/ep_card.dart';
 import '../../../core/widgets/ep_feedback.dart';
 import '../../../core/widgets/motion_widgets.dart';
 import '../../../core/widgets/state_views.dart';
+import '../../ecofriend/application/ecofriend_controller.dart';
+import '../../ecofriend/presentation/ecofriend_view.dart';
 import '../data/qr_repository.dart';
 
 enum _Gate { checking, granted, denied, permanentlyDenied }
@@ -46,12 +48,22 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _checkPermission();
+    // EcoFriend "thinking" while the scanner is open (not during build).
+    _ef = ref.read(ecoFriendProvider.notifier);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _ef.thinking(_efToken);
+    });
   }
+
+  static const String _efToken = 'scanner';
+  late final EcoFriendController _ef;
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _controller?.dispose();
+    final ef = _ef;
+    Future<void>.microtask(() => ef.endThinking(_efToken));
     super.dispose();
   }
 
@@ -171,7 +183,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     final done = outcome?.result;
     if (outcome != null && outcome.state == QrSessionState.done && done != null) {
       HapticFeedback.heavyImpact();
+      // Server-confirmed deposit → EcoFriend reacts (release thinking first).
+      _ef.endThinking(_efToken);
+      _ef.scanConfirmed(session.sessionId);
       await _showSuccess(done);
+      if (mounted) _ef.thinking(_efToken);
       return;
     }
     if (outcome != null) {
@@ -205,14 +221,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Center(
-                  child: Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: c.lime.withValues(alpha: 0.18),
-                      shape: BoxShape.circle,
+                  child: Consumer(
+                    builder: (context, ref, _) => EcoFriendView(
+                      mood: ref.watch(ecoFriendMoodProvider),
+                      size: 132,
                     ),
-                    child: Icon(Icons.check_rounded, size: 40, color: c.lime),
                   ),
                 ),
                 const SizedBox(height: Sp.md),
@@ -411,6 +424,24 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                   },
                 ),
               ],
+            ),
+          ),
+        ),
+        // EcoFriend: thinking while scanning / waiting for the server.
+        Positioned(
+          right: Sp.sm,
+          top: 0,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 56),
+              child: IgnorePointer(
+                child: Consumer(
+                  builder: (context, ref, _) => EcoFriendView(
+                    mood: ref.watch(ecoFriendMoodProvider),
+                    size: 84,
+                  ),
+                ),
+              ),
             ),
           ),
         ),

@@ -543,4 +543,17 @@ const Map<String, String> stringsFa = {
   'widget_motto_unstoppable': 'توقف‌ناپذیر!',
   'widget_motto_legend': 'افسانه‌ای!',
   'widget_motto_hero': 'قهرمان سبز!',
+  // EcoFriend mascot
+  'ef_normal': 'هر وقت آماده باشی، من هم آماده‌ام!',
+  'ef_breathing': 'هر قدم کوچک مهم است.',
+  'ef_thinking': 'یک لحظه…',
+  'ef_excited': 'عالی! EP گرفتی!',
+  'ef_cheering': 'هدف امروز کامل شد! 🎉',
+  'ef_proud': 'سطح جدید! به تو افتخار می‌کنم!',
+  'ef_sad': 'خوش برگشتی! بیا با هم بازیافت کنیم.',
+  'ef_goal_progress': 'هدف امروز: {done}/{total}',
+  'ef_empty': 'هنوز چیزی اینجا نیست. بیا شروع کنیم!',
+  'ef_error': 'مشکلی پیش آمد. دوباره امتحان کنیم.',
+  'ef_offline': 'اتصالی نیست. من با تو صبر می‌کنم.',
+  'ef_profile_hint': 'من EcoFriend هستم — در هر بازیافت کنارت.',
 };

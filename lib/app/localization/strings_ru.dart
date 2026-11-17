@@ -544,4 +544,17 @@ const Map<String, String> stringsRu = {
   'widget_motto_unstoppable': 'Не остановить!',
   'widget_motto_legend': 'Легенда!',
   'widget_motto_hero': 'Эко-герой!',
+  // EcoFriend mascot
+  'ef_normal': 'Готов, когда ты готов!',
+  'ef_breathing': 'Каждый маленький шаг важен.',
+  'ef_thinking': 'Один момент…',
+  'ef_excited': 'Отлично! Ты заработал EP!',
+  'ef_cheering': 'Дневная цель выполнена! 🎉',
+  'ef_proud': 'Новый уровень! Я горжусь тобой!',
+  'ef_sad': 'С возвращением! Давай сортировать вместе.',
+  'ef_goal_progress': 'Дневная цель: {done}/{total}',
+  'ef_empty': 'Здесь пока пусто. Давай начнём!',
+  'ef_error': 'Что-то пошло не так. Попробуем ещё раз.',
+  'ef_offline': 'Нет соединения. Я подожду с тобой.',
+  'ef_profile_hint': 'Я EcoFriend — рядом при каждой переработке.',
 };

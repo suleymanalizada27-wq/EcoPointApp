@@ -544,4 +544,17 @@ const Map<String, String> stringsEn = {
   'widget_motto_unstoppable': 'Unstoppable!',
   'widget_motto_legend': 'Legend!',
   'widget_motto_hero': 'Eco hero!',
+  // EcoFriend mascot
+  'ef_normal': 'Ready when you are!',
+  'ef_breathing': 'Every small step counts.',
+  'ef_thinking': 'One moment…',
+  'ef_excited': 'Great! You earned EP!',
+  'ef_cheering': 'Daily goal complete! 🎉',
+  'ef_proud': 'New level! I\'m so proud of you!',
+  'ef_sad': 'Welcome back! Let\'s recycle together.',
+  'ef_goal_progress': 'Daily goal: {done}/{total}',
+  'ef_empty': 'Nothing here yet. Let\'s get started!',
+  'ef_error': 'Something went wrong. Let\'s try again.',
+  'ef_offline': 'No connection. I\'ll wait with you.',
+  'ef_profile_hint': 'I\'m EcoFriend — with you on every recycle.',
 };

@@ -57,6 +57,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/ecofriend/
+    - assets/ecofriend/still/
 
 # `dart run flutter_launcher_icons` generates the Android launcher icons.
 flutter_launcher_icons:
