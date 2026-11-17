@@ -538,4 +538,10 @@ const Map<String, String> stringsTr = {
   'notif_quiet_title': 'Sessiz saatler (bildirim yok)',
   'notif_quiet_from': 'Başlangıç',
   'notif_quiet_to': 'Bitiş',
+  'widget_motto_start': 'İyi başlangıç',
+  'widget_motto_keep': 'Devam et!',
+  'widget_motto_fire': 'Ateş gibisin!',
+  'widget_motto_unstoppable': 'Durdurulamaz!',
+  'widget_motto_legend': 'Efsanesin!',
+  'widget_motto_hero': 'Eko kahraman!',
 };

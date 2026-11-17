@@ -476,4 +476,10 @@ const Map<String, String> stringsZh = {
   'notif_quiet_title': '免打扰时间（不发通知）',
   'notif_quiet_from': '从',
   'notif_quiet_to': '到',
+  'widget_motto_start': '开局不错',
+  'widget_motto_keep': '继续加油！',
+  'widget_motto_fire': '火力全开！',
+  'widget_motto_unstoppable': '势不可挡！',
+  'widget_motto_legend': '传奇！',
+  'widget_motto_hero': '环保英雄！',
 };

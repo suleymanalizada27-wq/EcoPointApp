@@ -537,4 +537,10 @@ const Map<String, String> stringsHi = {
   'notif_quiet_title': 'शांत घंटे (कोई सूचना नहीं)',
   'notif_quiet_from': 'से',
   'notif_quiet_to': 'तक',
+  'widget_motto_start': 'शानदार शुरुआत',
+  'widget_motto_keep': 'जारी रखो!',
+  'widget_motto_fire': 'जोश में!',
+  'widget_motto_unstoppable': 'अजेय!',
+  'widget_motto_legend': 'लीजेंड!',
+  'widget_motto_hero': 'इको हीरो!',
 };

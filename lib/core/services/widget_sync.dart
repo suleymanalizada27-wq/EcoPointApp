@@ -13,6 +13,15 @@ import 'firebase_providers.dart';
 import 'preferences.dart';
 
 const _goals = [3, 7, 14, 30, 60, 100, 365];
+/// Streak tiers: (min days, text key, flame variant 0..3).
+const _tiers = [
+  (100, 'widget_motto_hero', 3),
+  (30, 'widget_motto_legend', 3),
+  (14, 'widget_motto_unstoppable', 2),
+  (7, 'widget_motto_fire', 1),
+  (3, 'widget_motto_keep', 0),
+  (1, 'widget_motto_start', 0),
+];
 const _androidWidgets = [
   'az.ecopoint.widget.EpWidgetXsProvider',
   'az.ecopoint.widget.EpWidgetProvider',
@@ -42,6 +51,9 @@ final widgetSyncProvider = Provider<void>((ref) {
   final goal = _goals.firstWhere((g) => g > days, orElse: () => days);
   final goalText = days <= 0 ? '' : '$days/$goal';
   final goalPct = days <= 0 || goal <= 0 ? 0 : (days * 100 ~/ goal).clamp(0, 100);
+  final tier = _tiers.where((t) => days >= t.$1).firstOrNull;
+  final motto = tier == null ? '' : l.tr(tier.$2);
+  final flame = tier?.$3 ?? 0;
   unawaited(() async {
     try {
       await HomeWidget.saveWidgetData<String>('label', 'EcoPoint');
@@ -50,6 +62,8 @@ final widgetSyncProvider = Provider<void>((ref) {
       await HomeWidget.saveWidgetData<String>('streak', streakText);
       await HomeWidget.saveWidgetData<String>('goal_text', goalText);
       await HomeWidget.saveWidgetData<String>('goal_pct', '$goalPct');
+      await HomeWidget.saveWidgetData<String>('motto', motto);
+      await HomeWidget.saveWidgetData<String>('tier', '$flame');
       for (final w in _androidWidgets) {
         await HomeWidget.updateWidget(qualifiedAndroidName: w);
       }

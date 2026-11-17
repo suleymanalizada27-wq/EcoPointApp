@@ -537,4 +537,10 @@ const Map<String, String> stringsFa = {
   'notif_quiet_title': 'ساعات سکوت (بدون اعلان)',
   'notif_quiet_from': 'از',
   'notif_quiet_to': 'تا',
+  'widget_motto_start': 'شروع عالی',
+  'widget_motto_keep': 'ادامه بده!',
+  'widget_motto_fire': 'داغ داغی!',
+  'widget_motto_unstoppable': 'توقف‌ناپذیر!',
+  'widget_motto_legend': 'افسانه‌ای!',
+  'widget_motto_hero': 'قهرمان سبز!',
 };

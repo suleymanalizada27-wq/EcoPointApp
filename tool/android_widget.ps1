@@ -12,7 +12,7 @@ if (-not (Test-Path $m)) {
   $res = Join-Path $root 'android\app\src\main\res'
   foreach ($d in 'layout','drawable','xml') { New-Item -ItemType Directory -Force (Join-Path $res $d) | Out-Null }
   foreach ($n in 'ep_widget','ep_widget_s','ep_widget_xs','ep_widget_l') { Copy-Item (Join-Path $src ($n + '.xml')) (Join-Path $res ('layout\' + $n + '.xml')) -Force }
-  foreach ($n in 'ep_widget_bg','ep_widget_flame','ep_widget_progress','ep_widget_panel','ep_widget_pill') { Copy-Item (Join-Path $src ($n + '.xml')) (Join-Path $res ('drawable\' + $n + '.xml')) -Force }
+  foreach ($n in 'ep_widget_bg','ep_widget_flame','ep_widget_flame_1','ep_widget_flame_2','ep_widget_flame_3','ep_widget_seg_on','ep_widget_seg_off','ep_widget_divider','ep_widget_pill') { Copy-Item (Join-Path $src ($n + '.xml')) (Join-Path $res ('drawable\' + $n + '.xml')) -Force }
   New-Item -ItemType Directory -Force (Join-Path $res 'drawable-nodpi') | Out-Null
   Copy-Item (Join-Path $src 'ep_widget_logo.png') (Join-Path $res 'drawable-nodpi\ep_widget_logo.png') -Force
   foreach ($n in 'ep_widget_info','ep_widget_info_xs','ep_widget_info_m','ep_widget_info_l') { Copy-Item (Join-Path $src ($n + '.xml')) (Join-Path $res ('xml\' + $n + '.xml')) -Force }

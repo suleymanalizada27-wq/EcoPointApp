@@ -538,4 +538,10 @@ const Map<String, String> stringsRu = {
   'notif_quiet_title': 'Тихие часы (без уведомлений)',
   'notif_quiet_from': 'С',
   'notif_quiet_to': 'До',
+  'widget_motto_start': 'Отличный старт',
+  'widget_motto_keep': 'Так держать!',
+  'widget_motto_fire': 'В ударе!',
+  'widget_motto_unstoppable': 'Не остановить!',
+  'widget_motto_legend': 'Легенда!',
+  'widget_motto_hero': 'Эко-герой!',
 };

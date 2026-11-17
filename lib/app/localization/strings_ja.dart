@@ -488,4 +488,10 @@ const Map<String, String> stringsJa = {
   'notif_quiet_title': 'おやすみ時間（通知なし）',
   'notif_quiet_from': '開始',
   'notif_quiet_to': '終了',
+  'widget_motto_start': 'いいスタート',
+  'widget_motto_keep': 'その調子！',
+  'widget_motto_fire': '絶好調！',
+  'widget_motto_unstoppable': '止まらない！',
+  'widget_motto_legend': '伝説！',
+  'widget_motto_hero': 'エコヒーロー！',
 };

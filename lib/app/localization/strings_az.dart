@@ -539,4 +539,10 @@ const Map<String, String> stringsAz = {
   'notif_quiet_title': 'Sakit saatlar (bildiriş yoxdur)',
   'notif_quiet_from': 'Başlanğıc',
   'notif_quiet_to': 'Bitmə',
+  'widget_motto_start': 'Gözəl start',
+  'widget_motto_keep': 'Davam et!',
+  'widget_motto_fire': 'Alovlusan!',
+  'widget_motto_unstoppable': 'Dayanılmaz!',
+  'widget_motto_legend': 'Əfsanəsən!',
+  'widget_motto_hero': 'Eko qəhrəman!',
 };

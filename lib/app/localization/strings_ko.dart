@@ -487,4 +487,10 @@ const Map<String, String> stringsKo = {
   'notif_quiet_title': '방해 금지 시간 (알림 없음)',
   'notif_quiet_from': '시작',
   'notif_quiet_to': '종료',
+  'widget_motto_start': '좋은 시작',
+  'widget_motto_keep': '계속 가요!',
+  'widget_motto_fire': '불타오르네요!',
+  'widget_motto_unstoppable': '멈출 수 없어요!',
+  'widget_motto_legend': '전설!',
+  'widget_motto_hero': '에코 영웅!',
 };

@@ -514,4 +514,10 @@ const Map<String, String> stringsDe = {
   'notif_quiet_title': 'Ruhezeiten (keine Benachrichtigungen)',
   'notif_quiet_from': 'Von',
   'notif_quiet_to': 'Bis',
+  'widget_motto_start': 'Guter Start',
+  'widget_motto_keep': 'Weiter so!',
+  'widget_motto_fire': 'Läuft bei dir!',
+  'widget_motto_unstoppable': 'Unaufhaltsam!',
+  'widget_motto_legend': 'Legende!',
+  'widget_motto_hero': 'Öko-Held!',
 };

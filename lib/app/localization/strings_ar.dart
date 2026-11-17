@@ -537,4 +537,10 @@ const Map<String, String> stringsAr = {
   'notif_quiet_title': 'ساعات الهدوء (بدون إشعارات)',
   'notif_quiet_from': 'من',
   'notif_quiet_to': 'إلى',
+  'widget_motto_start': 'بداية رائعة',
+  'widget_motto_keep': 'واصل!',
+  'widget_motto_fire': 'أنت مشتعل!',
+  'widget_motto_unstoppable': 'لا أحد يوقفك!',
+  'widget_motto_legend': 'أسطورة!',
+  'widget_motto_hero': 'بطل البيئة!',
 };

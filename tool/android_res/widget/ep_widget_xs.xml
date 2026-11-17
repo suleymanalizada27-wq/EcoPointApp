@@ -26,6 +26,7 @@
                 android:id="@+id/ep_widget_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
                 android:letterSpacing="0.1"
                 android:maxLines="1"
                 android:text="EcoPoint"
@@ -49,14 +50,14 @@
                     android:maxLines="1"
                     android:text="—"
                     android:textColor="#FFFFFFFF"
-                    android:textSize="20sp" />
+                    android:textSize="22sp" />
 
                 <TextView
                     android:id="@+id/ep_widget_unit"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="5dp"
-                    android:layout_marginBottom="3dp"
+                    android:layout_marginBottom="4dp"
                     android:includeFontPadding="false"
                     android:text="EP"
                     android:textColor="#FFC8F23A"
@@ -81,6 +82,7 @@
                     android:layout_width="11dp"
                     android:layout_height="11dp"
                     android:importantForAccessibility="no"
+                    android:id="@+id/ep_widget_flame"
                     android:src="@drawable/ep_widget_flame" />
 
                 <TextView

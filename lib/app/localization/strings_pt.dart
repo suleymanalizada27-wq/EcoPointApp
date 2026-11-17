@@ -538,4 +538,10 @@ const Map<String, String> stringsPt = {
   'notif_quiet_title': 'Horas de silêncio (sem notificações)',
   'notif_quiet_from': 'Das',
   'notif_quiet_to': 'Até às',
+  'widget_motto_start': 'Bom começo',
+  'widget_motto_keep': 'Continue assim!',
+  'widget_motto_fire': 'Em chamas!',
+  'widget_motto_unstoppable': 'Imparável!',
+  'widget_motto_legend': 'Lenda!',
+  'widget_motto_hero': 'Herói eco!',
 };

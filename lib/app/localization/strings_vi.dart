@@ -538,4 +538,10 @@ const Map<String, String> stringsVi = {
   'notif_quiet_title': 'Giờ yên tĩnh (không thông báo)',
   'notif_quiet_from': 'Từ',
   'notif_quiet_to': 'Đến',
+  'widget_motto_start': 'Khởi đầu tốt',
+  'widget_motto_keep': 'Cố lên!',
+  'widget_motto_fire': 'Đang bùng cháy!',
+  'widget_motto_unstoppable': 'Không thể cản!',
+  'widget_motto_legend': 'Huyền thoại!',
+  'widget_motto_hero': 'Anh hùng xanh!',
 };
