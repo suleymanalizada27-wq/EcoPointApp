@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../ecofriend/presentation/ecofriend_view.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../../app/theme/ep_colors.dart';
 import '../../../app/theme/tokens.dart';
@@ -89,6 +90,14 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                 hint: context.tr('market_search'),
                 onChanged: (v) => setState(() => _query = v),
               ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: EcoFriendBanner(
+              msgKey: 'ef_s_rewards',
+              size: 80,
+              padding: const EdgeInsets.symmetric(
+                  horizontal: Sp.gutter, vertical: Sp.xxs),
             ),
           ),
           SliverToBoxAdapter(

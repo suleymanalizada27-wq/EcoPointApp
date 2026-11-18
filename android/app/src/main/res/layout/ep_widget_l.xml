@@ -1,331 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 4x2: only FrameLayout / LinearLayout / TextView / ImageView (all RemoteViews-safe) -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/ep_widget_root"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/ep_widget_bg">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal"
-        android:padding="14dp">
-
-        <ImageView
-            android:id="@+id/ep_widget_mascot"
-            android:layout_width="84dp"
-            android:layout_height="match_parent"
-            android:layout_marginEnd="10dp"
-            android:contentDescription="EcoFriend"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ecofriend_normal" />
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1.3"
-            android:orientation="vertical">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-                <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:contentDescription="EcoPoint"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ep_widget_logo" />
-                <TextView
-                android:id="@+id/ep_widget_label"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="10dp"
-                android:layout_marginBottom="0dp"
-                android:fontFamily="sans-serif-medium"
-                android:letterSpacing="0.14"
-                android:maxLines="1"
-                android:text="EcoPoint"
-                android:textAllCaps="true"
-                android:textColor="#80FFFFFF"
-                android:textSize="10sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:gravity="bottom"
-                android:orientation="vertical">
-                <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="bottom"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/ep_widget_balance"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="sans-serif-light"
-                    android:includeFontPadding="false"
-                    android:maxLines="1"
-                    android:text="—"
-                    android:textColor="#FFFFFFFF"
-                    android:textSize="46sp" />
-
-                <TextView
-                    android:id="@+id/ep_widget_unit"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:layout_marginBottom="8dp"
-                    android:fontFamily="sans-serif-medium"
-                    android:includeFontPadding="false"
-                    android:text="EP"
-                    android:textColor="#FFC8F23A"
-                    android:textSize="16sp" />
-            </LinearLayout>
-                <TextView
-                    android:id="@+id/ep_widget_msg"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:ellipsize="end"
-                    android:fontFamily="sans-serif-medium"
-                    android:includeFontPadding="false"
-                    android:maxLines="2"
-                    android:text=""
-                    android:textColor="#CCFFFFFF"
-                    android:textSize="11sp" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/ep_widget_panel"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:layout_width="1dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="14dp"
-                android:layout_marginEnd="16dp"
-                android:background="@drawable/ep_widget_divider"
-                android:orientation="vertical" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:importantForAccessibility="no"
-                        android:id="@+id/ep_widget_flame"
-                    android:src="@drawable/ep_widget_flame" />
-
-                    <TextView
-                        android:id="@+id/ep_widget_streak"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:fontFamily="sans-serif-light"
-                        android:includeFontPadding="false"
-                        android:text=""
-                        android:textColor="#FFFFFFFF"
-                        android:textSize="28sp" />
-                </LinearLayout>
-
-                <TextView
-                android:id="@+id/ep_widget_motto"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:fontFamily="sans-serif-medium"
-                android:includeFontPadding="false"
-                android:maxLines="2"
-                android:text=""
-                android:textColor="#E6C8F23A"
-                android:textSize="11sp" />
-
-                <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:gravity="bottom"
-                android:orientation="vertical">
-                <LinearLayout
-                android:id="@+id/ep_widget_bar_row"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="0dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="horizontal">
-                    <FrameLayout
-                        android:layout_width="0dp"
-                        android:layout_height="3dp"
-                        android:layout_marginEnd="3dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/ep_widget_seg_off">
-                        <LinearLayout
-                            android:id="@+id/ep_widget_seg_0"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="@drawable/ep_widget_seg_on"
-                            android:visibility="gone" />
-                    </FrameLayout>
-                    <FrameLayout
-                        android:layout_width="0dp"
-                        android:layout_height="3dp"
-                        android:layout_marginEnd="3dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/ep_widget_seg_off">
-                        <LinearLayout
-                            android:id="@+id/ep_widget_seg_1"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="@drawable/ep_widget_seg_on"
-                            android:visibility="gone" />
-                    </FrameLayout>
-                    <FrameLayout
-                        android:layout_width="0dp"
-                        android:layout_height="3dp"
-                        android:layout_marginEnd="3dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/ep_widget_seg_off">
-                        <LinearLayout
-                            android:id="@+id/ep_widget_seg_2"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="@drawable/ep_widget_seg_on"
-                            android:visibility="gone" />
-                    </FrameLayout>
-                    <FrameLayout
-                        android:layout_width="0dp"
-                        android:layout_height="3dp"
-                        android:layout_marginEnd="3dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/ep_widget_seg_off">
-                        <LinearLayout
-                            android:id="@+id/ep_widget_seg_3"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="@drawable/ep_widget_seg_on"
-                            android:visibility="gone" />
-                    </FrameLayout>
-                    <FrameLayout
-                        android:layout_width="0dp"
-                        android:layout_height="3dp"
-                        android:layout_marginEnd="3dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/ep_widget_seg_off">
-                        <LinearLayout
-                            android:id="@+id/ep_widget_seg_4"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="@drawable/ep_widget_seg_on"
-                            android:visibility="gone" />
-                    </FrameLayout>
-                    <FrameLayout
-                        android:layout_width="0dp"
-                        android:layout_height="3dp"
-                        android:layout_marginEnd="3dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/ep_widget_seg_off">
-                        <LinearLayout
-                            android:id="@+id/ep_widget_seg_5"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="@drawable/ep_widget_seg_on"
-                            android:visibility="gone" />
-                    </FrameLayout>
-                    <FrameLayout
-                        android:layout_width="0dp"
-                        android:layout_height="3dp"
-                        android:layout_marginEnd="3dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/ep_widget_seg_off">
-                        <LinearLayout
-                            android:id="@+id/ep_widget_seg_6"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="@drawable/ep_widget_seg_on"
-                            android:visibility="gone" />
-                    </FrameLayout>
-                    <FrameLayout
-                        android:layout_width="0dp"
-                        android:layout_height="3dp"
-                        android:layout_marginEnd="3dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/ep_widget_seg_off">
-                        <LinearLayout
-                            android:id="@+id/ep_widget_seg_7"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="@drawable/ep_widget_seg_on"
-                            android:visibility="gone" />
-                    </FrameLayout>
-                    <FrameLayout
-                        android:layout_width="0dp"
-                        android:layout_height="3dp"
-                        android:layout_marginEnd="3dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/ep_widget_seg_off">
-                        <LinearLayout
-                            android:id="@+id/ep_widget_seg_8"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="@drawable/ep_widget_seg_on"
-                            android:visibility="gone" />
-                    </FrameLayout>
-                    <FrameLayout
-                        android:layout_width="0dp"
-                        android:layout_height="3dp"
-                        android:layout_marginEnd="3dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/ep_widget_seg_off">
-                        <LinearLayout
-                            android:id="@+id/ep_widget_seg_9"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="@drawable/ep_widget_seg_on"
-                            android:visibility="gone" />
-                    </FrameLayout>
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/ep_widget_goal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:fontFamily="sans-serif-medium"
-                    android:includeFontPadding="false"
-                    android:text=""
-                    android:textColor="#99FFFFFF"
-                    android:textSize="11sp" />
-            </LinearLayout>
-            </LinearLayout>
-            </LinearLayout>
-        </LinearLayout>
-    </LinearLayout>
+<!-- Duolingo-style EcoFriend widget. Only FrameLayout / LinearLayout / TextView / ImageView (RemoteViews-safe). -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/ep_widget_root" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/ep_widget_bg">
+<LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal" android:padding="12dp">
+<ImageView android:id="@+id/ep_widget_mascot" android:layout_width="110dp" android:layout_height="match_parent" android:background="@drawable/ep_widget_halo" android:contentDescription="EcoFriend" android:scaleType="fitCenter" android:src="@drawable/ecofriend_normal" />
+<LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="10dp" android:gravity="center_vertical" android:orientation="vertical">
+<TextView android:id="@+id/ep_widget_msg" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/ep_widget_bubble" android:ellipsize="end" android:includeFontPadding="false" android:maxLines="2" android:paddingStart="12dp" android:paddingEnd="12dp" android:paddingTop="8dp" android:paddingBottom="8dp" android:text="" android:textStyle="bold" android:textColor="@color/ef_w_ink" android:textSize="13sp" />
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:gravity="center_vertical" android:orientation="horizontal">
+<LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+<LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="bottom" android:orientation="horizontal">
+<TextView android:id="@+id/ep_widget_balance" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:maxLines="1" android:text="—" android:textStyle="bold" android:textColor="@color/ef_w_text" android:shadowColor="#80000000" android:shadowDx="0" android:shadowDy="2" android:shadowRadius="3" android:textSize="30sp" />
+<TextView android:id="@+id/ep_widget_unit" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:layout_marginBottom="3dp" android:includeFontPadding="false" android:textStyle="bold" android:text="EP" android:textColor="@color/ef_w_lime"  android:textSize="13sp" />
+</LinearLayout>
+<TextView android:id="@+id/ep_widget_label" android:layout_width="match_parent" android:layout_height="wrap_content" android:ellipsize="end" android:includeFontPadding="false" android:maxLines="1" android:text="EcoPoint" android:textColor="@color/ef_w_sub" android:shadowColor="#80000000" android:shadowDx="0" android:shadowDy="2" android:shadowRadius="3" android:textSize="10sp" />
+</LinearLayout>
+<LinearLayout android:id="@+id/ep_widget_streak_chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/ep_widget_chip" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="8dp" android:paddingEnd="10dp" android:paddingTop="4dp" android:paddingBottom="4dp">
+<ImageView android:id="@+id/ep_widget_flame" android:layout_width="16dp" android:layout_height="16dp" android:importantForAccessibility="no" android:src="@drawable/ep_widget_flame" />
+<TextView android:id="@+id/ep_widget_streak" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:includeFontPadding="false" android:textStyle="bold" android:textColor="@color/ef_w_flame" android:textSize="16sp" android:text="" />
+</LinearLayout>
+</LinearLayout>
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="vertical">
+<LinearLayout android:id="@+id/ep_widget_bar_row" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+<LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="horizontal">
+<FrameLayout android:layout_width="0dp" android:layout_height="7dp" android:layout_marginEnd="3dp" android:layout_weight="1" android:background="@drawable/ep_widget_seg_off"><LinearLayout android:id="@+id/ep_widget_seg_0" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/ep_widget_seg_on" android:visibility="gone" /></FrameLayout>
+<FrameLayout android:layout_width="0dp" android:layout_height="7dp" android:layout_marginEnd="3dp" android:layout_weight="1" android:background="@drawable/ep_widget_seg_off"><LinearLayout android:id="@+id/ep_widget_seg_1" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/ep_widget_seg_on" android:visibility="gone" /></FrameLayout>
+<FrameLayout android:layout_width="0dp" android:layout_height="7dp" android:layout_marginEnd="3dp" android:layout_weight="1" android:background="@drawable/ep_widget_seg_off"><LinearLayout android:id="@+id/ep_widget_seg_2" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/ep_widget_seg_on" android:visibility="gone" /></FrameLayout>
+<FrameLayout android:layout_width="0dp" android:layout_height="7dp" android:layout_marginEnd="3dp" android:layout_weight="1" android:background="@drawable/ep_widget_seg_off"><LinearLayout android:id="@+id/ep_widget_seg_3" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/ep_widget_seg_on" android:visibility="gone" /></FrameLayout>
+<FrameLayout android:layout_width="0dp" android:layout_height="7dp" android:layout_marginEnd="3dp" android:layout_weight="1" android:background="@drawable/ep_widget_seg_off"><LinearLayout android:id="@+id/ep_widget_seg_4" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/ep_widget_seg_on" android:visibility="gone" /></FrameLayout>
+<FrameLayout android:layout_width="0dp" android:layout_height="7dp" android:layout_marginEnd="3dp" android:layout_weight="1" android:background="@drawable/ep_widget_seg_off"><LinearLayout android:id="@+id/ep_widget_seg_5" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/ep_widget_seg_on" android:visibility="gone" /></FrameLayout>
+<FrameLayout android:layout_width="0dp" android:layout_height="7dp" android:layout_marginEnd="3dp" android:layout_weight="1" android:background="@drawable/ep_widget_seg_off"><LinearLayout android:id="@+id/ep_widget_seg_6" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/ep_widget_seg_on" android:visibility="gone" /></FrameLayout>
+<FrameLayout android:layout_width="0dp" android:layout_height="7dp" android:layout_marginEnd="3dp" android:layout_weight="1" android:background="@drawable/ep_widget_seg_off"><LinearLayout android:id="@+id/ep_widget_seg_7" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/ep_widget_seg_on" android:visibility="gone" /></FrameLayout>
+<FrameLayout android:layout_width="0dp" android:layout_height="7dp" android:layout_marginEnd="3dp" android:layout_weight="1" android:background="@drawable/ep_widget_seg_off"><LinearLayout android:id="@+id/ep_widget_seg_8" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/ep_widget_seg_on" android:visibility="gone" /></FrameLayout>
+<FrameLayout android:layout_width="0dp" android:layout_height="7dp" android:layout_marginEnd="3dp" android:layout_weight="1" android:background="@drawable/ep_widget_seg_off"><LinearLayout android:id="@+id/ep_widget_seg_9" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/ep_widget_seg_on" android:visibility="gone" /></FrameLayout>
+</LinearLayout>
+<TextView android:id="@+id/ep_widget_goal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:includeFontPadding="false" android:textStyle="bold" android:textColor="@color/ef_w_sub" android:shadowColor="#80000000" android:shadowDx="0" android:shadowDy="2" android:shadowRadius="3" android:textSize="11sp" android:text="" />
+</LinearLayout>
+</LinearLayout>
+</LinearLayout>
+</LinearLayout>
 </FrameLayout>

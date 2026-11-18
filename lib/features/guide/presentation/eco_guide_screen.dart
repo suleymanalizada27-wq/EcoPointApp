@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../ecofriend/presentation/ecofriend_view.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../../app/theme/ep_colors.dart';
 import '../../../app/theme/tokens.dart';
@@ -24,6 +25,7 @@ class EcoGuideScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(Sp.gutter),
         children: [
+          EcoFriendBanner(msgKey: 'ef_s_guide'),
           Text(context.tr('guide_intro'),
               style: TextStyle(color: c.textSecondary)),
           const SizedBox(height: Sp.md),

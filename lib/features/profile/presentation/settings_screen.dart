@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../ecofriend/presentation/ecofriend_view.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../../app/theme/ep_colors.dart';
 import '../../../app/theme/tokens.dart';
@@ -32,6 +33,8 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(Sp.gutter),
         children: [
+          const EcoFriendBanner(msgKey: 'ef_s_settings', size: 84),
+          const SizedBox(height: Sp.sm),
           Text(context.tr('settings_language'),
               style: context.text.titleSmall),
           const SizedBox(height: Sp.xs),

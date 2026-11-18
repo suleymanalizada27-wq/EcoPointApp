@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ef_w_text">#FFFFFFFF</color>
+    <color name="ef_w_sub">#E6FFFFFF</color>
+    <color name="ef_w_ink">#FF1F3D12</color>
+    <color name="ef_w_lime">#FFD9FF6B</color>
+    <color name="ef_w_green">#FFC8F23A</color>
+    <color name="ef_w_green_top">#FFE3FF7A</color>
+    <color name="ef_w_green_lip">#FF6E9E0F</color>
+    <color name="ef_w_bubble">#FFFFFFFF</color>
+    <color name="ef_w_bubble_stroke">#FFD2E8B8</color>
+    <color name="ef_w_bubble_lip">#FFA9D07F</color>
+    <color name="ef_w_chip">#FFFFF1D6</color>
+    <color name="ef_w_chip_stroke">#FFFFC96B</color>
+    <color name="ef_w_flame">#FFF57C00</color>
+    <color name="ef_w_dot_off">#55FFFFFF</color>
+    <color name="ef_w_halo_in">#80FFFFFF</color>
+    <color name="ef_w_halo_out">#00FFFFFF</color>
+    <color name="ef_w_gloss">#33FFFFFF</color>
+    <color name="ef_w_orange">#FFFFA81A</color>
+    <color name="ef_w_orange_lip">#FFE07B00</color>
+</resources>

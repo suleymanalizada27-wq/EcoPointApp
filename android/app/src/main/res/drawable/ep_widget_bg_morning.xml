@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item><shape android:shape="rectangle"><solid android:color="#FFC8743A" /><corners android:radius="28dp" /></shape></item>
+    <item android:bottom="5dp"><shape android:shape="rectangle"><gradient android:angle="270" android:startColor="#FFFF9F6B" android:endColor="#FFFFD58A" /><corners android:radius="28dp" /></shape></item>
+    <item android:gravity="top|end" android:width="70dp" android:height="70dp" android:top="2dp" android:end="8dp"><shape android:shape="oval"><solid android:color="#55FFE08A" /></shape></item>
+    <item android:gravity="top|end" android:width="42dp" android:height="42dp" android:top="16dp" android:end="22dp"><shape android:shape="oval"><solid android:color="#FFFFF3B0" /></shape></item>
+    <item android:gravity="top|start" android:width="46dp" android:height="14dp" android:top="20dp" android:start="24dp"><shape android:shape="rectangle"><solid android:color="#66FFFFFF" /><corners android:radius="8dp" /></shape></item>
+    <item android:gravity="top|start" android:width="30dp" android:height="10dp" android:top="34dp" android:start="60dp"><shape android:shape="rectangle"><solid android:color="#66FFFFFF" /><corners android:radius="6dp" /></shape></item>
+    <item android:gravity="bottom" android:height="70dp" android:bottom="5dp"><shape android:shape="rectangle"><solid android:color="#FF58B368" /><corners android:topLeftRadius="140dp" android:topRightRadius="140dp" android:bottomLeftRadius="28dp" android:bottomRightRadius="28dp" /></shape></item>
+    <item android:gravity="bottom" android:height="46dp" android:bottom="5dp" android:start="70dp"><shape android:shape="rectangle"><solid android:color="#FF3E9B51" /><corners android:topLeftRadius="120dp" android:topRightRadius="200dp" android:bottomLeftRadius="0dp" android:bottomRightRadius="28dp" /></shape></item>
+    <item android:bottom="5dp" android:gravity="top" android:height="46dp"><shape android:shape="rectangle"><gradient android:angle="270" android:startColor="@color/ef_w_gloss" android:endColor="#00FFFFFF" /><corners android:topLeftRadius="28dp" android:topRightRadius="28dp" /></shape></item>
+</layer-list>

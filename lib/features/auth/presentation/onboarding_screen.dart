@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../ecofriend/domain/ecofriend_engine.dart';
+import '../../ecofriend/presentation/ecofriend_view.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../../app/theme/ep_colors.dart';
 import '../../../app/theme/tokens.dart';
@@ -72,6 +74,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 itemBuilder: (context, i) => _Slide(
                   active: i == _page,
                   icon: _icons[i],
+                  moodIndex: i,
                   title: context.tr('onb_${i + 1}_title'),
                   body: context.tr('onb_${i + 1}_body'),
                 ),
@@ -135,7 +138,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 }
 
 class _Slide extends StatelessWidget {
-  const _Slide({required this.active, required this.icon, required this.title, required this.body});
+  const _Slide({required this.active, required this.icon, required this.moodIndex, required this.title, required this.body});
+  final int moodIndex;
   final bool active;
   final IconData icon;
   final String title;
@@ -156,26 +160,14 @@ class _Slide extends StatelessWidget {
             duration: calm ? Duration.zero : const Duration(milliseconds: 520),
             curve: Curves.easeOutBack,
             scale: on ? 1 : 0.7,
-            child: Container(
-            width: 168,
-            height: 168,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: c.heroGradient,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: c.emerald.withValues(alpha: 0.28),
-                  blurRadius: 48,
-                  offset: const Offset(0, 18),
-                ),
-              ],
-            ),
-            child: Icon(icon, size: 76, color: c.lime),
-          )),
+            child: EcoFriendView(
+              mood: const [
+                EcoFriendMood.excited,
+                EcoFriendMood.proud,
+                EcoFriendMood.cheering
+              ][moodIndex],
+              size: 240,
+            )),
           const SizedBox(height: Sp.xxl),
           AnimatedSlide(
             duration: calm ? Duration.zero : const Duration(milliseconds: 450),

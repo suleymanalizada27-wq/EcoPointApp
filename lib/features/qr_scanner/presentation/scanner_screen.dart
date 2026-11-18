@@ -18,6 +18,7 @@ import '../../../core/widgets/ep_feedback.dart';
 import '../../../core/widgets/motion_widgets.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../ecofriend/application/ecofriend_controller.dart';
+import '../../ecofriend/domain/ecofriend_engine.dart';
 import '../../ecofriend/presentation/ecofriend_view.dart';
 import '../data/qr_repository.dart';
 
@@ -220,12 +221,21 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Center(
-                  child: Consumer(
-                    builder: (context, ref, _) => EcoFriendView(
-                      mood: ref.watch(ecoFriendMoodProvider),
-                      size: 132,
-                    ),
+                Consumer(
+                  builder: (context, ref, _) => Row(
+                    children: [
+                      EcoFriendView(
+                        mood: ref.watch(ecoFriendMoodProvider),
+                        size: 150,
+                      ),
+                      const SizedBox(width: Sp.xs),
+                      Expanded(
+                        child: EcoFriendBubble(
+                          child: Text(context.tr('ef_excited'),
+                              style: ctx.text.titleMedium),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: Sp.md),
@@ -429,17 +439,33 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         ),
         // EcoFriend: thinking while scanning / waiting for the server.
         Positioned(
+          left: Sp.sm,
           right: Sp.sm,
           top: 0,
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.only(top: 56),
+              padding: const EdgeInsets.only(top: 52),
               child: IgnorePointer(
                 child: Consumer(
-                  builder: (context, ref, _) => EcoFriendView(
-                    mood: ref.watch(ecoFriendMoodProvider),
-                    size: 84,
-                  ),
+                  builder: (context, ref, _) {
+                    final m = ref.watch(ecoFriendMoodProvider);
+                    return Row(
+                      children: [
+                        EcoFriendView(mood: m, size: 96),
+                        const SizedBox(width: Sp.xs),
+                        Flexible(
+                          child: EcoFriendBubble(
+                            child: Text(
+                              context.tr(m == EcoFriendMood.thinking
+                                  ? 'ef_tip_3'
+                                  : m.messageKey),
+                              style: context.text.titleSmall,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),

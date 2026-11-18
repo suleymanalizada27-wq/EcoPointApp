@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../ecofriend/presentation/ecofriend_view.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../../app/theme/ep_colors.dart';
 import '../../../app/theme/tokens.dart';
@@ -65,6 +66,12 @@ class _BinsScreenState extends ConsumerState<BinsScreen> {
                         ?.copyWith(color: c.textSecondary)),
               ],
             ),
+          ),
+          EcoFriendBanner(
+            msgKey: 'ef_s_bins',
+            size: 64,
+            padding: const EdgeInsets.symmetric(
+                horizontal: Sp.gutter, vertical: Sp.xxs),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: Sp.gutter),

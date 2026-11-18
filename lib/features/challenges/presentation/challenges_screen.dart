@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../ecofriend/presentation/ecofriend_view.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../../app/theme/ep_colors.dart';
 import '../../../app/theme/tokens.dart';
@@ -22,6 +23,7 @@ class ChallengesScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(Sp.gutter, 0, Sp.gutter, Sp.xxl),
         children: [
+          EcoFriendBanner(msgKey: 'ef_s_challenges'),
           const StreakCard(),
           SectionHeader(
             title: context.tr('ch_daily'),
@@ -62,7 +64,12 @@ class AchievementsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(context.tr('ach_title'))),
-      body: GridView.builder(
+      body: Column(children: [
+        const Padding(
+          padding: EdgeInsets.fromLTRB(Sp.gutter, Sp.xs, Sp.gutter, 0),
+          child: EcoFriendBanner(msgKey: 'ef_s_achievements', size: 80),
+        ),
+        Expanded(child: GridView.builder(
         padding: const EdgeInsets.all(Sp.gutter),
         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
           maxCrossAxisExtent: 200,
@@ -112,7 +119,8 @@ class AchievementsScreen extends ConsumerWidget {
             ),
           );
         },
-      ),
+      )),
+      ]),
     );
   }
 }

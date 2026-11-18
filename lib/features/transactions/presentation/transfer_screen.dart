@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../ecofriend/presentation/ecofriend_view.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../../app/theme/ep_colors.dart';
 import '../../../app/theme/tokens.dart';
@@ -188,6 +189,8 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const EcoFriendBanner(msgKey: 'ef_s_transfer', size: 84),
+              const SizedBox(height: Sp.xs),
               EpCard(
                 color: c.surfaceRaised,
                 child: Row(

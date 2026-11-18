@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../ecofriend/presentation/ecofriend_view.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../../app/theme/ep_colors.dart';
 import '../../../app/theme/tokens.dart';
@@ -76,6 +77,7 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
       body: ListView(
         padding: const EdgeInsets.all(Sp.gutter),
         children: [
+          EcoFriendBanner(msgKey: 'ef_s_referral'),
           Text(context.tr('referral_sub'),
               style: context.text.bodyLarge?.copyWith(color: c.textSecondary)),
           const SizedBox(height: Sp.lg),

@@ -16,3 +16,26 @@ alpha WebM without an extra package.
   supported by RemoteViews). Run `. .\tool\android_widget.ps1` to install.
 * Widget quick links (4x4) reuse the quick_actions intent handled in `ShortcutsHost`.
 * Tests: `test/ecofriend_engine_test.dart`.
+
+## Duolingo-style presence (v4b)
+* Dashboard hero: large animated mascot + speech bubble, tap the mascot for tips.
+* `EcoFriendBanner` (mascot + bubble) on Missions, Statistics, Rewards, Bins, History, Guide,
+  Referral, Profile; scanner has a live bubble; `EcoFriendCelebrationHost` (in `MainShell`)
+  slides EcoFriend up on every tab for excited / cheering / proud.
+* Widgets: light/dark palette (`ep_widget_colors*.xml`), chunky cards, speech bubble, week-dot
+  row and big action buttons on the 4x4.
+
+## v4c
+* `EcoFriendView`: pop-in on every mood change, tap = jump + sparkles (cosmetic only).
+* Full-screen confetti party (big EcoFriend) for cheering / proud; excited = bottom toast.
+* Streak milestones (3, 7, 14, 30, 60, 100, 365) -> proud with `ef_streak`.
+* More screens: onboarding (3 moods), sign-in, sign-up, settings, transfer, my QR, achievements.
+* Widget: morning / evening nudge until the app is opened today.
+
+## v4d (widget look)
+Gradient card with 3D bottom lip + gloss, soft glow behind EcoFriend, speech bubble with lip,
+glossy green "Scan" button, orange week coins; separate light / dark palettes.
+
+## v4e (time-of-day widget scenes)
+`ep_widget_bg_{morning,day,evening,night}.xml` (sky gradient, sun/moon, clouds, stars, hills);
+Kotlin picks the scene by local hour (05-09 / 10-15 / 16-19 / 20-04); update period 30 min.

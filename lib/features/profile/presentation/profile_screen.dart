@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../ecofriend/domain/ecofriend_engine.dart';
 import '../../ecofriend/presentation/ecofriend_view.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../../app/theme/ep_colors.dart';
@@ -61,18 +62,10 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ],
           ),
-          Padding(
-            padding: const EdgeInsets.only(top: Sp.sm),
-            child: EpCard(
-              child: Row(children: [
-                const EcoFriendHint(size: 84),
-                const SizedBox(width: Sp.sm),
-                Expanded(
-                  child: Text(context.tr('ef_profile_hint'),
-                      style: context.text.bodyMedium),
-                ),
-              ]),
-            ),
+          const EcoFriendBanner(
+            msgKey: 'ef_profile_hint',
+            base: EcoFriendMood.normal,
+            size: 100,
           ),
           const SizedBox(height: Sp.md),
           EpCard(

@@ -40,11 +40,24 @@ class EcoFriendSnapshot {
   const EcoFriendSnapshot({
     required this.mood,
     required this.widget,
+    this.msgKey,
+    this.msgArgs = const {},
   });
 
   final EcoFriendMood mood;
   final EcoFriendWidgetData widget;
+
+  /// Optional message that belongs to the current event (e.g. streak
+  /// milestone). Null = use the mood's default message.
+  final String? msgKey;
+  final Map<String, Object?> msgArgs;
+
+  /// Localised text of the current event (or of the resting mood).
+  String text(String Function(String, [Map<String, Object?>]) tr) =>
+      tr(msgKey ?? mood.messageKey, msgArgs);
 }
+
+const List<int> _kStreakMilestones = [3, 7, 14, 30, 60, 100, 365];
 
 const _kLastActive = 'ef-last-active';
 const _kWidgetMood = 'ef-w-mood';
@@ -67,6 +80,9 @@ class EcoFriendController extends Notifier<EcoFriendSnapshot>
   bool _goalSeeded = false;
   bool _goalWasComplete = false;
   int _lastActiveMs = 0;
+  String? _msgKey;
+  Map<String, Object?> _msgArgs = const {};
+  EcoFriendMood? _msgMood;
 
   @override
   EcoFriendSnapshot build() {
@@ -147,6 +163,32 @@ class EcoFriendController extends Notifier<EcoFriendSnapshot>
       }
     });
 
+    // Streak milestone (server-side check-in streak) → proud with its own line.
+    ref.listen(streakProvider, (_, next) {
+      if (next is! AsyncData) return;
+      final uid = ref.read(uidProvider);
+      if (uid == null) return;
+      final n = next.value?.count ?? 0;
+      final prefs = ref.read(sharedPrefsProvider);
+      final key = 'ef-streak-seen-$uid';
+      final seen = prefs.getInt(key);
+      if (seen == null) {
+        prefs.setInt(key, n);
+        return;
+      }
+      if (n <= seen) {
+        if (n < seen) prefs.setInt(key, n); // streak was reset
+        return;
+      }
+      prefs.setInt(key, n);
+      final hit = _kStreakMilestones.where((m) => m > seen && m <= n);
+      if (hit.isEmpty) return;
+      _fire(EcoFriendMood.proud,
+          key: 'streak_$uid-${hit.last}',
+          msgKey: 'ef_streak',
+          msgArgs: {'n': hit.last});
+    });
+
     // New level (lifetime earned EP crossed a threshold) → proud.
     ref.listen(statsProvider, (_, next) {
       if (next is! AsyncData) return;
@@ -190,10 +232,14 @@ class EcoFriendController extends Notifier<EcoFriendSnapshot>
 
   // ------------------------------------------------------------ internals
 
-  bool _fire(EcoFriendMood mood, {String? key}) {
+  bool _fire(EcoFriendMood mood,
+      {String? key, String? msgKey, Map<String, Object?> msgArgs = const {}}) {
     final now = DateTime.now();
     final ok = _engine.trigger(mood, now: now, eventKey: key);
     if (!ok) return false;
+    _msgKey = msgKey;
+    _msgArgs = msgArgs;
+    _msgMood = mood;
     if (widgetHoldFor(mood) > Duration.zero) {
       final prefs = ref.read(sharedPrefsProvider);
       prefs.setString(_kWidgetMood, mood.name);
@@ -225,7 +271,11 @@ class EcoFriendController extends Notifier<EcoFriendSnapshot>
 
   void _refresh() {
     final s = _snapshot(DateTime.now());
-    if (s.mood != state.mood || s.widget != state.widget) state = s;
+    if (s.mood != state.mood ||
+        s.widget != state.widget ||
+        s.msgKey != state.msgKey) {
+      state = s;
+    }
   }
 
   EcoFriendSnapshot _snapshot(DateTime now) {
@@ -233,8 +283,12 @@ class EcoFriendController extends Notifier<EcoFriendSnapshot>
     final until = prefs.getInt(_kWidgetUntil) ?? 0;
     var mood = prefs.getString(_kWidgetMood) ?? '';
     if (until <= now.millisecondsSinceEpoch) mood = '';
+    final cur = _engine.current(now);
+    final hasMsg = _msgKey != null && _msgMood == cur && cur.isEvent;
     return EcoFriendSnapshot(
-      mood: _engine.current(now),
+      mood: cur,
+      msgKey: hasMsg ? _msgKey : null,
+      msgArgs: hasMsg ? _msgArgs : const {},
       widget: EcoFriendWidgetData(
         eventMood: mood,
         eventUntilMs: mood.isEmpty ? 0 : until,

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../ecofriend/presentation/ecofriend_view.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../../app/theme/ep_colors.dart';
 import '../../../app/theme/tokens.dart';
@@ -37,6 +38,7 @@ class MyQrScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(Sp.gutter),
                 child: Column(
                   children: [
+                    const EcoFriendBanner(msgKey: 'ef_s_myqr', size: 84),
                     const Spacer(),
                     EpAvatar(
                       size: 64,

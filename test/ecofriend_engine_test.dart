@@ -110,4 +110,12 @@ void main() {
       expect(widgetMoodAt(now: t0), EcoFriendMood.normal);
     });
   });
+
+  test('streak milestone (proud) is not blocked by an earlier excited', () {
+    final e = EcoFriendEngine(resting: EcoFriendMood.breathing);
+    expect(e.trigger(EcoFriendMood.excited, now: t0, eventKey: 'bal_1'), isTrue);
+    expect(e.trigger(EcoFriendMood.proud, now: t0, eventKey: 'streak_u-7'),
+        isTrue);
+    expect(e.current(t0), EcoFriendMood.proud);
+  });
 }

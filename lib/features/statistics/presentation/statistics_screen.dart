@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../ecofriend/presentation/ecofriend_view.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../../app/theme/ep_colors.dart';
 import '../../../app/theme/tokens.dart';
@@ -59,6 +60,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
             padding: const EdgeInsets.fromLTRB(
                 Sp.gutter, 0, Sp.gutter, Sp.xxl),
             children: [
+            EcoFriendBanner(msgKey: 'ef_s_stats'),
               // Lifetime tiles (server-maintained counters).
               Row(
                 children: [

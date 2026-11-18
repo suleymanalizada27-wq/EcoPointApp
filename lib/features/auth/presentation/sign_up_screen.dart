@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../ecofriend/domain/ecofriend_engine.dart';
+import '../../ecofriend/presentation/ecofriend_view.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../../app/theme/ep_colors.dart';
 import '../../../app/theme/tokens.dart';
@@ -87,6 +89,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const EcoFriendBanner(
+                  msgKey: 'ef_s_signup', base: EcoFriendMood.excited, size: 110),
+              const SizedBox(height: Sp.sm),
               EpTextField(
                 label: context.tr('auth_full_name'),
                 controller: _name,

@@ -21,7 +21,7 @@ import es.antonborri.home_widget.HomeWidgetProvider
  * Flutter app (single source of truth, see widget_sync.dart): a recent
  * backend-confirmed event (excited / cheering / proud) wins, then >= 7 days of
  * inactivity -> sad, otherwise normal. Refresh = system AppWidget update
- * (6 h, no WorkManager, no wake-locks) + whenever the app pushes new data.
+ * (30 min, so the scene follows the time of day; no WorkManager, no wake-locks) + whenever the app pushes new data.
  *
  * Five entries in the widget picker (2x1, 2x2, 3x2, 4x2, 4x4). The 2x2 one adapts
  * to its size; the others (subclasses below) always use their own layout.
@@ -125,23 +125,46 @@ open class EpWidgetProvider : HomeWidgetProvider() {
             if (res == 0) res = rid("ecofriend_normal", "drawable")
             if (res != 0) views.setImageViewResource(mascotId, res)
         }
-        val efMsg = str("ef_msg_$mood", "")
+        // Like Duolingo: on a calm day the mascot nudges you (morning / evening)
+        // until you have opened the app today. No guilt wording, normal pose.
+        val cal = java.util.Calendar.getInstance()
+        val hour = cal.get(java.util.Calendar.HOUR_OF_DAY)
+        val last = java.util.Calendar.getInstance().apply { timeInMillis = efLast }
+        val activeToday = efLast > 0L &&
+            last.get(java.util.Calendar.YEAR) == cal.get(java.util.Calendar.YEAR) &&
+            last.get(java.util.Calendar.DAY_OF_YEAR) == cal.get(java.util.Calendar.DAY_OF_YEAR)
+        // Time-of-day scene (like Duolingo): sunrise / day / sunset / night.
+        val theme = when (hour) {
+            in 5..9 -> "morning"
+            in 10..15 -> "day"
+            in 16..19 -> "evening"
+            else -> "night"
+        }
+        run {
+            val rootBg = rid("ep_widget_root", "id")
+            val bgRes = rid("ep_widget_bg_$theme", "drawable")
+            if (rootBg != 0 && bgRes != 0) views.setInt(rootBg, "setBackgroundResource", bgRes)
+        }
+        val nudge = when {
+            mood != "normal" || activeToday -> ""
+            hour in 5..11 -> str("ef_msg_morning", "")
+            hour in 18..21 -> str("ef_msg_evening", "")
+            else -> ""
+        }
+        val efMsg = when {
+            nudge.isNotEmpty() -> nudge
+            mood == "normal" && theme == "night" && str("ef_msg_night", "").isNotEmpty() -> str("ef_msg_night", "")
+            else -> str("ef_msg_$mood", "")
+        }
         setText("ep_widget_msg", efMsg)
         val isXl = layoutName == "ep_widget_xl"
 
         val num = str("balance_num", "—")
         val unit = str("unit", "EP")
         val streak = str("streak", "")
-        val goalText = str("goal_text", "")
-        val pct = (data.getString("goal_pct", "0") ?: "0").toIntOrNull() ?: 0
         val has = streak.isNotEmpty()
-        val motto = str("motto", "")
         val tier = (data.getString("tier", "0") ?: "0").toIntOrNull() ?: 0
-        // Small layouts show the motivational line in place of the brand label.
-        val mottoInLabel = layoutName == "ep_widget_xs" || layoutName == "ep_widget_s"
-        setText("ep_widget_label", if (has && mottoInLabel && motto.isNotEmpty()) motto else str("label", "EcoPoint"))
-        setText("ep_widget_motto", motto)
-        vis("ep_widget_motto", has && !mottoInLabel && motto.isNotEmpty())
+        setText("ep_widget_label", str("label", "EcoPoint"))
         // Flame changes with the streak: lime -> amber -> orange -> gold star.
         val flameId = rid("ep_widget_flame", "id")
         if (flameId != 0 && has) {
@@ -151,31 +174,34 @@ open class EpWidgetProvider : HomeWidgetProvider() {
         setText("ep_widget_balance", num)
         setText("ep_widget_unit", unit)
         setText("ep_widget_streak", streak)
-        if (!isXl) setText("ep_widget_goal", goalText)
-
-        // Streak chip / panel / progress exist only when there is a streak.
         vis("ep_widget_streak_chip", has)
-        vis("ep_widget_panel", has)
-        vis("ep_widget_bar_row", has)
-        // Segmented progress bar: 10 segments, filled ones are shown.
-        val barPct = if (isXl)
-            ((data.getString("daily_pct", "0") ?: "0").toIntOrNull() ?: 0) else pct
-        val showBar = if (isXl) true else has
-        val filled = ((barPct + 5) / 10).coerceIn(0, 10)
+
+        // Daily-goal bar (4x2 and 4x4): 10 chunky segments.
+        val dailyText = str("daily_text", "")
+        val dailyPct = (data.getString("daily_pct", "0") ?: "0").toIntOrNull() ?: 0
+        val showBar = (isXl || layoutName == "ep_widget_l") && dailyText.isNotEmpty()
+        vis("ep_widget_bar_row", showBar)
+        setText("ep_widget_goal", dailyText)
+        val filled = ((dailyPct + 5) / 10).coerceIn(0, 10)
         for (i in 0 until 10) vis("ep_widget_seg_$i", showBar && i < filled)
+
         if (isXl) {
-            setText("ep_widget_goal", str("daily_text", ""))
+            // Duolingo-style week row: orange tick = day with confirmed EP.
+            val dots = str("week_dots", "0000000")
+            for (i in 0 until 7) {
+                val id = rid("ep_widget_day_$i", "id")
+                if (id == 0) continue
+                val on = i < dots.length && dots[i] == '1'
+                val bg = rid(if (on) "ep_widget_day_on" else "ep_widget_day_off", "drawable")
+                if (bg != 0) views.setInt(id, "setBackgroundResource", bg)
+                views.setTextViewText(id, if (on) "✓" else "")
+            }
             setText("ep_widget_week", str("week_text", ""))
-            setText("ep_widget_week_days", str("week_days", ""))
             setText("ep_widget_level", str("level_text", ""))
             setText("ep_widget_impact", str("impact_text", ""))
             setText("ep_widget_btn_scan", str("lbl_scan", "Scan"))
             setText("ep_widget_btn_missions", str("lbl_missions", "Missions"))
             setText("ep_widget_btn_history", str("lbl_history", "History"))
-        }
-        if (layoutName == "ep_widget_l") {
-            val daily = str("daily_text", "")
-            if (daily.isNotEmpty()) setText("ep_widget_label", "EcoPoint · $daily")
         }
 
         val rootId = rid("ep_widget_root", "id")

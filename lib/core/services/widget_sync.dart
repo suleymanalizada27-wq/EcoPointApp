@@ -85,9 +85,26 @@ final widgetSyncProvider = Provider<void>((ref) {
       await HomeWidget.saveWidgetData<String>('ef_until', '${ef.eventUntilMs}');
       await HomeWidget.saveWidgetData<String>(
           'ef_last_active', '${ef.lastActiveMs}');
-      for (final m in const ['normal', 'sad', 'excited', 'cheering', 'proud']) {
+      for (final m in const ['sad', 'excited', 'cheering', 'proud']) {
         await HomeWidget.saveWidgetData<String>('ef_msg_$m', l.tr('ef_$m'));
       }
+      // Calm day: show the daily-goal progress like the in-app bubble.
+      await HomeWidget.saveWidgetData<String>(
+          'ef_msg_normal',
+          dailyTotal > 0 && dailyDone < dailyTotal
+              ? l.tr('ef_goal_progress', {'done': dailyDone, 'total': dailyTotal})
+              : l.tr('ef_normal'));
+      await HomeWidget.saveWidgetData<String>('ef_msg_morning', l.tr('ef_w_morning'));
+      await HomeWidget.saveWidgetData<String>('ef_msg_night', l.tr('ef_w_night'));
+      await HomeWidget.saveWidgetData<String>('ef_msg_evening', l.tr('ef_w_evening'));
+      // Week row (oldest -> today): 1 = day with confirmed EP.
+      await HomeWidget.saveWidgetData<String>(
+          'week_dots',
+          weekly
+              .skip(weekly.length > 7 ? weekly.length - 7 : 0)
+              .map((b) => b.earned > 0 ? '1' : '0')
+              .join()
+              .padLeft(7, '0'));
       await HomeWidget.saveWidgetData<String>('lbl_scan', l.tr('nav_scan'));
       await HomeWidget.saveWidgetData<String>('lbl_missions', l.tr('ch_title'));
       await HomeWidget.saveWidgetData<String>(

@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../ecofriend/presentation/ecofriend_view.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../../app/theme/ep_colors.dart';
 import '../../../app/theme/tokens.dart';
@@ -38,6 +39,12 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       body: Column(
         children: [
           const OfflineBanner(),
+          EcoFriendBanner(
+            msgKey: 'ef_s_history',
+            size: 76,
+            padding: const EdgeInsets.symmetric(
+                horizontal: Sp.gutter, vertical: Sp.xxs),
+          ),
           SizedBox(
             height: 48,
             child: ListView.separated(
