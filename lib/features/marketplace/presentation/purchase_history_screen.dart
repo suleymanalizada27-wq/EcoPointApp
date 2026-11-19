@@ -29,6 +29,7 @@ class PurchaseHistoryScreen extends ConsumerWidget {
             return EmptyView(
               icon: Icons.shopping_bag_outlined,
               message: context.tr('reward_history_empty'),
+                  mascot: true,
               actionLabel: context.tr('nav_rewards'),
               onAction: () => context.go('/rewards'),
             );

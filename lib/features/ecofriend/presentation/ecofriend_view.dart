@@ -13,7 +13,9 @@ import '../../../core/utils/formatters.dart';
 import '../../challenges/data/gamification_repository.dart';
 import '../../wallet/data/wallet_providers.dart';
 import '../application/ecofriend_controller.dart';
+import '../application/ecofriend_messages_provider.dart';
 import '../domain/ecofriend_engine.dart';
+import '../domain/ecofriend_messages.dart';
 
 /// Renders one EcoFriend mood: full body, original proportions, cross-fade
 /// between moods, a pop-in on every mood change, and (when [interactive]) a
@@ -29,9 +31,12 @@ class EcoFriendView extends StatefulWidget {
     required this.size,
     this.animate = true,
     this.interactive = true,
+    this.sleepy = false,
     this.onTap,
   });
 
+  /// Night scene: floating "Zzz" next to the (unchanged) mascot.
+  final bool sleepy;
   final EcoFriendMood mood;
   final double size;
   final bool animate;
@@ -180,6 +185,19 @@ class _EcoFriendViewState extends State<EcoFriendView>
     }
 
     body = RepaintBoundary(child: SizedBox(width: size, height: size, child: body));
+    if (widget.sleepy) {
+      body = Stack(
+        clipBehavior: Clip.none,
+        children: [
+          body,
+          PositionedDirectional(
+            top: size * 0.02,
+            end: size * 0.02,
+            child: IgnorePointer(child: _Zzz(size: size, animate: !reduce)),
+          ),
+        ],
+      );
+    }
     if (widget.interactive || widget.onTap != null) {
       body = GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -188,6 +206,81 @@ class _EcoFriendViewState extends State<EcoFriendView>
       );
     }
     return body;
+  }
+}
+
+/// Three "z" letters drifting up and fading (night / sleepy scene).
+class _Zzz extends StatefulWidget {
+  const _Zzz({required this.size, required this.animate});
+  final double size;
+  final bool animate;
+
+  @override
+  State<_Zzz> createState() => _ZzzState();
+}
+
+class _ZzzState extends State<_Zzz> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 3200));
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.animate) _c.repeat();
+  }
+
+  @override
+  void didUpdateWidget(_Zzz old) {
+    super.didUpdateWidget(old);
+    if (widget.animate && !_c.isAnimating) {
+      _c.repeat();
+    } else if (!widget.animate && _c.isAnimating) {
+      _c.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final box = widget.size * 0.34;
+    return SizedBox(
+      width: box,
+      height: box,
+      child: AnimatedBuilder(
+        animation: _c,
+        builder: (_, __) => Stack(
+          clipBehavior: Clip.none,
+          children: [
+            for (var i = 0; i < 3; i++)
+              Builder(builder: (_) {
+                final t = widget.animate ? (_c.value + i / 3) % 1.0 : (i + 1) / 4;
+                final fade = math.sin(math.pi * t).clamp(0.0, 1.0).toDouble();
+                return PositionedDirectional(
+                  start: box * (0.05 + 0.55 * t),
+                  bottom: box * (0.05 + 0.7 * t),
+                  child: Opacity(
+                    opacity: widget.animate ? fade : 0.9,
+                    child: Text(
+                      i == 0 ? 'z' : 'Z',
+                      style: TextStyle(
+                        fontSize: widget.size * (0.075 + 0.05 * t),
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF9FC0FF),
+                        height: 1,
+                      ),
+                    ),
+                  ),
+                );
+              }),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -338,12 +431,6 @@ class EcoFriendBubble extends StatelessWidget {
   }
 }
 
-String _greetKey(DateTime now) => now.hour < 12
-    ? 'greet_morning'
-    : now.hour < 18
-        ? 'greet_afternoon'
-        : 'greet_evening';
-
 /// Dashboard hero: big mascot + speech bubble + EP / daily-goal chips.
 /// Tap the mascot: it jumps and tells you a tip.
 class EcoFriendCard extends ConsumerStatefulWidget {
@@ -358,10 +445,22 @@ class _EcoFriendCardState extends ConsumerState<EcoFriendCard> {
   int _tip = 0;
   bool _showTip = false;
   Timer? _tipTimer;
+  Timer? _clock;
+
+  @override
+  void initState() {
+    super.initState();
+    // Scene (morning / day / evening / night) and the message slot follow the
+    // clock even if the screen stays open. One cheap rebuild every 10 minutes.
+    _clock = Timer.periodic(const Duration(minutes: 10), (_) {
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   void dispose() {
     _tipTimer?.cancel();
+    _clock?.cancel();
     super.dispose();
   }
 
@@ -405,17 +504,28 @@ class _EcoFriendCardState extends ConsumerState<EcoFriendCard> {
     final total = missions.length;
     final lang = Localizations.localeOf(context).languageCode;
 
+    final now = DateTime.now();
+    final scene = EcoScene.at(now);
+    final ctx = ref.watch(ecoMsgContextProvider);
+    final level = ref.watch(levelProgressProvider);
+    final sleepy = scene == EcoScene.night && !mood.isEvent && !_showTip;
+    final accent = switch (scene) {
+      EcoScene.morning => const Color(0xFFFF9F6B),
+      EcoScene.day => c.emerald,
+      EcoScene.evening => const Color(0xFFC265C9),
+      EcoScene.night => const Color(0xFF5B7CFA),
+    };
+
     final String message;
     if (_showTip && !mood.isEvent) {
       message = context.tr('ef_tip_$_tip');
     } else if (mood.isEvent) {
       message = snap.text(context.tr);
-    } else if (mood == EcoFriendMood.normal) {
-      message = context.tr(_greetKey(DateTime.now()));
-    } else if (total > 0 && done < total) {
-      message = context.tr('ef_goal_progress', {'done': done, 'total': total});
     } else {
-      message = context.tr(mood.messageKey);
+      // Smart message: scene + real state (goal, streak, last recycle, level…),
+      // rotating every 3 h, never repeating back to back.
+      final m = EcoFriendMessages.pick(EcoFriendMessages.pool(scene, ctx), now);
+      message = context.tr(m.key, m.args);
     }
 
     return Padding(
@@ -428,20 +538,21 @@ class _EcoFriendCardState extends ConsumerState<EcoFriendCard> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              c.emerald.withValues(alpha: 0.20),
-              c.emerald.withValues(alpha: 0.05),
+              accent.withValues(alpha: 0.24),
+              accent.withValues(alpha: 0.05),
             ],
           ),
-          border: Border.all(color: c.emerald.withValues(alpha: 0.35)),
+          border: Border.all(color: accent.withValues(alpha: 0.40)),
         ),
         child: LayoutBuilder(builder: (context, box) {
-          final size = (box.maxWidth * 0.46).clamp(120.0, 190.0);
+          final size = (box.maxWidth * 0.50).clamp(130.0, 220.0);
           return Row(
             children: [
               Semantics(
                 button: true,
                 label: 'EcoFriend',
-                child: EcoFriendView(mood: mood, size: size, onTap: _poke),
+                child: EcoFriendView(
+                    mood: mood, size: size, sleepy: sleepy, onTap: _poke),
               ),
               const SizedBox(width: Sp.sm),
               Expanded(
@@ -469,6 +580,9 @@ class _EcoFriendCardState extends ConsumerState<EcoFriendCard> {
                             '${Fmt.number(balance, lang)} ${context.tr('ep_unit')}',
                             c.lime),
                       if (total > 0) _Chip('$done/$total', c.emerald),
+                      if (ctx.streak > 0)
+                        _Chip('🔥 ${ctx.streak}', const Color(0xFFF57C00)),
+                      _Chip(context.tr(level.current.l10nKey), accent),
                     ]),
                   ],
                 ),
@@ -672,10 +786,14 @@ class _EcoFriendCelebrationHostState
 
 /// Small static EcoFriend for empty / error / offline states.
 class EcoFriendHint extends StatelessWidget {
-  const EcoFriendHint({super.key, this.size = 96});
+  const EcoFriendHint(
+      {super.key, this.size = 96, this.mood = EcoFriendMood.normal});
   final double size;
+
+  /// `thinking` = puzzled (offline), `normal` = calm and ready to help.
+  final EcoFriendMood mood;
 
   @override
   Widget build(BuildContext context) => EcoFriendView(
-      mood: EcoFriendMood.normal, size: size, animate: false, interactive: false);
+      mood: mood, size: size, animate: false, interactive: false);
 }

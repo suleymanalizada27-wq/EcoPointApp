@@ -102,6 +102,7 @@ class _BinsScreenState extends ConsumerState<BinsScreen> {
                   return EmptyView(
                     icon: Icons.delete_outline_rounded,
                     message: context.tr('bins_empty'),
+                  mascot: true,
                   );
                 }
                 final sorted = _sortByDistance(list, location);

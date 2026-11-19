@@ -208,6 +208,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                 EmptyView(
                   icon: Icons.receipt_long_outlined,
                   message: context.tr('history_empty'),
+                  mascot: true,
                 )
               else
                 for (final t in list.take(8))

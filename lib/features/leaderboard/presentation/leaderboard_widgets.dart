@@ -172,6 +172,7 @@ class _BoardList extends ConsumerWidget {
           return EmptyView(
             icon: Icons.emoji_events_outlined,
             message: context.tr(emptyKey),
+                  mascot: true,
           );
         }
         return ListView.builder(

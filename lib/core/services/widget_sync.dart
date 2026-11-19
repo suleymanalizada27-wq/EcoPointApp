@@ -9,6 +9,8 @@ import '../../app/localization/app_localizations.dart';
 import '../utils/formatters.dart';
 import '../../features/challenges/data/gamification_repository.dart';
 import '../../features/ecofriend/application/ecofriend_controller.dart';
+import '../../features/ecofriend/application/ecofriend_messages_provider.dart';
+import '../../features/ecofriend/domain/ecofriend_messages.dart';
 import '../../features/wallet/data/wallet_providers.dart';
 import 'firebase_providers.dart';
 import 'preferences.dart';
@@ -55,6 +57,7 @@ final widgetSyncProvider = Provider<void>((ref) {
   final activeDays = weekly.where((b) => b.earned > 0).length;
   final level = ref.watch(levelProgressProvider);
   final impact = ref.watch(impactProvider);
+  final msgCtx = ref.watch(ecoMsgContextProvider);
 
   final lang = locale.languageCode;
   final balanceText =
@@ -70,6 +73,23 @@ final widgetSyncProvider = Provider<void>((ref) {
   final tier = _tiers.where((t) => days >= t.$1).firstOrNull;
   final motto = tier == null ? '' : l.tr(tier.$2);
   final flame = tier?.$3 ?? 0;
+  // Smart messages: the app pre-translates one rotating pool per scene
+  // (same engine as the in-app card); the widget picks from it by the clock,
+  // so it stays right while the app is closed. `activeToday: true` / no
+  // lastScan here because those are time-sensitive and resolved natively.
+  final today = DateTime.now();
+  String join(List<EcoMsg> p) => p.map((m) => l.tr(m.key, m.args)).join('\u001F');
+  final poolCtx = EcoMsgContext(
+    now: today,
+    goalPct: msgCtx.goalPct,
+    streak: msgCtx.streak,
+    activeToday: true,
+    levelFraction: msgCtx.levelFraction,
+    isMaxLevel: msgCtx.isMaxLevel,
+    hasEarned: msgCtx.hasEarned,
+  );
+  final dayStamp =
+      '${today.year}${today.month.toString().padLeft(2, '0')}${today.day.toString().padLeft(2, '0')}';
   unawaited(() async {
     try {
       await HomeWidget.saveWidgetData<String>('label', 'EcoPoint');
@@ -94,6 +114,17 @@ final widgetSyncProvider = Provider<void>((ref) {
           dailyTotal > 0 && dailyDone < dailyTotal
               ? l.tr('ef_goal_progress', {'done': dailyDone, 'total': dailyTotal})
               : l.tr('ef_normal'));
+      // --- EcoFriend 2.0: scene pools + goal label + day stamp ---
+      for (final sc in EcoScene.values) {
+        await HomeWidget.saveWidgetData<String>(
+            'ef_pool_${sc.name}', join(EcoFriendMessages.pool(sc, poolCtx)));
+        await HomeWidget.saveWidgetData<String>(
+            'ef_pool_${sc.name}_base', join(EcoFriendMessages.basePool(sc)));
+      }
+      await HomeWidget.saveWidgetData<String>(
+          'ef_pool_risk', join(EcoFriendMessages.riskPool(days)));
+      await HomeWidget.saveWidgetData<String>('goal_label', l.tr('efm_goal_label'));
+      await HomeWidget.saveWidgetData<String>('daily_day', dayStamp);
       await HomeWidget.saveWidgetData<String>('ef_msg_morning', l.tr('ef_w_morning'));
       await HomeWidget.saveWidgetData<String>('ef_msg_night', l.tr('ef_w_night'));
       await HomeWidget.saveWidgetData<String>('ef_msg_evening', l.tr('ef_w_evening'));

@@ -6,6 +6,7 @@ import '../../app/theme/ep_colors.dart';
 import '../../app/theme/tokens.dart';
 import '../errors/failure.dart';
 import '../services/firebase_providers.dart';
+import '../../features/ecofriend/domain/ecofriend_engine.dart';
 import '../../features/ecofriend/presentation/ecofriend_view.dart';
 import 'ep_button.dart';
 
@@ -212,7 +213,14 @@ class ErrorView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (mascot)
-              const EcoFriendHint(size: 104)
+              // No connection: EcoFriend is puzzled (thinking); other errors:
+              // calm and ready to help — never alarmed, never blaming.
+              EcoFriendHint(
+                size: 112,
+                mood: failure.code == Failure.network
+                    ? EcoFriendMood.thinking
+                    : EcoFriendMood.normal,
+              )
             else
               Container(
                 width: 72,
@@ -224,6 +232,17 @@ class ErrorView extends StatelessWidget {
                 child: Icon(Icons.cloud_off_rounded, size: 32, color: c.danger),
               ),
             const SizedBox(height: Sp.md),
+            if (mascot)
+              Padding(
+                padding: const EdgeInsets.only(bottom: Sp.xs),
+                child: Text(
+                  context.tr(failure.code == Failure.network
+                      ? 'ef_offline'
+                      : 'ef_error'),
+                  style: context.text.titleSmall,
+                  textAlign: TextAlign.center,
+                ),
+              ),
             Text(
               context.tr(failure.l10nKey),
               style: context.text.bodyLarge,
@@ -295,7 +314,8 @@ class OfflineBanner extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.wifi_off_rounded, size: 16, color: c.warning),
+                    const EcoFriendHint(
+                        size: 34, mood: EcoFriendMood.thinking),
                     const SizedBox(width: Sp.xs),
                     Expanded(
                       child: Text(

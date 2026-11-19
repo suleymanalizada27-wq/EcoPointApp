@@ -12,7 +12,7 @@ if (-not (Test-Path $m)) {
   $res = Join-Path $root 'android\app\src\main\res'
   foreach ($d in 'layout','drawable','xml','values','values-night') { New-Item -ItemType Directory -Force (Join-Path $res $d) | Out-Null }
   foreach ($n in 'ep_widget','ep_widget_s','ep_widget_xs','ep_widget_l','ep_widget_xl') { Copy-Item (Join-Path $src ($n + '.xml')) (Join-Path $res ('layout\' + $n + '.xml')) -Force }
-  foreach ($n in 'ep_widget_bg','ep_widget_flame','ep_widget_flame_1','ep_widget_flame_2','ep_widget_flame_3','ep_widget_seg_on','ep_widget_seg_off','ep_widget_divider','ep_widget_pill','ep_widget_btn','ep_widget_btn_ghost','ep_widget_bubble','ep_widget_chip','ep_widget_day_on','ep_widget_day_off','ep_widget_halo','ep_widget_bg_morning','ep_widget_bg_day','ep_widget_bg_evening','ep_widget_bg_night') { Copy-Item (Join-Path $src ($n + '.xml')) (Join-Path $res ('drawable\' + $n + '.xml')) -Force }
+  foreach ($n in 'ep_widget_bg','ep_widget_flame','ep_widget_flame_1','ep_widget_flame_2','ep_widget_flame_3','ep_widget_seg_on','ep_widget_seg_off','ep_widget_divider','ep_widget_pill','ep_widget_btn','ep_widget_btn_ghost','ep_widget_bubble','ep_widget_chip','ep_widget_day_on','ep_widget_day_off','ep_widget_halo','ep_widget_bg_morning','ep_widget_bg_day','ep_widget_bg_evening','ep_widget_bg_night','ep_w_panel_light','ep_w_panel_dark','ep_w_seg_off_p') { Copy-Item (Join-Path $src ($n + '.xml')) (Join-Path $res ('drawable\' + $n + '.xml')) -Force }
   New-Item -ItemType Directory -Force (Join-Path $res 'drawable-nodpi') | Out-Null
   # Duolingo-style palette, light + dark
   Copy-Item (Join-Path $src 'ep_widget_colors.xml') (Join-Path $res 'values\ep_widget_colors.xml') -Force
@@ -21,6 +21,9 @@ if (-not (Test-Path $m)) {
   Copy-Item (Join-Path $src 'ep_widget_logo.png') (Join-Path $res 'drawable-nodpi\ep_widget_logo.png') -Force
   # EcoFriend static PNGs (home-screen widgets cannot play animated WebP)
   foreach ($n in 'normal','sad','excited','cheering','proud') { Copy-Item (Join-Path $src ('ecofriend\ecofriend_' + $n + '.png')) (Join-Path $res ('drawable-nodpi\ecofriend_' + $n + '.png')) -Force }
+  # EcoFriend 2.0: pre-rendered scene art (4 scenes x square/wide) + EcoFriend variants (regenerate: python tool/gen_widget_art.py)
+  foreach ($f in (Get-ChildItem (Join-Path $src 'art') -Filter 'ep_w_bg_*.webp')) { Copy-Item $f.FullName (Join-Path $res ('drawable-nodpi\' + $f.Name)) -Force }
+  foreach ($f in (Get-ChildItem (Join-Path $src 'ecofriend') -Filter 'ecofriend_w_*.png')) { Copy-Item $f.FullName (Join-Path $res ('drawable-nodpi\' + $f.Name)) -Force }
   foreach ($n in 'ep_widget_info','ep_widget_info_xs','ep_widget_info_m','ep_widget_info_l','ep_widget_info_xl') { Copy-Item (Join-Path $src ($n + '.xml')) (Join-Path $res ('xml\' + $n + '.xml')) -Force }
   $kt = Join-Path $root 'android\app\src\main\kotlin\az\ecopoint\widget'
   New-Item -ItemType Directory -Force $kt | Out-Null
